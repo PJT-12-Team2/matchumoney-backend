@@ -12,7 +12,7 @@ public class WebConfig extends AbstractAnnotationConfigDispatcherServletInitiali
         return new Class[] {
                 AppConfig.class,
                 MyBatisConfig.class,
-                CorsConfig.class
+                CorsConfig.class,
         };
     }
 
