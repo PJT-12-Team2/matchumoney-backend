@@ -1,0 +1,74 @@
+plugins {
+    id 'java'
+    id 'war'
+}
+
+group 'team2.pjt12'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    junitVersion = '5.10.2'
+    springVersion = '5.3.37'
+    lombokVersion = '1.18.30'
+    mybatisVersion = '3.5.15'
+    mybatisSpringVersion = '2.1.1'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+dependencies {
+
+    // Spring Core / MVC
+    implementation "org.springframework:spring-context:${springVersion}"
+    implementation "org.springframework:spring-webmvc:${springVersion}"
+
+    // MyBatis
+    implementation "org.mybatis:mybatis:${mybatisVersion}"
+    implementation "org.mybatis:mybatis-spring:${mybatisSpringVersion}"
+
+    // Lombok (선택사항)
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+
+    // JSTL & Servlet API
+    implementation 'javax.servlet:jstl:1.2'
+    providedCompile 'javax.servlet:javax.servlet-api:4.0.1'
+
+    // MySQL Driver (또는 사용하는 DB)
+    runtimeOnly 'mysql:mysql-connector-java:8.0.33'
+    implementation 'com.zaxxer:HikariCP:2.7.4'
+
+    implementation "org.springframework:spring-tx:${springVersion}"
+    implementation "org.springframework:spring-jdbc:${springVersion}"
+
+    // JUnit (테스트 용도)
+    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+    testImplementation "org.springframework:spring-test:${springVersion}"
+
+    implementation 'org.apache.logging.log4j:log4j-api:2.18.0'
+    implementation 'org.apache.logging.log4j:log4j-core:2.18.0'
+    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.18.0'
+
+    // JSON 변환용
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.3'
+
+    // swagger
+    implementation 'io.springfox:springfox-swagger2:2.9.2'
+    implementation 'io.springfox:springfox-swagger-ui:2.9.2'
+}
+
+test {
+    useJUnitPlatform()
+}
