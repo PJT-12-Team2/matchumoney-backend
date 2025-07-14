@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="team2.pjt12.matchumoney.domain.user.mapper.UserMapper">
+
+    <select id="findBySocialIdAndSocialProvider" resultType="team2.pjt12.matchumoney.domain.user.domain.UserVO">
+        SELECT *
+        FROM user
+        WHERE social_id = #{socialId}
+          AND social_provider = #{socialProvider}
+    </select>
+
+    <insert id="save" parameterType="team2.pjt12.matchumoney.domain.user.domain.UserVO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user (
+            social_provider, social_id, email, nickname, profile_image_url,
+            created_time, last_modified_time
+        ) VALUES (
+                     #{socialProvider}, #{socialId}, #{email}, #{nickname}, #{profileImageUrl},
+                     #{createdTime}, #{lastModifiedTime}
+                 )
+    </insert>
+
+</mapper>
