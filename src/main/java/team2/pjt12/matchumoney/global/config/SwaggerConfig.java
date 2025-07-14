@@ -49,5 +49,8 @@ public class SwaggerConfig implements WebMvcConfigurer {
                 .addResourceLocations("classpath:/META-INF/resources/");
         registry.addResourceHandler("/v2/api-docs")
                 .addResourceLocations("classpath:/META-INF/resources/");
+
+        registry.addResourceHandler("/static/**")
+                .addResourceLocations("classpath:/static/");
     }
 }
