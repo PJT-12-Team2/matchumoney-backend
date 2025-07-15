@@ -4,14 +4,6 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="team2.pjt12.matchumoney.domain.auth.mapper.AuthMapper">
-
-    <select id="findBySocialIdAndSocialProvider" resultType="team2.pjt12.matchumoney.domain.user.domain.UserVO">
-        SELECT *
-        FROM user
-        WHERE social_id = #{socialId}
-          AND social_provider = #{socialProvider}
-    </select>
-
     <insert id="save" parameterType="team2.pjt12.matchumoney.domain.user.domain.UserVO" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO user (
             social_provider, social_id, email, password, nickname, profile_image_url,
@@ -21,11 +13,5 @@
                      #{createdTime}, #{lastModifiedTime}, #{isSocialLogin}
                  )
     </insert>
-
-    <select id="findByEmail" parameterType="string" resultType="team2.pjt12.matchumoney.domain.user.domain.UserVO">
-        SELECT *
-        FROM user
-        WHERE email = #{email}
-    </select>
 
 </mapper>

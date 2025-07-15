@@ -2,20 +2,20 @@ package team2.pjt12.matchumoney.domain.auth.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import team2.pjt12.matchumoney.domain.auth.dto.LoginResponseDTO;
 import team2.pjt12.matchumoney.domain.auth.dto.SocialLoginRequestDTO;
 import team2.pjt12.matchumoney.domain.auth.dto.TokenDTO;
 import team2.pjt12.matchumoney.domain.auth.dto.req.LoginRequestDTO;
+import team2.pjt12.matchumoney.domain.auth.dto.req.SendEmailRequestDTO;
 import team2.pjt12.matchumoney.domain.auth.dto.req.SignupRequestDTO;
+import team2.pjt12.matchumoney.domain.auth.dto.req.VerifyEmailRequestDTO;
 import team2.pjt12.matchumoney.domain.auth.service.AuthService;
 import team2.pjt12.matchumoney.global.success.SuccessResponse;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
 
 @RestController
 @RequiredArgsConstructor
@@ -43,5 +43,23 @@ public class AuthController {
         TokenDTO tokenDto = authService.login(reqDto, response);
         log.info("로그인 성공: {}", tokenDto);
         return new SuccessResponse<>(tokenDto);
+    }
+
+    // 인증번호 전송
+    @PostMapping("/signup/email/send")
+    public SuccessResponse<Boolean> sendSignupEmailVerification(@RequestBody SendEmailRequestDTO reqDto) {
+        return new SuccessResponse<>(authService.sendSignupEmailVerification(reqDto));
+    }
+
+    @PostMapping("/reset/email/send")
+    public SuccessResponse<Boolean> sendResetEmailVerification(@RequestBody SendEmailRequestDTO reqDto) {
+        return new SuccessResponse<>(authService.sendResetEmailVerification(reqDto));
+    }
+
+    // 인증번호 검증
+    @PostMapping("/email/verify")
+    public SuccessResponse<Boolean> verifyEmailCode(@RequestBody @Valid VerifyEmailRequestDTO reqDto) {
+        boolean verified = authService.verifyEmail(reqDto);
+        return new SuccessResponse<>(verified);
     }
 }

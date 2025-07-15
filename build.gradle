@@ -87,6 +87,10 @@ dependencies {
     // Redis
     implementation 'org.springframework.data:spring-data-redis:2.7.18'
     implementation 'io.lettuce:lettuce-core:6.2.3.RELEASE'
+
+    // email
+    implementation "org.springframework:spring-context-support:5.3.37"
+    implementation "com.sun.mail:jakarta.mail:1.6.7"
 }
 
 test {
