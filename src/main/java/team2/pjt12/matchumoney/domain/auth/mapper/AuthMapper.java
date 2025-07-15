@@ -7,4 +7,6 @@ import team2.pjt12.matchumoney.domain.user.domain.UserVO;
 public interface AuthMapper {
 
     void save(UserVO user);
+
+    int updatePassword(String password);
 }

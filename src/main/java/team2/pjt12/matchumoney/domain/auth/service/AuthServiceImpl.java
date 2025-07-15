@@ -14,10 +14,7 @@ import team2.pjt12.matchumoney.domain.auth.dto.LoginResponseDTO;
 import team2.pjt12.matchumoney.domain.auth.dto.SocialLoginRequestDTO;
 import team2.pjt12.matchumoney.domain.auth.dto.SocialUserInfo;
 import team2.pjt12.matchumoney.domain.auth.dto.TokenDTO;
-import team2.pjt12.matchumoney.domain.auth.dto.req.LoginRequestDTO;
-import team2.pjt12.matchumoney.domain.auth.dto.req.SendEmailRequestDTO;
-import team2.pjt12.matchumoney.domain.auth.dto.req.SignupRequestDTO;
-import team2.pjt12.matchumoney.domain.auth.dto.req.VerifyEmailRequestDTO;
+import team2.pjt12.matchumoney.domain.auth.dto.req.*;
 import team2.pjt12.matchumoney.domain.auth.mapper.AuthMapper;
 import team2.pjt12.matchumoney.domain.user.domain.UserVO;
 import team2.pjt12.matchumoney.domain.user.mapper.UserMapper;
@@ -120,19 +117,14 @@ public class AuthServiceImpl implements AuthService{
     public TokenDTO login(LoginRequestDTO reqDto, HttpServletResponse response) {
 
         UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(reqDto.getEmail(), reqDto.getPassword());
-
         Authentication authentication = authenticationManager.authenticate(token);
         String email = authentication.getName();
-
         UserVO user = userMapper.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
         String accessToken = jwtService.createAccessToken(user);
         String refreshToken = jwtService.createRefreshToken(user);
         redisTemplate.opsForValue().set("refresh:" + email, refreshToken, jwtService.getExpiration(refreshToken), TimeUnit.MILLISECONDS);
-
         jwtService.sendAccessAndRefreshToken(response, accessToken, refreshToken);
-
         return TokenDTO.builder()
                 .accessToken(accessToken)
                 .userId(user.getId())
@@ -184,5 +176,17 @@ public class AuthServiceImpl implements AuthService{
 
         redisTemplate.delete(emailKey);
         return true;
+    }
+
+    @Override
+    public void resetPassword(ResetRequestDTO reqDto) {
+        if (!reqDto.getNewPassword().equals(reqDto.getConfirmPassword())) {
+            throw new CustomException(ErrorCode.NOT_MATCH_PASSWORD);
+        }
+
+        UserVO user = userMapper.findByEmail(reqDto.getEmail())
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        authMapper.updatePassword(passwordEncoder.encode(reqDto.getNewPassword()));
     }
 }
