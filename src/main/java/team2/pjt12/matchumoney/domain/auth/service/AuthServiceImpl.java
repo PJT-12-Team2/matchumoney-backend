@@ -1,6 +1,7 @@
 package team2.pjt12.matchumoney.domain.auth.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthServiceImpl implements AuthService{
     private final KakaoApiClient kakaoApiClient;
     private final AuthMapper authMapper;
@@ -69,7 +71,6 @@ public class AuthServiceImpl implements AuthService{
 
     @Override
     public void signup(SignupRequestDTO reqDto) {
-
         String verifiedKey = "email:verified:" + reqDto.getEmail();
         String isVerified = redisTemplate.opsForValue().get(verifiedKey);
         if (!"true".equals(isVerified)) {

@@ -12,7 +12,7 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import javax.sql.DataSource;
 
 @Configuration
-@MapperScan(basePackages = "team2.pjt12")  // Mapper 인터페이스 위치
+@MapperScan(basePackages = {"team2.pjt12"}, annotationClass = org.apache.ibatis.annotations.Mapper.class)  // Mapper 인터페이스 위치
 public class MyBatisConfig {
 
     @Autowired

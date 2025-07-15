@@ -12,7 +12,6 @@ import team2.pjt12.matchumoney.domain.auth.dto.TokenDTO;
 import team2.pjt12.matchumoney.domain.auth.dto.req.LoginRequestDTO;
 import team2.pjt12.matchumoney.domain.auth.dto.req.SignupRequestDTO;
 import team2.pjt12.matchumoney.domain.auth.service.AuthService;
-import team2.pjt12.matchumoney.domain.user.service.UserService;
 import team2.pjt12.matchumoney.global.success.SuccessResponse;
 
 import javax.servlet.http.HttpServletResponse;
