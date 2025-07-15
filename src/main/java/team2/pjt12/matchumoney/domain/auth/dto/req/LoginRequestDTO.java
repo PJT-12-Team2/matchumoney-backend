@@ -1,6 +1,7 @@
 package team2.pjt12.matchumoney.domain.auth.dto.req;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -18,7 +19,9 @@ public class LoginRequestDTO {
     private final String password;
 
     @Builder
-    public LoginRequestDTO(String email, String password) {
+    public LoginRequestDTO(
+            @JsonProperty("email") String email,
+            @JsonProperty("password") String password) {
         this.email = email;
         this.password = password;
     }

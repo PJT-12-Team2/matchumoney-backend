@@ -91,6 +91,8 @@ dependencies {
     // email
     implementation "org.springframework:spring-context-support:5.3.37"
     implementation "com.sun.mail:jakarta.mail:1.6.7"
+
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.3'
 }
 
 test {
