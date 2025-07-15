@@ -12,7 +12,11 @@ public enum ErrorCode {
 
     // 사용자 관련 예외
     USER_NOT_FOUND(404, "U404", "해당 사용자를 찾을 수 없습니다."),
-    USER_DUPLICATE(409, "U409", "이미 존재하는 사용자입니다.");
+    USER_DUPLICATE(409, "U409", "이미 존재하는 사용자입니다."),
+    USER_NOT_AUTHORIZED(403, "U403", "유효하지 않은 사용자입니다."),
+    EMAIL_NOT_VERIFIED(403, "U403", "검증되지 않은 이메일입니다."),
+    EMAIL_NOT_AVAILABLE(409, "U409", "사용할 수 없는 이메일입니다."),
+    NOT_MATCH_PASSWORD(400, "U400", "비밀번호가 일치하지 않습니다.");
 
     private final int status;
     private final String code;

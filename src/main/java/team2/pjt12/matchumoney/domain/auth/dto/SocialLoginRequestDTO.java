@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SocialLoginReqDto {
+public class SocialLoginRequestDTO {
 
     private String code;
 

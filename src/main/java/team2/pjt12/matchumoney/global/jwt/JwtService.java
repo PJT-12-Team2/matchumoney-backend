@@ -1,46 +1,30 @@
 package team2.pjt12.matchumoney.global.jwt;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 import team2.pjt12.matchumoney.domain.user.domain.UserVO;
 
-import java.security.Key;
-import java.util.Base64;
-import java.util.Date;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Optional;
 
-@Service
-@RequiredArgsConstructor
-public class JwtService {
+public interface JwtService {
 
-    @Value("${jwt.secret}")
-    private String rawSecretKey; // Base64로 인코딩된 시크릿 키 문자열
+    String createAccessToken(UserVO user);
 
-    @Value("${jwt.access-token-expiration}")
-    private long accessTokenExpiration;
+    String createRefreshToken(UserVO user);
 
-    private Key getSigningKey() {
-        byte[] decodedKey = Base64.getDecoder().decode(rawSecretKey);
-        return Keys.hmacShaKeyFor(decodedKey);
-    }
+    Optional<String> extractAccessToken(HttpServletRequest request);
 
-    public String issueToken(UserVO user) {
-        System.out.println("user.getId() = " + user.getId());
-        System.out.println("user.getNickname() = " + user.getNickname());
-        System.out.println("user.getSocialProvider() = " + user.getSocialProvider());
-        Date now = new Date();
-        Date expiry = new Date(now.getTime() + accessTokenExpiration);
+    Optional<String> extractRefreshToken(HttpServletRequest request);
 
-        return Jwts.builder()
-                .setSubject(String.valueOf(user.getId()))
-                .claim("nickname", user.getNickname())
-                .claim("provider", user.getSocialProvider())
-                .setIssuedAt(now)
-                .setExpiration(expiry)
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-                .compact();
-    }
+    Optional<String> extractEmail(String accessToken);
+
+    boolean isTokenValid(String token);
+
+    long getExpiration(String token);
+
+    void sendAccessToken(HttpServletResponse response, String newAccessToken);
+
+    void sendAccessAndRefreshToken(HttpServletResponse response,
+                                   String accessToken,
+                                   String refreshToken);
 }

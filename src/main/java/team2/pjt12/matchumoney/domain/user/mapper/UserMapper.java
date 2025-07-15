@@ -12,4 +12,6 @@ public interface UserMapper {
     Optional<UserVO> findBySocialIdAndSocialProvider(@Param("socialId") String socialId, @Param("socialProvider") String socialProvider);
 
     void save(UserVO user);
+
+    Optional<UserVO> findByEmail(String email);
 }

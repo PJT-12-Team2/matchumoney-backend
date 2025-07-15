@@ -14,12 +14,18 @@
 
     <insert id="save" parameterType="team2.pjt12.matchumoney.domain.user.domain.UserVO" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO user (
-            social_provider, social_id, email, nickname, profile_image_url,
-            created_time, last_modified_time
+            social_provider, social_id, email, password, nickname, profile_image_url,
+            created_time, last_modified_time, is_social_login
         ) VALUES (
-                     #{socialProvider}, #{socialId}, #{email}, #{nickname}, #{profileImageUrl},
-                     #{createdTime}, #{lastModifiedTime}
+                     #{socialProvider}, #{socialId}, #{email}, #{password}, #{nickname}, #{profileImageUrl},
+                     #{createdTime}, #{lastModifiedTime}, #{isSocialLogin}
                  )
     </insert>
+
+    <select id="findByEmail" parameterType="string" resultType="team2.pjt12.matchumoney.domain.user.domain.UserVO">
+        SELECT *
+        FROM user
+        WHERE email = #{email}
+    </select>
 
 </mapper>

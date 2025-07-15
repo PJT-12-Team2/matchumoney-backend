@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import team2.pjt12.matchumoney.global.oauth.KakaoOauthProperties;
 
 @Controller
-@RequestMapping("/auth")
+@RequestMapping("/page")
 @RequiredArgsConstructor
 @Slf4j
 public class LoginPageController {
@@ -19,7 +19,6 @@ public class LoginPageController {
     @GetMapping("/login")
     public String loginPage(Model model) {
 
-        log.info("=========== Kakao Login Page Accessed ===========");
         String kakaoLoginUrl = "https://kauth.kakao.com/oauth/authorize?response_type=code"
                 + "&client_id=" + kakaoOauthProperties.getClientId()
                 + "&redirect_uri=" + kakaoOauthProperties.getRedirectUri();
