@@ -25,7 +25,6 @@ import javax.validation.Valid;
 public class AuthController {
 
     private final AuthService authService;
-    private final UserService userService;
 
     @PostMapping("/kakao-login")
     public SuccessResponse<LoginResponseDTO> kakaoLogin(@RequestBody SocialLoginRequestDTO request) {
@@ -35,14 +34,14 @@ public class AuthController {
 
     @PostMapping("/signup")
     public SuccessResponse<?> signup(@RequestBody @Valid SignupRequestDTO reqDto) {
-        userService.signup(reqDto);
+        authService.signup(reqDto);
         return new SuccessResponse<>("회원가입 성공");
     }
 
     @PostMapping("/login")
     public SuccessResponse<TokenDTO> signin(@RequestBody @Valid LoginRequestDTO reqDto, HttpServletResponse response) {
         log.info("로그인 요청: {}", reqDto);
-        TokenDTO tokenDto = userService.login(reqDto, response);
+        TokenDTO tokenDto = authService.login(reqDto, response);
         log.info("로그인 성공: {}", tokenDto);
         return new SuccessResponse<>(tokenDto);
     }

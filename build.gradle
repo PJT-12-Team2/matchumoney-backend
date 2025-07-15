@@ -84,9 +84,9 @@ dependencies {
     implementation 'javax.validation:validation-api:2.0.1.Final'
     implementation 'org.glassfish:javax.el:3.0.0' // EL 표현식 지원
 
-    // redis
-    implementation 'org.springframework.data:spring-data-redis:3.2.4' // Spring 버전에 맞춰
-    implementation 'io.lettuce.core:lettuce-core:6.3.2'
+    // Redis
+    implementation 'org.springframework.data:spring-data-redis:2.7.18'
+    implementation 'io.lettuce:lettuce-core:6.2.3.RELEASE'
 }
 
 test {
