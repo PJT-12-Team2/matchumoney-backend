@@ -1,6 +1,5 @@
 package team2.pjt12.matchumoney.domain.auth.dto.req;
 
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;

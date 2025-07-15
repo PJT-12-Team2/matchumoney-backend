@@ -14,4 +14,11 @@
                  )
     </insert>
 
+    <update id="updatePassword">
+        UPDATE user
+        SET password = #{password},
+            last_modified_time = NOW()
+        WHERE email = #{email}
+    </update>
+
 </mapper>

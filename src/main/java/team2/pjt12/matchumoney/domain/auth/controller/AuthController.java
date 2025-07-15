@@ -6,16 +6,12 @@ import org.springframework.web.bind.annotation.*;
 import team2.pjt12.matchumoney.domain.auth.dto.LoginResponseDTO;
 import team2.pjt12.matchumoney.domain.auth.dto.SocialLoginRequestDTO;
 import team2.pjt12.matchumoney.domain.auth.dto.TokenDTO;
-import team2.pjt12.matchumoney.domain.auth.dto.req.LoginRequestDTO;
-import team2.pjt12.matchumoney.domain.auth.dto.req.SendEmailRequestDTO;
-import team2.pjt12.matchumoney.domain.auth.dto.req.SignupRequestDTO;
-import team2.pjt12.matchumoney.domain.auth.dto.req.VerifyEmailRequestDTO;
+import team2.pjt12.matchumoney.domain.auth.dto.req.*;
 import team2.pjt12.matchumoney.domain.auth.service.AuthService;
 import team2.pjt12.matchumoney.global.success.SuccessResponse;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
 
 @RestController
 @RequiredArgsConstructor
@@ -61,5 +57,11 @@ public class AuthController {
     public SuccessResponse<Boolean> verifyEmailCode(@RequestBody @Valid VerifyEmailRequestDTO reqDto) {
         boolean verified = authService.verifyEmail(reqDto);
         return new SuccessResponse<>(verified);
+    }
+
+    @PatchMapping("/reset/password")
+    public SuccessResponse<?> resetPassword(@RequestBody @Valid ResetRequestDTO reqDto) {
+        authService.resetPassword(reqDto);
+        return new SuccessResponse<>("비밀번호 재설정 성공");
     }
 }
