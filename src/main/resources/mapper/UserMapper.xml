@@ -7,7 +7,7 @@
 
     <select id="findBySocialIdAndSocialProvider" resultType="team2.pjt12.matchumoney.domain.user.domain.UserVO">
         SELECT *
-        FROM user
+        FROM users
         WHERE social_id = #{socialId}
           AND social_provider = #{socialProvider}
     </select>
@@ -15,14 +15,14 @@
 
     <select id="findByEmail" parameterType="string" resultType="team2.pjt12.matchumoney.domain.user.domain.UserVO">
         SELECT *
-        FROM user
+        FROM users
         WHERE email = #{email}
     </select>
 
     <select id="existsByEmail" parameterType="string" resultType="boolean">
         SELECT
             CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END
-        FROM user
+        FROM users
         WHERE email = #{email}
     </select>
 
