@@ -5,7 +5,7 @@
 
 <mapper namespace="team2.pjt12.matchumoney.domain.auth.mapper.AuthMapper">
     <insert id="save" parameterType="team2.pjt12.matchumoney.domain.user.domain.UserVO" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO user (
+        INSERT INTO users (
             social_provider, social_id, email, password, nickname, profile_image_url,
             created_time, last_modified_time, is_social_login
         ) VALUES (
@@ -15,7 +15,7 @@
     </insert>
 
     <update id="updatePassword">
-        UPDATE user
+        UPDATE users
         SET password = #{password},
             last_modified_time = NOW()
         WHERE email = #{email}
