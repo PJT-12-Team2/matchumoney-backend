@@ -13,17 +13,23 @@
     </select>
 
 
-    <select id="findByEmail" parameterType="string" resultType="team2.pjt12.matchumoney.domain.user.domain.UserVO">
+    <select id="findByEmail" resultType="team2.pjt12.matchumoney.domain.user.domain.UserVO">
         SELECT *
         FROM users
         WHERE email = #{email}
     </select>
 
-    <select id="existsByEmail" parameterType="string" resultType="boolean">
+    <select id="existsByEmail" resultType="boolean">
         SELECT
             CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END
         FROM users
         WHERE email = #{email}
+    </select>
+
+    <select id="findByUserId" resultType="team2.pjt12.matchumoney.domain.user.domain.UserVO">
+        SELECT *
+        FROM users
+        WHERE user_id = #{userId}
     </select>
 
 </mapper>

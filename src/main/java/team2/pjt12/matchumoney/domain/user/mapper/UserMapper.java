@@ -14,4 +14,6 @@ public interface UserMapper {
     Optional<UserVO> findByEmail(String email);
 
     boolean existsByEmail(String email);
+
+    Optional<UserVO> findByUserId(Long userId);
 }

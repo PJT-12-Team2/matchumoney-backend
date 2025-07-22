@@ -71,9 +71,6 @@ public class AuthServiceImpl implements AuthService{
                 .createdTime(LocalDateTime.now())
                 .lastModifiedTime(LocalDateTime.now())
                 .socialLogin(true)
-                .personaId(null)
-                .productId(null)
-                .exp(0)
                 .build();
 
         authMapper.save(user);
@@ -108,10 +105,7 @@ public class AuthServiceImpl implements AuthService{
                 reqDto.getProfileImageUrl(),
                 LocalDateTime.now(),
                 LocalDateTime.now(),
-                false,
-                null,
-                null,
-                0
+                false
         );
 
         authMapper.save(user);

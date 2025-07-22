@@ -2,6 +2,9 @@ package team2.pjt12.matchumoney.domain.user.domain;
 
 import lombok.Builder;
 import lombok.Getter;
+import team2.pjt12.matchumoney.domain.user.dto.req.UserUpdateRequestDTO;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -20,13 +23,13 @@ public class UserVO {
     private Long personaId;
     private Long productId;
     private Integer exp;
-    private Long finId;
+    private Gender gender;
+    private LocalDate birthDate;
 
     @Builder
     public UserVO(Long id, String socialProvider, String socialId, String email,
                   String password, String nickname, String profileImageUrl,
-                  LocalDateTime createdTime, LocalDateTime lastModifiedTime, boolean socialLogin,
-                  Long personaId, Long productId, Integer exp) {
+                  LocalDateTime createdTime, LocalDateTime lastModifiedTime, boolean socialLogin) {
         this.userId = id;
         this.socialProvider = socialProvider;
         this.socialId = socialId;
@@ -37,8 +40,14 @@ public class UserVO {
         this.createdTime = createdTime;
         this.lastModifiedTime = lastModifiedTime;
         this.isSocialLogin = socialLogin;
-        this.personaId = personaId;
-        this.productId = productId;
-        this.exp = exp;
+    }
+
+    public void updateUserInfo(Gender gender, LocalDate birthDate) {
+        if (gender != null) {
+            this.gender = gender;
+        }
+        if (birthDate != null) {
+            this.birthDate = birthDate;
+        }
     }
 }
