@@ -104,7 +104,11 @@ public class AuthServiceImpl implements AuthService{
                 reqDto.getProfileImageUrl(),
                 LocalDateTime.now(),
                 LocalDateTime.now(),
-                false
+                false,
+                null,
+                null,
+                0,
+                null
         );
 
         authMapper.save(user);
@@ -127,7 +131,7 @@ public class AuthServiceImpl implements AuthService{
         jwtService.sendAccessAndRefreshToken(response, accessToken, refreshToken);
         return TokenDTO.builder()
                 .accessToken(accessToken)
-                .userId(user.getId())
+                .userId(user.getUserId())
                 .nickname(user.getNickname())
                 .build();
     }

@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 @Getter
 public class UserVO {
 
-    private Long id;
+    private Long userId;
     private String socialProvider;
     private String socialId;
     private String email;
@@ -16,13 +16,18 @@ public class UserVO {
     private String profileImageUrl;
     private LocalDateTime createdTime;
     private LocalDateTime lastModifiedTime;
-    private boolean isSocialLogin;
+    private Boolean isSocialLogin;
+    private Long personaId;
+    private Long productId;
+    private Integer exp;
+    private Long finId;
 
     @Builder
-    public UserVO(Long id, String socialProvider, String socialId, String email, String password,
-                  String nickname, String profileImageUrl,
-                  LocalDateTime createdTime, LocalDateTime lastModifiedTime, boolean socialLogin) {
-        this.id = id;
+    public UserVO(Long id, String socialProvider, String socialId, String email,
+                  String password, String nickname, String profileImageUrl,
+                  LocalDateTime createdTime, LocalDateTime lastModifiedTime, boolean socialLogin,
+                  Long personaId, Long productId, Integer exp, Long finId) {
+        this.userId = id;
         this.socialProvider = socialProvider;
         this.socialId = socialId;
         this.email = email;
@@ -32,5 +37,9 @@ public class UserVO {
         this.createdTime = createdTime;
         this.lastModifiedTime = lastModifiedTime;
         this.isSocialLogin = socialLogin;
+        this.personaId = personaId;
+        this.productId = productId;
+        this.exp = exp;
+        this.finId = finId;
     }
 }
