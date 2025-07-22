@@ -9,6 +9,8 @@ import team2.pjt12.matchumoney.domain.user.dto.res.UserUpdateResponseDTO;
 import team2.pjt12.matchumoney.domain.user.service.UserService;
 import team2.pjt12.matchumoney.global.success.SuccessResponse;
 
+import javax.validation.Valid;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/user")
@@ -18,13 +20,13 @@ public class UserController {
     private final UserService userService;
 
     @PatchMapping("/update")
-    public SuccessResponse<UserUpdateResponseDTO> updateUserInfo(@RequestBody UpdateUserInfoRequestDTO reqDto) {
+    public SuccessResponse<UserUpdateResponseDTO> updateUserInfo(@RequestBody @Valid UpdateUserInfoRequestDTO reqDto) {
         UserUpdateResponseDTO resDto = userService.updateUserInfo(reqDto);
         return new SuccessResponse<>(resDto, "회원정보 수정 성공");
     }
 
     @PatchMapping("/update/password")
-    public SuccessResponse<String> updatePassword(@RequestBody UpdatePasswordRequestDTO reqDto) {
+    public SuccessResponse<String> updatePassword(@RequestBody @Valid UpdatePasswordRequestDTO reqDto) {
         userService.updatePassword(reqDto);
         return new SuccessResponse<>("비밀번호 수정 성공");
     }
