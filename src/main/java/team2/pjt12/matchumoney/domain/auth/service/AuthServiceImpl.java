@@ -65,11 +65,15 @@ public class AuthServiceImpl implements AuthService{
                 .socialProvider("KAKAO")
                 .socialId(info.getSocialId())
                 .email(info.getEmail())
+                .password(passwordEncoder.encode(info.getSocialId())) // 임시 비밀번호로 소셜 ID 사용
                 .nickname(info.getNickname())
                 .profileImageUrl(info.getProfileImageUrl())
                 .createdTime(LocalDateTime.now())
                 .lastModifiedTime(LocalDateTime.now())
                 .socialLogin(true)
+                .personaId(null)
+                .productId(null)
+                .exp(0)
                 .build();
 
         authMapper.save(user);
@@ -107,8 +111,7 @@ public class AuthServiceImpl implements AuthService{
                 false,
                 null,
                 null,
-                0,
-                null
+                0
         );
 
         authMapper.save(user);

@@ -26,7 +26,7 @@ public class UserVO {
     public UserVO(Long id, String socialProvider, String socialId, String email,
                   String password, String nickname, String profileImageUrl,
                   LocalDateTime createdTime, LocalDateTime lastModifiedTime, boolean socialLogin,
-                  Long personaId, Long productId, Integer exp, Long finId) {
+                  Long personaId, Long productId, Integer exp) {
         this.userId = id;
         this.socialProvider = socialProvider;
         this.socialId = socialId;
@@ -40,6 +40,5 @@ public class UserVO {
         this.personaId = personaId;
         this.productId = productId;
         this.exp = exp;
-        this.finId = finId;
     }
 }
