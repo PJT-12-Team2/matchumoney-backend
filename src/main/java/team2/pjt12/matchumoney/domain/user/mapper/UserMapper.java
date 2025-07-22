@@ -19,9 +19,11 @@ public interface UserMapper {
 
     Optional<UserVO> findByUserId(Long userId);
 
-    void updateUserInfo(@Param("userId") Long userId,
-                        @Param("gender") Gender gender,
-                        @Param("birthDate") LocalDate birthDate);
+    void updateUserInfo(
+            @Param("userId") Long userId,
+            @Param("nickname") String nickname,
+            @Param("gender") Gender gender,
+            @Param("birthDate") LocalDate birthDate);
 
     void updatePassword(@Param("userId") Long userId, @Param("newPassword") String newPassword);
 }

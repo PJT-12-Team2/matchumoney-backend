@@ -6,6 +6,7 @@ import java.time.LocalDate;
 
 public class UpdateUserInfoRequestDTO {
 
+    public String nickname;
     public Gender gender;
     public LocalDate birthDate;
 }

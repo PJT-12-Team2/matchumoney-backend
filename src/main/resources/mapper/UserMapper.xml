@@ -34,7 +34,8 @@
 
     <update id="updateUserInfo">
         UPDATE users
-        SET gender = #{gender},
+        SET nickname = #{nickname},
+            gender = #{gender},
             birth_date = #{birthDate}
         WHERE user_id = #{userId}
     </update>

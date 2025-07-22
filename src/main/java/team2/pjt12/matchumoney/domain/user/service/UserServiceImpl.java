@@ -33,7 +33,7 @@ public class UserServiceImpl implements UserService {
         UserVO user = userMapper.findByUserId(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        userMapper.updateUserInfo(userId, reqDto.gender, reqDto.birthDate);
+        userMapper.updateUserInfo(userId, reqDto.nickname, reqDto.gender, reqDto.birthDate);
 
         return new UserUpdateResponseDTO(userId);
     }
