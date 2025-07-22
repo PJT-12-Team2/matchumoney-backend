@@ -17,7 +17,12 @@ public enum ErrorCode {
     EMAIL_NOT_FOUND(404, "U404", "해당 이메일을 가진 사용자를 찾을 수 없습니다."),
     EMAIL_NOT_VERIFIED(403, "U403", "검증되지 않은 이메일입니다."),
     EMAIL_NOT_AVAILABLE(409, "U409", "사용할 수 없는 이메일입니다."),
-    NOT_MATCH_PASSWORD(400, "U400", "비밀번호가 일치하지 않습니다.");
+    NOT_MATCH_PASSWORD(400, "U400", "비밀번호가 일치하지 않습니다."),
+
+    // 인증 관련 예외
+    INVALID_PASSWORD(401, "A401", "유효하지 않은 비밀번호입니다."),
+    SAME_PASSWORD(400, "A400", "현재 비밀번호와 새 비밀번호가 동일합니다."),
+    PASSWORD_MISMATCH(400, "A400", "새 비밀번호와 확인 비밀번호가 일치하지 않습니다.");
 
     private final int status;
     private final String code;

@@ -1,6 +1,7 @@
 package team2.pjt12.matchumoney.domain.auth.dto.req;
 
-import lombok.Builder;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import javax.validation.constraints.Email;
@@ -9,7 +10,6 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
 @Getter
-@Builder
 public class SignupRequestDTO {
 
     @NotEmpty
@@ -31,4 +31,18 @@ public class SignupRequestDTO {
     private final String passwordCheck;
 
     private final String profileImageUrl;
+
+    @JsonCreator
+    public SignupRequestDTO(
+            @JsonProperty("nickname") String nickname,
+            @JsonProperty("email") String email,
+            @JsonProperty("password") String password,
+            @JsonProperty("passwordCheck") String passwordCheck,
+            @JsonProperty("profileImageUrl") String profileImageUrl) {
+        this.nickname = nickname;
+        this.email = email;
+        this.password = password;
+        this.passwordCheck = passwordCheck;
+        this.profileImageUrl = profileImageUrl;
+    }
 }

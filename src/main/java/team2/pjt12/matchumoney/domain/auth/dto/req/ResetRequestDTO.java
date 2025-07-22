@@ -1,5 +1,7 @@
 package team2.pjt12.matchumoney.domain.auth.dto.req;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -9,7 +11,6 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
 @Getter
-@Builder
 public class ResetRequestDTO {
 
     @NotEmpty
@@ -26,4 +27,14 @@ public class ResetRequestDTO {
 
     @NotEmpty
     private final String confirmPassword;
+
+    @JsonCreator
+    public ResetRequestDTO(
+            @JsonProperty ("email") String email,
+            @JsonProperty("newPassword") String newPassword,
+            @JsonProperty("confirmPassword") String confirmPassword) {
+        this.email = email;
+        this.newPassword = newPassword;
+        this.confirmPassword = confirmPassword;
+    }
 }

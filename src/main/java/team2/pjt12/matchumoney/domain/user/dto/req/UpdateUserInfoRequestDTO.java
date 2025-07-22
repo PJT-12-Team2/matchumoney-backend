@@ -4,7 +4,7 @@ import team2.pjt12.matchumoney.domain.user.domain.Gender;
 
 import java.time.LocalDate;
 
-public class UserUpdateRequestDTO {
+public class UpdateUserInfoRequestDTO {
 
     public Gender gender;
     public LocalDate birthDate;

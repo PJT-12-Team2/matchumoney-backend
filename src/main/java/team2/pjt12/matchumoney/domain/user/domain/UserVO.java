@@ -2,7 +2,6 @@ package team2.pjt12.matchumoney.domain.user.domain;
 
 import lombok.Builder;
 import lombok.Getter;
-import team2.pjt12.matchumoney.domain.user.dto.req.UserUpdateRequestDTO;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

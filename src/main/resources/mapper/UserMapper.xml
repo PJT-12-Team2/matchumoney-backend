@@ -32,4 +32,16 @@
         WHERE user_id = #{userId}
     </select>
 
+    <update id="updateUserInfo">
+        UPDATE users
+        SET gender = #{gender},
+            birth_date = #{birthDate}
+        WHERE user_id = #{userId}
+    </update>
+
+    <update id="updatePassword">
+        UPDATE users
+        SET password = #{newPassword}
+        WHERE user_id = #{userId}
+    </update>
 </mapper>
