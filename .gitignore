@@ -18,7 +18,17 @@ bin/
 !**/src/test/**/bin/
 
 ### IntelliJ IDEA ###
-.idea
+.idea/modules.xml
+.idea/jarRepositoreis.xml
+.idea/compiler.xml
+.idea/libraries/
+.idea/misc.xml
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
 *.iws
 *.iml
 *.ipr
@@ -38,3 +48,5 @@ out/
 /src/main/generated/
 
 *.sql
+.idea/
+.idea/
