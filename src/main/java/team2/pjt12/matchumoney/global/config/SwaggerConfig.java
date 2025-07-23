@@ -48,7 +48,12 @@ public class SwaggerConfig implements WebMvcConfigurer {
                 .forPaths(PathSelectors.any())
                 .build();
     }
-
+    private List<SecurityReference> defaultAuth() {
+        AuthorizationScope authorizationScope = new AuthorizationScope("global", "accessEverything");
+        AuthorizationScope[] authorizationScopes = new AuthorizationScope[1];
+        authorizationScopes[0] = authorizationScope;
+        return Collections.singletonList(new SecurityReference("Authorization", authorizationScopes));
+    }
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/swagger-ui.html")
