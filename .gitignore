@@ -50,3 +50,4 @@ out/
 *.sql
 .idea/
 .idea/
+src/main/resources/application.properties
