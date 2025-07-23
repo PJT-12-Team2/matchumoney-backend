@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="team2.pjt12.matchumoney.domain.mydata.mapper.KbCardMapper">
+    <insert id="insertKbCard">
+        INSERT INTO mydata_card_holdings (
+            card_id, fin_id, discontinued, card_name, res_card_no, res_sleep_yn,
+            res_card_type, res_traffic_yn, res_image_link, res_issue_date,
+            res_valid_period, res_state, created_time, last_modified_time, user_id
+        ) VALUES (
+                     #{cardId}, #{finId}, #{discontinued}, #{cardName}, #{resCardNo}, #{resSleepYn},
+                     #{resCardType}, #{resTrafficYn}, #{resImageLink}, #{resIssueDate},
+                     #{resValidPeriod}, #{resState}, NOW(), NOW(), #{userId}
+                 )
+    </insert>
+    <delete id="deleteKbCardById" parameterType="long">
+        DELETE FROM mydata_card_holdings WHERE user_id = #{userId}
+    </delete>
+
+    <select id="selectKbCardByUserId" resultType="team2.pjt12.matchumoney.domain.mydata.vo.CardInfoVO">
+        SELECT * FROM mydata_card_holdings WHERE user_id = #{userId}
+    </select>
+</mapper>
