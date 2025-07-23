@@ -24,4 +24,5 @@ public class CardInfoVO {
     private java.sql.Timestamp createdTime;
     private java.sql.Timestamp lastModifiedTime;
     private Long userId;
+    private String connectedId;
 }

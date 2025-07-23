@@ -143,15 +143,15 @@ public class KBCardApiUtil {
 
         if (dataNode.isArray()) {
             for (JsonNode card : dataNode) {
-                cardHoldings.add(parseCardNode(card, userId));
+                cardHoldings.add(parseCardNode(card, userId,connectedId));
             }
         } else if (dataNode.has("resCardNo")) {
-            cardHoldings.add(parseCardNode(dataNode, userId));
+            cardHoldings.add(parseCardNode(dataNode, userId,connectedId));
         }
         return cardHoldings;
     }
 
-    private CardInfoVO parseCardNode(JsonNode card, Long userId) {
+    private CardInfoVO parseCardNode(JsonNode card, Long userId, String connectedId) {
         CardInfoVO vo = new CardInfoVO();
 
         vo.setCardId(1);
@@ -172,6 +172,7 @@ public class KBCardApiUtil {
         vo.setResValidPeriod(card.hasNonNull("resValidPeriod") ? card.path("resValidPeriod").asText() : "202601");
         vo.setResState(card.hasNonNull("resState") ? card.path("resState").asText() : "정상");
         vo.setUserId(userId != null ? userId : 1L); // userId가 null이 아닐 경우 사용, 아니면 기본값 1L
+        vo.setConnectedId(connectedId);
         return vo;
     }
 }
