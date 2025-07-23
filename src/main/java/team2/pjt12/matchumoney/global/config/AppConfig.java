@@ -11,12 +11,14 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
+import team2.pjt12.matchumoney.domain.persona.chatbot.util.OpenAIClient;
 
 import javax.sql.DataSource;
 
 @Configuration
 @ComponentScan(basePackages = "team2.pjt12")  // 패키지 구조에 맞게 수정
 @PropertySource("classpath:application.properties")
+@PropertySource("classpath:openAI.properties")
 @EnableTransactionManagement
 public class AppConfig {
 
@@ -31,6 +33,9 @@ public class AppConfig {
 
     @Value("${db.driverClassName}")
     private String driverClassName;
+
+    @Value("${openai.api.key}")
+    private String openaiApiKey;
 
     @Bean
     public DataSource dataSource() {
@@ -55,4 +60,6 @@ public class AppConfig {
         resolver.setSuffix(".jsp");
         return resolver;
     }
+
+
 }
