@@ -43,12 +43,12 @@ public class AuthController {
 
     // 인증번호 전송
     @PostMapping("/signup/email/send")
-    public SuccessResponse<Boolean> sendSignupEmailVerification(@RequestBody SendEmailRequestDTO reqDto) {
+    public SuccessResponse<Boolean> sendSignupEmailVerification(@RequestBody @Valid SendEmailRequestDTO reqDto) {
         return new SuccessResponse<>(authService.sendSignupEmailVerification(reqDto));
     }
 
     @PostMapping("/reset/email/send")
-    public SuccessResponse<Boolean> sendResetEmailVerification(@RequestBody SendEmailRequestDTO reqDto) {
+    public SuccessResponse<Boolean> sendResetEmailVerification(@RequestBody @Valid SendEmailRequestDTO reqDto) {
         return new SuccessResponse<>(authService.sendResetEmailVerification(reqDto));
     }
 

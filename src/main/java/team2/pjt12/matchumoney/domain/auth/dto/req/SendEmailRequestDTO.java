@@ -1,5 +1,6 @@
 package team2.pjt12.matchumoney.domain.auth.dto.req;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
@@ -13,8 +14,8 @@ public class SendEmailRequestDTO {
     @Email
     private final String email;
 
-    public SendEmailRequestDTO(
-            @JsonProperty("email") String email) {
+    @JsonCreator
+    public SendEmailRequestDTO(@JsonProperty("email") String email) {
         this.email = email;
     }
 }
