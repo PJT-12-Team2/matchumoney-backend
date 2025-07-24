@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="team2.pjt12.matchumoney.domain.cardsearch.mapper.CardSearchMapper">
+
+    <select id="selectCardsByFilter" resultType="team2.pjt12.matchumoney.domain.cardsearch.dto.CardSearchResponseDTO"
+            parameterType="team2.pjt12.matchumoney.domain.cardsearch.dto.CardSearchRequestDTO">
+
+        SELECT DISTINCT
+        cp.card_id AS id,
+        cp.name,
+        cp.type,
+        cp.card_image_url AS imageUrl
+        FROM cards_products cp
+        <if test="selectedBenefits != null and selectedBenefits.size() > 0">
+            LEFT JOIN card_search_benefit csb ON cp.card_id = csb.card_id2
+        </if>
+        <where>
+            <!-- 카드 종류 조건 -->
+            <choose>
+                <when test="creditCard == true and debitCard == true">
+                    (cp.type = '신용' OR cp.type = '체크')
+                </when>
+                <when test="creditCard == true and debitCard == false">
+                    cp.type = '신용'
+                </when>
+                <when test="creditCard == false and debitCard == true">
+                    cp.type = '체크'
+                </when>
+                <otherwise>
+                    1=1
+                </otherwise>
+            </choose>
+
+            <!-- 카드 혜택 조건 - 공백 기준 첫 단어 추출 (예: 쇼핑) -->
+            <if test="selectedBenefits != null and selectedBenefits.size() > 0">
+                AND (
+                <foreach item="benefit" collection="selectedBenefits" separator=" OR ">
+                    SUBSTRING_INDEX(csb.benefit_text, ' ', 1) = #{benefit}
+                </foreach>
+                )
+            </if>
+        </where>
+    </select>
+
+</mapper>
