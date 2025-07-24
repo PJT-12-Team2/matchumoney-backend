@@ -45,6 +45,11 @@ public class AppConfig {
         config.setPassword(password);
         config.setDriverClassName(driverClassName);
 
+        config.setMaximumPoolSize(3);
+        config.setMinimumIdle(1);
+        config.setConnectionTimeout(30000);
+        config.setIdleTimeout(60000);
+
         return new HikariDataSource(config);
     }
 

@@ -65,6 +65,7 @@ public class AuthServiceImpl implements AuthService{
                 .socialProvider("KAKAO")
                 .socialId(info.getSocialId())
                 .email(info.getEmail())
+                .password(passwordEncoder.encode(info.getSocialId())) // 임시 비밀번호로 소셜 ID 사용
                 .nickname(info.getNickname())
                 .profileImageUrl(info.getProfileImageUrl())
                 .createdTime(LocalDateTime.now())
@@ -127,7 +128,7 @@ public class AuthServiceImpl implements AuthService{
         jwtService.sendAccessAndRefreshToken(response, accessToken, refreshToken);
         return TokenDTO.builder()
                 .accessToken(accessToken)
-                .userId(user.getId())
+                .userId(user.getUserId())
                 .nickname(user.getNickname())
                 .build();
     }

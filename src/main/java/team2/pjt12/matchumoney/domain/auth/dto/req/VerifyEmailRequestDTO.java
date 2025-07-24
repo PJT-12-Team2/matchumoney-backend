@@ -1,5 +1,6 @@
 package team2.pjt12.matchumoney.domain.auth.dto.req;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
@@ -16,9 +17,9 @@ public class VerifyEmailRequestDTO {
     @NotBlank
     private final String code;
 
-    public VerifyEmailRequestDTO(
-            @JsonProperty("email") String email,
-            @JsonProperty("code") String code) {
+    @JsonCreator
+    public VerifyEmailRequestDTO(@JsonProperty("email") String email,
+                                 @JsonProperty("code") String code) {
         this.email = email;
         this.code = code;
     }

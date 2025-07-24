@@ -14,13 +14,12 @@ import team2.pjt12.matchumoney.global.security.UserDetailsImpl;
 public class SecurityUtils {
     public static UserVO getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
+        log.info("Current User: {}", authentication.getName());
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new CustomException(ErrorCode.USER_NOT_AUTHORIZED); // 인증되지 않은 사용자
         }
 
         Object principal = authentication.getPrincipal();
-
         // 예외 방지: principal이 User 경우에만 반환
         if (principal instanceof UserVO) {
             return (UserVO) principal;
