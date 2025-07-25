@@ -29,7 +29,7 @@ public class CodefApiClient {
             .connectTimeout(Duration.ofSeconds(10))
             .build();
 
-     //CODEF API Access Token 발급
+    //CODEF API Access Token 발급
     public String getAccessToken() {
         try {
             String credentials = config.getClientId() + ":" + config.getClientSecret();

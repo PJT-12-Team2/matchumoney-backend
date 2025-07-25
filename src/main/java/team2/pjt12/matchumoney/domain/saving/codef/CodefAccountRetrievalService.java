@@ -22,7 +22,7 @@ public class CodefAccountRetrievalService {
         try {
             String payload = buildAccountListPayload(connectedId, orgCode);
 
-            log.info("계좌 목록 조회 요청 - 은행코드: {}", orgCode);
+//            log.info("계좌 목록 조회 요청 - 은행코드: {}", orgCode);
 
             JsonNode response = codefApiClient.postJson(CodefApiConstants.ACCOUNT_LIST_URL, accessToken, payload);
             JsonNode accountList = response.path("data").path("resDepositTrust");
