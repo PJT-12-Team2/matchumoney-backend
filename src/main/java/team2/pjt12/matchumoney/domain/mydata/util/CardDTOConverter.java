@@ -20,7 +20,7 @@ public class CardDTOConverter {
     /**
      * CardInfoVO를 CardInfoResponseDTO로 변환합니다.
      * 
-     * @param cardInfoVO 변환할 카드 정보 VO
+     * @param cardHoldingVO 변환할 카드 정보 VO
      * @param matchedCard 매칭된 카드고릴라 카드 정보 (nullable)
      * @return 변환된 카드 정보 응답 DTO
      */
@@ -46,7 +46,7 @@ public class CardDTOConverter {
     /**
      * CardInfoVO를 CardInfoResponseDTO로 변환합니다. (매칭 정보 없음)
      * 
-     * @param cardInfoVO 변환할 카드 정보 VO
+     * @param cardHoldingVO 변환할 카드 정보 VO
      * @return 변환된 카드 정보 응답 DTO
      */
     public static CardInfoResponseDTO toCardInfoResponseDTO(CardHoldingVO cardHoldingVO) {
@@ -56,7 +56,7 @@ public class CardDTOConverter {
     /**
      * CardInfoVO 리스트를 CardInfoResponseDTO 리스트로 변환합니다.
      * 
-     * @param cardInfoVOList 변환할 카드 정보 VO 리스트
+     * @param cardHoldingVOList 변환할 카드 정보 VO 리스트
      * @return 변환된 카드 정보 응답 DTO 리스트
      */
     public static List<CardInfoResponseDTO> toCardInfoResponseDTOList(List<CardHoldingVO> cardHoldingVOList) {
