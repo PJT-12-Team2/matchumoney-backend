@@ -80,11 +80,11 @@ public class CodefAccountRetrievalService {
 
     private String buildAccountListPayload(String connectedId, String orgCode) {
         return String.format("""
-            {
-              "connectedId": "%s",
-              "organization": "%s"
-            }
-            """, connectedId, orgCode);
+                {
+                  "connectedId": "%s",
+                  "organization": "%s"
+                }
+                """, connectedId, orgCode);
     }
 
     private String buildTransactionPayload(String connectedId, String orgCode, String accountNumber) {
