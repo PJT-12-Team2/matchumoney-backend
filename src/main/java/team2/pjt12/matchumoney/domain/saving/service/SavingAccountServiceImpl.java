@@ -13,6 +13,7 @@ import team2.pjt12.matchumoney.domain.saving.codef.CodefConnectedIdProvider;
 import team2.pjt12.matchumoney.domain.saving.domain.SavingAccountVO;
 import team2.pjt12.matchumoney.domain.saving.dto.BankLoginRequestDTO;
 import team2.pjt12.matchumoney.domain.saving.dto.MySavingProductResponseDTO;
+import team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO;
 import team2.pjt12.matchumoney.domain.saving.mapper.SavingAccountMapper;
 import team2.pjt12.matchumoney.domain.saving.util.SavingAccountConverter;
 import team2.pjt12.matchumoney.global.exception.CustomException;
@@ -136,5 +137,21 @@ public class SavingAccountServiceImpl implements SavingAccountService  {
             log.error("거래내역 처리 중 예외 발생 - 계좌번호: {}", accountNumber, e);
             return false;
         }
+    }
+
+    //내 계좌에 대한 추천 리스트
+    @Override
+    public List<SavingListItemResponseDTO> getUserRecommendedSavingAccounts(Long id) {
+        MySavingProductResponseDTO mySavingProduct = savingAccountMapper.getSavingAccount(id);
+        if (mySavingProduct == null) {
+            log.warn("해당 ID로 조회된 적금 계좌가 없습니다. id={}", id);
+            throw new CustomException(ErrorCode.CODEF_ERROR);
+        }
+        log.info(String.valueOf(mySavingProduct));
+        String period = mySavingProduct.getPeriod();
+        double rate = Double.parseDouble(mySavingProduct.getRate());
+
+
+        return savingAccountMapper.getRecommendSavingAccountList(period, rate);
     }
 }
