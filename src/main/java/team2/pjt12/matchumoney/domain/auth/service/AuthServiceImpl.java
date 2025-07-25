@@ -22,11 +22,9 @@ import team2.pjt12.matchumoney.global.email.EmailService;
 import team2.pjt12.matchumoney.global.exception.CustomException;
 import team2.pjt12.matchumoney.global.exception.ErrorCode;
 import team2.pjt12.matchumoney.global.jwt.JwtServiceImpl;
-import team2.pjt12.matchumoney.global.util.SecurityUtils;
 
 import javax.servlet.http.HttpServletResponse;
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -42,10 +40,6 @@ public class AuthServiceImpl implements AuthService{
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
-
-    private UserVO getCurrentUser() {
-        return SecurityUtils.getCurrentUser();
-    }
 
     @Override
     public LoginResponseDTO loginOrSignUp(SocialLoginRequestDTO request) {
@@ -67,8 +61,6 @@ public class AuthServiceImpl implements AuthService{
                 .password(passwordEncoder.encode(info.getSocialId())) // 임시 비밀번호로 소셜 ID 사용
                 .nickname(info.getNickname())
                 .profileImageUrl(info.getProfileImageUrl())
-                .createdTime(LocalDateTime.now())
-                .lastModifiedTime(LocalDateTime.now())
                 .socialLogin(true)
                 .build();
 
@@ -101,8 +93,6 @@ public class AuthServiceImpl implements AuthService{
                 encodedPassword,
                 reqDto.getNickname(),
                 reqDto.getProfileImageUrl(),
-                LocalDateTime.now(),
-                LocalDateTime.now(),
                 false
         );
 
@@ -134,7 +124,7 @@ public class AuthServiceImpl implements AuthService{
     //인증번호 전송
     @Override
     public boolean sendSignupEmailVerification(SendEmailRequestDTO reqDto) {
-        if (userMapper.existsByEmail(reqDto.getEmail())) {
+        if (userMapper.isExistsByEmail(reqDto.getEmail())) {
             throw new CustomException(ErrorCode.EMAIL_NOT_FOUND);
         }
         return sendEmailCode(reqDto.getEmail());
@@ -142,7 +132,7 @@ public class AuthServiceImpl implements AuthService{
 
     @Override
     public boolean sendResetEmailVerification(SendEmailRequestDTO reqDto) {
-        if (!userMapper.existsByEmail(reqDto.getEmail())) {
+        if (!userMapper.isExistsByEmail(reqDto.getEmail())) {
             throw new CustomException(ErrorCode.USER_NOT_FOUND);
         }
         return sendEmailCode(reqDto.getEmail());

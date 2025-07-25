@@ -22,7 +22,13 @@ public enum ErrorCode {
     // 인증 관련 예외
     INVALID_PASSWORD(401, "A401", "유효하지 않은 비밀번호입니다."),
     SAME_PASSWORD(400, "A400", "현재 비밀번호와 새 비밀번호가 동일합니다."),
-    PASSWORD_MISMATCH(400, "A400", "새 비밀번호와 확인 비밀번호가 일치하지 않습니다.");
+    PASSWORD_MISMATCH(400, "A400", "새 비밀번호와 확인 비밀번호가 일치하지 않습니다."),
+
+    // 즐겨찾기 관련 예외
+    FAVORITE_ALREADY_EXISTS(409, "F409", "이미 존재하는 즐겨찾기입니다."),
+
+    // 상품 관련 예외
+    INVALID_PRODUCT_TYPE(400, "P400", "유효하지 않은 상품 유형입니다.");
 
     private final int status;
     private final String code;

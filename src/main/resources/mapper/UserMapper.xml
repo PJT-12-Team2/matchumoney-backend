@@ -19,7 +19,7 @@
         WHERE email = #{email}
     </select>
 
-    <select id="existsByEmail" resultType="boolean">
+    <select id="isExistsByEmail" resultType="boolean">
         SELECT
             CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END
         FROM users
@@ -45,4 +45,40 @@
         SET password = #{newPassword}
         WHERE user_id = #{userId}
     </update>
+
+    <insert id="addDepositFavorite">
+        INSERT INTO user_favorites (user_id, deposit_product_id)
+        VALUES (#{userId}, #{productId})
+    </insert>
+
+    <insert id="addSavingFavorite">
+        INSERT INTO user_favorites (user_id, saving_product_id)
+        VALUES (#{userId}, #{productId})
+    </insert>
+
+    <insert id="addCardFavorite">
+        INSERT INTO user_favorites (user_id, card_product_id)
+        VALUES (#{userId}, #{productId})
+    </insert>
+
+    <select id="isDepositFavoriteExists" resultType="boolean">
+        SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END
+        FROM user_favorites
+        WHERE user_id = #{userId}
+          AND deposit_product_id = #{productId}
+    </select>
+
+    <select id="isSavingFavoriteExists" resultType="boolean">
+        SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END
+        FROM user_favorites
+        WHERE user_id = #{userId}
+          AND saving_product_id = #{productId}
+    </select>
+
+    <select id="isCardFavoriteExists" resultType="boolean">
+        SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END
+        FROM user_favorites
+        WHERE user_id = #{userId}
+          AND card_product_id = #{productId}
+    </select>
 </mapper>

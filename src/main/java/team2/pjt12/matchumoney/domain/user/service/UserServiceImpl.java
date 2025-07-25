@@ -12,7 +12,8 @@ import team2.pjt12.matchumoney.domain.user.dto.res.UserUpdateResponseDTO;
 import team2.pjt12.matchumoney.domain.user.mapper.UserMapper;
 import team2.pjt12.matchumoney.global.exception.CustomException;
 import team2.pjt12.matchumoney.global.exception.ErrorCode;
-import team2.pjt12.matchumoney.global.util.SecurityUtils;
+
+import static team2.pjt12.matchumoney.global.util.SecurityUtils.getCurrentUser;
 
 @Service
 @RequiredArgsConstructor
@@ -21,10 +22,6 @@ public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
-
-    private UserVO getCurrentUser() {
-        return SecurityUtils.getCurrentUser();
-    }
 
     @Override
     @Transactional
