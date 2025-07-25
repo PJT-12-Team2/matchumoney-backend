@@ -125,7 +125,7 @@ public class AuthServiceImpl implements AuthService{
     @Override
     public boolean sendSignupEmailVerification(SendEmailRequestDTO reqDto) {
         if (userMapper.isExistsByEmail(reqDto.getEmail())) {
-            throw new CustomException(ErrorCode.EMAIL_NOT_FOUND);
+            throw new CustomException(ErrorCode.USER_ALREADY_EXISTS);
         }
         return sendEmailCode(reqDto.getEmail());
     }
@@ -176,6 +176,6 @@ public class AuthServiceImpl implements AuthService{
         UserVO user = userMapper.findByEmail(reqDto.getEmail())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        authMapper.updatePassword(passwordEncoder.encode(reqDto.getNewPassword()));
+        authMapper.updatePassword(reqDto.getEmail(), passwordEncoder.encode(reqDto.getNewPassword()));
     }
 }
