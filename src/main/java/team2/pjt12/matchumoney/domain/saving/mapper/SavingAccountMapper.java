@@ -13,5 +13,9 @@ public interface SavingAccountMapper {
     void deleteByUserIdAndFinId(@Param("userId") Long userId, @Param("finId") Long finId);
     void insertSavingAccount(SavingAccountVO savingAccountVO);
 
+    MySavingProductResponseDTO getSavingAccount(@Param("id") Long id);
+
+    List<SavingListItemResponseDTO> getRecommendSavingAccountList(@Param("period") String period, @Param("rate") Double rate);
+
     List<MySavingProductResponseDTO> getSavingAccountList(@Param("userId") Long userId);
 }
