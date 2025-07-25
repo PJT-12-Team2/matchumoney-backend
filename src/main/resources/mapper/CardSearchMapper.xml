@@ -9,13 +9,13 @@
             parameterType="team2.pjt12.matchumoney.domain.cardsearch.dto.CardSearchRequestDTO">
 
         SELECT DISTINCT
-        cp.card_id AS id,
+        cp.card_product_id AS id,
         cp.name,
         cp.type,
         cp.card_image_url AS imageUrl
-        FROM cards_products cp
+        FROM card_product cp
         <if test="selectedBenefits != null and selectedBenefits.size() > 0">
-            LEFT JOIN card_search_benefit csb ON cp.card_id = csb.card_id2
+            LEFT JOIN card_search_benefit csb ON cp.card_product_id = csb.card_id2
         </if>
         <where>
             <!-- 카드 종류 조건 -->
