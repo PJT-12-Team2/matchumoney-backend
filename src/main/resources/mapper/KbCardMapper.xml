@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="team2.pjt12.matchumoney.domain.mydata.mapper.KbCardMapper">
-    <insert id="insertKbCard">
+    <insert id="insertKbCard" useGeneratedKeys="true" keyProperty="holdingId">
         INSERT INTO mydata_card_holdings (
             card_id, fin_id, discontinued, card_name, res_card_no, res_sleep_yn,
             res_card_type, res_traffic_yn, res_image_link, res_issue_date,
@@ -16,7 +16,26 @@
         DELETE FROM mydata_card_holdings WHERE user_id = #{userId}
     </delete>
 
-    <select id="selectKbCardByUserId" resultType="team2.pjt12.matchumoney.domain.mydata.vo.CardInfoVO">
-        SELECT * FROM mydata_card_holdings WHERE user_id = #{userId}
+    <select id="selectKbCardByUserId" resultType="team2.pjt12.matchumoney.domain.mydata.vo.CardHoldingVO">
+        SELECT 
+            holding_id as holdingId,
+            card_id as cardId,
+            fin_id as finId,
+            discontinued,
+            card_name as cardName,
+            res_card_no as resCardNo,
+            res_sleep_yn as resSleepYn,
+            res_card_type as resCardType,
+            res_traffic_yn as resTrafficYn,
+            res_image_link as resImageLink,
+            res_issue_date as resIssueDate,
+            res_valid_period as resValidPeriod,
+            res_state as resState,
+            created_time as createdTime,
+            last_modified_time as lastModifiedTime,
+            user_id as userId,
+            connected_id as connectedId
+        FROM mydata_card_holdings 
+        WHERE user_id = #{userId}
     </select>
 </mapper>
