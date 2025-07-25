@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="team2.pjt12.matchumoney.domain.personacard.mapper.PersonacardMapper">
+
+    <select id="findPersonaNameById" resultType="string">
+        SELECT name_ko
+        FROM persona_types
+        WHERE persona_id = #{personaId}
+    </select>
+
+    <select id="findCardsByPersonaId"
+            resultType="team2.pjt12.matchumoney.domain.personacard.dto.RecommendedCardDTO">
+        SELECT
+            card_product_id AS cardProductId,
+            name,
+            card_image_url AS cardImageUrl
+        FROM card_product
+        WHERE persona_id = #{personaId}
+    </select>
+
+</mapper>
