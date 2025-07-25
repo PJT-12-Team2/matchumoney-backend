@@ -38,7 +38,7 @@ public class SavingAccountServiceImpl implements SavingAccountService  {
      //사용자 적금 계좌 목록 조회
     @Override
     @Transactional(readOnly = true)
-    public List<MySavingProductResponseDTO> getSavingAccount() {
+    public List<MySavingProductResponseDTO> getSavingAccountList() {
         Long userId = getCurrentUser().getUserId();
         log.info("📋 적금 계좌 목록 조회 - 사용자ID: {}", userId);
 
