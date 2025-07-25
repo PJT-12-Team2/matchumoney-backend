@@ -17,6 +17,35 @@
         WHERE user_id = #{userId}
     </select>
 
+    <!--    하나의 계좌 조회-->
+    <select id="getSavingAccount"
+            resultType="team2.pjt12.matchumoney.domain.saving.dto.MySavingProductResponseDTO">
+        SELECT account_id             AS id,
+               res_account_name       AS title,
+               res_account_start_date AS start_date,
+               res_account_end_date   AS end_date,
+               res_rate               AS rate,
+               res_valid_period       AS period
+        FROM mydata_saving_accounts
+        WHERE account_id = #{id}
+    </select>
+    <select id="getRecommendSavingAccountList"
+            resultType="team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO">
+        SELECT sp.saving_product_id as id,
+               sp.kor_co_nm         as company,
+               sp.fin_prdt_nm       AS title,
+               so.intr_rate         as base_rate,
+               so.intr_rate2        as max_rate,
+               so.save_trm          as period,
+               sp.max_limit         as amount
+        FROM saving_product sp
+                 JOIN
+             saving_option so ON sp.fin_prdt_cd = so.fin_prdt_cd AND sp.fin_id = so.fin_id
+        WHERE so.save_trm = #{period}
+          AND CAST(so.intr_rate AS DECIMAL(5, 4)) > #{rate}
+        ORDER BY CAST(so.intr_rate AS DECIMAL(5, 4)) DESC
+    </select>
+
     <insert id="insertSavingAccount" parameterType="team2.pjt12.matchumoney.domain.saving.domain.SavingAccountVO">
         INSERT INTO mydata_saving_accounts (
             res_account,
