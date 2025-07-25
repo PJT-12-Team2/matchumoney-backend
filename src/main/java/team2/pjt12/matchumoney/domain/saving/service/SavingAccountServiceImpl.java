@@ -26,7 +26,7 @@ import static team2.pjt12.matchumoney.global.util.SecurityUtils.getCurrentUser;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SavingAccountServiceImpl implements SavingAccountService  {
+public class SavingAccountServiceImpl implements SavingAccountService {
 
     private final SavingAccountMapper savingAccountMapper;
     private final CodefApiClient codefApiClient;
