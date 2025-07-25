@@ -24,8 +24,8 @@ public class SavingAccountController implements SavingAccountApi{
     }
 
     @Override
-    public ResponseEntity<List<MySavingProductResponseDTO>> getSavingAccount() {
-        List<MySavingProductResponseDTO> accountList = savingAccountService.getSavingAccount();
+    public ResponseEntity<List<MySavingProductResponseDTO>> getMySavingAccount() {
+        List<MySavingProductResponseDTO> accountList = savingAccountService.getSavingAccountList();
         return ResponseEntity.ok(accountList); // JSON 형식으로 반환
     }
 
