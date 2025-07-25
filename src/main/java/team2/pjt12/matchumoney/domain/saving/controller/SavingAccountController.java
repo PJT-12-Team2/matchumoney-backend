@@ -15,7 +15,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-public class SavingAccountController implements SavingAccountApi{
+public class SavingAccountController implements SavingAccountApi {
 
     private final SavingAccountService savingAccountService;
 
