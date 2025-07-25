@@ -88,16 +88,16 @@ public class CodefAccountRetrievalService {
         String endDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
         return String.format("""
-            {
-              "connectedId": "%s",
-              "organization": "%s",
-              "account": "%s",
-              "startDate": "%s",
-              "endDate": "%s",
-              "orderBy": "0",
-              "inquiryType": "1",
-              "birthDate": ""
-            }
-            """, connectedId, orgCode, accountNumber, CodefApiConstants.DEFAULT_START_DATE, endDate);
+                {
+                  "connectedId": "%s",
+                  "organization": "%s",
+                  "account": "%s",
+                  "startDate": "%s",
+                  "endDate": "%s",
+                  "orderBy": "0",
+                  "inquiryType": "1",
+                  "birthDate": ""
+                }
+                """, connectedId, orgCode, accountNumber, CodefApiConstants.DEFAULT_START_DATE, endDate);
     }
 }
