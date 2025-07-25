@@ -14,6 +14,9 @@ public class SavingListItemResponseDTO {
     String max_rate;
     String base_rate;
     String period;
-    String company_logo_url;
-    Boolean is_starred;
+    @ApiModelProperty(value = "한 달 최대 적금 가능 금액", example = "100000")
+    String amount;
+
+//    String company_logo_url;
+//    Boolean is_starred;
 }
