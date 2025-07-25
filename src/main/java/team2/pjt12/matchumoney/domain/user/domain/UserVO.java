@@ -26,10 +26,9 @@ public class UserVO {
     private LocalDate birthDate;
 
     @Builder
-    public UserVO(Long id, String socialProvider, String socialId, String email,
+    public UserVO(String socialProvider, String socialId, String email,
                   String password, String nickname, String profileImageUrl,
                   LocalDateTime createdTime, LocalDateTime lastModifiedTime, boolean socialLogin) {
-        this.userId = id;
         this.socialProvider = socialProvider;
         this.socialId = socialId;
         this.email = email;

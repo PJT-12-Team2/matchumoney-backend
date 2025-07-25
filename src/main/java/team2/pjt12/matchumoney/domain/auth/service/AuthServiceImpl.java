@@ -61,7 +61,6 @@ public class AuthServiceImpl implements AuthService{
 
     private UserVO registerUser(SocialUserInfo info) {
         UserVO user = UserVO.builder()
-                .id(null)
                 .socialProvider("KAKAO")
                 .socialId(info.getSocialId())
                 .email(info.getEmail())
@@ -96,7 +95,6 @@ public class AuthServiceImpl implements AuthService{
         String encodedPassword = passwordEncoder.encode(reqDto.getPassword());
 
         UserVO user = new UserVO(
-                null,
                 null,
                 null,
                 reqDto.getEmail(),
