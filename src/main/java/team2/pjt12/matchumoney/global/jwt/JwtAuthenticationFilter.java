@@ -23,10 +23,6 @@ import java.io.IOException;
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
-    private final RedisTemplate<String, String> redisTemplate;
-    private final UserMapper userMapper;
-
     private static final String SOCIAL_LOGIN_URL = "/auth/kakao-login";
     private static final String LOGIN_URL = "/auth/login";
     private static final String LOGOUT_URL = "/logout";
