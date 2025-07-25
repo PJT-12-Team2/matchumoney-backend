@@ -2,10 +2,12 @@ package team2.pjt12.matchumoney.domain.user.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import team2.pjt12.matchumoney.domain.favorite.domain.FavoriteVO;
 import team2.pjt12.matchumoney.domain.user.domain.Gender;
 import team2.pjt12.matchumoney.domain.user.domain.UserVO;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Mapper
@@ -47,4 +49,10 @@ public interface UserMapper {
 
     boolean isCardFavoriteExists(@Param("userId") Long userId,
                                  @Param("productId") Long productId);
+
+    void deleteFavorite(@Param("userId") Long userId,
+                        @Param("productId") Long productId,
+                        @Param("productType") String productType);
+
+    List<FavoriteVO> getFavorites(@Param("userId") Long userId);
 }

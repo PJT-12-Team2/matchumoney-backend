@@ -4,11 +4,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import team2.pjt12.matchumoney.domain.favorite.domain.FavoriteVO;
 import team2.pjt12.matchumoney.domain.user.domain.UserVO;
 import team2.pjt12.matchumoney.domain.user.mapper.UserMapper;
 import team2.pjt12.matchumoney.global.ProductType;
 import team2.pjt12.matchumoney.global.exception.CustomException;
 import team2.pjt12.matchumoney.global.exception.ErrorCode;
+
+import java.util.List;
 
 import static team2.pjt12.matchumoney.global.util.SecurityUtils.getCurrentUser;
 
@@ -46,5 +49,17 @@ public class FavoriteServiceImpl implements FavoriteService {
             }
             default -> throw new CustomException(ErrorCode.INVALID_PRODUCT_TYPE);
         }
+    }
+
+    @Transactional
+    public void deleteFavorite(Long productId, ProductType productType) {
+        Long userId = getCurrentUser().getUserId();
+        userMapper.deleteFavorite(userId, productId, productType.name());
+    }
+
+    @Transactional(readOnly = true)
+    public List<FavoriteVO> getFavorites() {
+        Long userId = getCurrentUser().getUserId();
+        return userMapper.getFavorites(userId);
     }
 }
