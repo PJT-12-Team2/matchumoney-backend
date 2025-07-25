@@ -48,7 +48,7 @@ public class SavingAccountConverter {
             return vo;
 
         } catch (Exception e) {
-            log.error("데이터 변환 중 예외 발생", e);
+//            log.error("데이터 변환 중 예외 발생", e);
             throw new RuntimeException("데이터 변환 실패", e);
         }
     }

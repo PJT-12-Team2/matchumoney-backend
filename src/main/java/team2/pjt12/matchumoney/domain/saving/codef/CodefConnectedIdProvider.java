@@ -26,23 +26,23 @@ public class CodefConnectedIdProvider {
             String encryptedPassword = RsaEncryptor.encryptRSA(password, config.getPublicKey());
             String payload = buildConnectedIdPayload(bankId, encryptedPassword, orgCode);
 
-            log.info("Connected ID 생성 요청 - 은행코드: {}, 사용자ID: {}", orgCode, bankId);
+//            log.info("Connected ID 생성 요청 - 은행코드: {}, 사용자ID: {}", orgCode, bankId);
 
             JsonNode response = codefApiClient.postJson(CodefApiConstants.CONNECTED_ID_URL, accessToken, payload);
             String connectedId = response.path("data").path("connectedId").asText(null);
 
             if (connectedId == null || connectedId.trim().isEmpty()) {
-                log.error("Connected ID 생성 실패 - 응답: {}", response.toPrettyString());
+//                log.error("Connected ID 생성 실패 - 응답: {}", response.toPrettyString());
                 throw new CustomException(ErrorCode.CODEF_LOGIN);
             }
 
-            log.info("✅ Connected ID 생성 성공");
+//            log.info("✅ Connected ID 생성 성공");
             return connectedId;
 
         } catch (CustomException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Connected ID 생성 중 예외 발생", e);
+//            log.error("Connected ID 생성 중 예외 발생", e);
             throw new CustomException(ErrorCode.CODEF_LOGIN);
         }
     }

@@ -40,7 +40,7 @@ public class SavingAccountServiceImpl implements SavingAccountService {
     @Transactional(readOnly = true)
     public List<MySavingProductResponseDTO> getSavingAccountList() {
         Long userId = getCurrentUser().getUserId();
-        log.info("📋 적금 계좌 목록 조회 - 사용자ID: {}", userId);
+//        log.info("📋 적금 계좌 목록 조회 - 사용자ID: {}", userId);
 
         return savingAccountMapper.getSavingAccountList(userId);
     }
@@ -51,7 +51,7 @@ public class SavingAccountServiceImpl implements SavingAccountService {
     @Override
     public List<MySavingProductResponseDTO> retrieveAccounts(BankLoginRequestDTO requestDto) {
         Long userId = getCurrentUser().getUserId();
-        log.info("🏦 은행 계좌 동기화 시작 - 사용자ID: {}", userId);
+//        log.info("🏦 은행 계좌 동기화 시작 - 사용자ID: {}", userId);
 
         try {
             // 1. Access Token 발급
@@ -70,15 +70,15 @@ public class SavingAccountServiceImpl implements SavingAccountService {
 
             // 4. 동기화된 계좌 목록 반환
             List<MySavingProductResponseDTO> result = savingAccountMapper.getSavingAccountList(userId);
-            log.info("✅ 계좌 동기화 완료 - {}개 계좌", result.size());
+//            log.info("✅ 계좌 동기화 완료 - {}개 계좌", result.size());
 
             return result;
 
         } catch (CustomException e) {
-            log.error("❌ 계좌 동기화 실패 - ", e);
+//            log.error("❌ 계좌 동기화 실패 - ", e);
             throw e;
         } catch (Exception e) {
-            log.error("❌ 계좌 동기화 실패 - 예상치 못한 오류", e);
+//            log.error("❌ 계좌 동기화 실패 - 예상치 못한 오류", e);
             throw new CustomException(ErrorCode.CODEF_SAVING);
         }
     }
@@ -89,7 +89,7 @@ public class SavingAccountServiceImpl implements SavingAccountService {
             // 기존 적금 계좌 삭제
             Long finId = Long.parseLong(CodefApiConstants.ORG_CODE_KB);
             savingAccountMapper.deleteByUserIdAndFinId(userId, finId);
-            log.info("기존 적금 계좌 삭제 완료 - 사용자ID: {}, 금융기관ID: {}", userId, finId);
+//            log.info("기존 적금 계좌 삭제 완료 - 사용자ID: {}, 금융기관ID: {}", userId, finId);
 
             // 계좌 목록 조회
             List<JsonNode> savingAccounts = codefAccountRetrievalService.retrieveAccountList(
@@ -106,10 +106,10 @@ public class SavingAccountServiceImpl implements SavingAccountService {
                 }
             }
 
-            log.info("계좌 처리 완료 - 총 {}개 중 {}개 성공", savingAccounts.size(), processedCount);
+//            log.info("계좌 처리 완료 - 총 {}개 중 {}개 성공", savingAccounts.size(), processedCount);
 
         } catch (Exception e) {
-            log.error("계좌 동기화 처리 중 예외 발생", e);
+//            log.error("계좌 동기화 처리 중 예외 발생", e);
             throw new RuntimeException("계좌 동기화 처리 실패", e);
         }
     }
@@ -123,18 +123,18 @@ public class SavingAccountServiceImpl implements SavingAccountService {
             );
 
             if (transactionData == null) {
-                log.warn("내역이 없어 처리를 건너뜀 - 계좌번호: {}", accountNumber);
+//                log.warn("내역이 없어 처리를 건너뜀 - 계좌번호: {}", accountNumber);
                 return false;
             }
 
             SavingAccountVO vo = dataTransformService.transformToVO(transactionData, userId, finId);
             savingAccountMapper.insertSavingAccount(vo);
 
-            log.info("✅ 적금 계좌 저장 완료 - 계좌번호: {}", accountNumber);
+//            log.info("✅ 적금 계좌 저장 완료 - 계좌번호: {}", accountNumber);
             return true;
 
         } catch (Exception e) {
-            log.error("거래내역 처리 중 예외 발생 - 계좌번호: {}", accountNumber, e);
+//            log.error("거래내역 처리 중 예외 발생 - 계좌번호: {}", accountNumber, e);
             return false;
         }
     }
@@ -144,10 +144,10 @@ public class SavingAccountServiceImpl implements SavingAccountService {
     public List<SavingListItemResponseDTO> getUserRecommendedSavingAccounts(Long id) {
         MySavingProductResponseDTO mySavingProduct = savingAccountMapper.getSavingAccount(id);
         if (mySavingProduct == null) {
-            log.warn("해당 ID로 조회된 적금 계좌가 없습니다. id={}", id);
+//            log.warn("해당 ID로 조회된 적금 계좌가 없습니다. id={}", id);
             throw new CustomException(ErrorCode.CODEF_ERROR);
         }
-        log.info(String.valueOf(mySavingProduct));
+//        log.info(String.valueOf(mySavingProduct));
         String period = mySavingProduct.getPeriod();
         double rate = Double.parseDouble(mySavingProduct.getRate());
 

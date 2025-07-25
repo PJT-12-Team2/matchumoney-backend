@@ -46,19 +46,19 @@ public class CodefApiClient {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() != 200) {
-                log.error("❌ Access Token 발급 실패 - Status: {}, Body: {}",
-                        response.statusCode(), response.body());
+//                log.error("❌ Access Token 발급 실패 - Status: {}, Body: {}",
+//                        response.statusCode(), response.body());
                 throw new CustomException(ErrorCode.CODEF_ERROR);
             }
 
             String accessToken = objectMapper.readTree(response.body()).get("access_token").asText();
-            log.info("✅ Access Token 발급 성공");
+//            log.info("✅ Access Token 발급 성공");
             return accessToken;
 
         } catch (CustomException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Access Token 요청 중 예외 발생", e);
+//            log.error("Access Token 요청 중 예외 발생", e);
             throw new CustomException(ErrorCode.CODEF_ERROR);
         }
     }
@@ -77,8 +77,8 @@ public class CodefApiClient {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() >= 400) {
-                log.error("❌ API 호출 실패 - URL: {}, Status: {}, Body: {}",
-                        url, response.statusCode(), response.body());
+//               log.error("❌ API 호출 실패 - URL: {}, Status: {}, Body: {}",
+//                        url, response.statusCode(), response.body());
                 throw new CustomException(ErrorCode.CODEF_ERROR);
             }
 
@@ -88,7 +88,7 @@ public class CodefApiClient {
         } catch (CustomException e) {
             throw e;
         } catch (Exception e) {
-            log.error("API 호출 중 예외 발생 - URL: {}", url, e);
+//            log.error("API 호출 중 예외 발생 - URL: {}", url, e);
             throw new CustomException(ErrorCode.CODEF_ERROR);
         }
     }
