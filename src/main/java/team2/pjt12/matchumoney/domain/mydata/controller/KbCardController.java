@@ -117,4 +117,37 @@ public class KbCardController {
             String.format("총 %d건의 거래 내역이 동기화되었습니다.", responseDTOList.size())));
     }
 
+    @GetMapping("/cards/{holdingId}/transactions")
+    @ApiOperation(
+        value = "저장된 카드 거래 내역 조회",
+        notes = "이미 저장된 특정 카드의 거래 내역을 조회합니다. " +
+                "MyData API를 호출하지 않고 데이터베이스에서 조회합니다. " +
+                "각 거래 내역에는 자동 분류된 소비 분야(merchantCategory)가 포함됩니다."
+    )
+    @ApiResponses({
+        @ApiResponse(code = 200, message = "거래 내역 조회 성공"),
+        @ApiResponse(code = 401, message = "인증 실패"),
+        @ApiResponse(code = 404, message = "카드 또는 거래 내역을 찾을 수 없음")
+    })
+    public ResponseEntity<SuccessResponse<List<CardTransactionResponseDTO>>> getStoredCardTransactions(
+            @ApiParam(value = "카드 보유 ID", required = true, example = "1")
+            @PathVariable Long holdingId,
+            @ApiParam(value = "사용자 ID", required = true, example = "1")
+            @RequestParam Long userId) {
+
+        List<CardTransactionVO> transactionVOList = kbCardService.getCardTransactions(userId, holdingId);
+        List<CardTransactionResponseDTO> responseDTOList = CardDTOConverter.toCardTransactionResponseDTOList(transactionVOList);
+
+        // 카테고리별 통계 추가
+        Map<String, Long> categoryStats = transactionVOList.stream()
+                .filter(t -> t.getResMemberStoreType() != null)
+                .collect(java.util.stream.Collectors.groupingBy(
+                        CardTransactionVO::getResMemberStoreType,
+                        java.util.stream.Collectors.counting()));
+
+        String message = String.format("카드 %d의 거래 내역 %d건을 조회했습니다. 카테고리별 분포: %s",
+                holdingId, responseDTOList.size(), categoryStats);
+
+        return ResponseEntity.ok(new SuccessResponse<>(responseDTOList, message));
+    }
 }
