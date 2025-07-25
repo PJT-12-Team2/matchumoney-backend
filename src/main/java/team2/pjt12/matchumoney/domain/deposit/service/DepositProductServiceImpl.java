@@ -2,14 +2,14 @@ package team2.pjt12.matchumoney.domain.deposit.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team2.pjt12.matchumoney.domain.deposit.dto.res.DepositProductResponseDTO;
 import team2.pjt12.matchumoney.domain.deposit.mapper.DepositProductMapper;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -21,11 +21,41 @@ public class DepositProductServiceImpl implements DepositProductService {
     @Override
     @Transactional(readOnly = true)
     public List<DepositProductResponseDTO> getAllDepositProducts() {
-//        Logger testLogger = LogManager.getLogger("log4j2-test");
-        log.info("모든 예금 상품 조회 요청");
         List<DepositProductResponseDTO> products = depositProductMapper.findAllDepositProducts();
-        log.info("조회된 예금 상품 수: {}", products.size());
+
+        // 각 상품의 최소 금액 추출 및 설정
+        products.forEach(product -> {
+            String minAmount = extractMinAmount(product.getEtcNote());
+            product.setMinAmount(minAmount);
+
+        });
+
         return products;
+    }
+
+    private String extractMinAmount(String etcNote) {
+        if (etcNote == null || etcNote.trim().isEmpty()) {
+            return "정보 없음";
+        }
+
+        // 정규식으로 금액 추출
+        Pattern pattern = Pattern.compile("([0-9]+(?:[천백십]*[만]?)+원)");
+        Matcher matcher = pattern.matcher(etcNote);
+
+        if (matcher.find()) {
+            String amount = matcher.group(1);
+            String converted = convertKoreanNumber(amount);
+            return converted;
+        } else {
+            return "정보 없음";
+        }
+    }
+
+    private String convertKoreanNumber(String amount) {
+        // 천백십 -> 000, 00, 0 변환 로직
+        return amount.replace("천", "000")
+                .replace("백", "00")
+                .replace("십", "0");
     }
 
     @Override

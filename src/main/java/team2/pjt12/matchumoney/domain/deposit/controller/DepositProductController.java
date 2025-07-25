@@ -9,7 +9,7 @@ import team2.pjt12.matchumoney.domain.deposit.service.DepositProductService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/deposit")
+@RequestMapping("/api/deposits")
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class DepositProductController {
@@ -17,8 +17,8 @@ public class DepositProductController {
     private final DepositProductService depositProductService;
 
     /**
-     * 모든 예금 상품 조회
-     * @return 예금 상품 목록
+     * 모든 예금 상품 조회 (프론트엔드에서 호출하는 엔드포인트)
+     * @return 예금 상품 목록 (minAmount 포함)
      */
     @GetMapping("/products")
     public ResponseEntity<List<DepositProductResponseDTO>> getAllDepositProducts() {
