@@ -24,5 +24,8 @@ public class MySavingProductResponseDTO {
 
     @ApiModelProperty(value = "적용 금리 (연 %)", example = "2.500")
     private String rate;
+
+    @ApiModelProperty(value = "적금 기간", example = "12")
+    private String period;
 }
 
