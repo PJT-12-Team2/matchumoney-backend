@@ -1,7 +1,15 @@
 package team2.pjt12.matchumoney.domain.persona.chatbot.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+
+@Getter
 public class ChatRequest {
-    private String message;
-    public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
+    private final String message;
+
+    @JsonCreator
+    public ChatRequest(@JsonProperty("message") String message) {
+        this.message = message;
+    }
 }

@@ -7,6 +7,7 @@ import team2.pjt12.matchumoney.domain.cardsearch.dto.CardSearchRequestDTO;
 import team2.pjt12.matchumoney.domain.cardsearch.dto.CardSearchResponseDTO;
 import team2.pjt12.matchumoney.domain.cardsearch.service.CardSearchService;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -18,6 +19,14 @@ public class CardSearchController {
 
     @PostMapping("/cardsearch")
     public ResponseEntity<List<CardSearchResponseDTO>> searchCards(@RequestBody CardSearchRequestDTO request) {
+        if (request.getSelectedBenefits() == null) {
+            request = new CardSearchRequestDTO(
+                    request.isCreditCard(),
+                    request.isDebitCard(),
+                    Collections.emptyList()
+            );
+        }
+
         List<CardSearchResponseDTO> result = cardSearchService.searchCards(request);
         return ResponseEntity.ok(result);
     }

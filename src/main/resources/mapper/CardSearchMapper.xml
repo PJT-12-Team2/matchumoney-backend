@@ -4,33 +4,38 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="team2.pjt12.matchumoney.domain.cardsearch.mapper.CardSearchMapper">
-
-    <select id="selectCardsByFilter" resultType="team2.pjt12.matchumoney.domain.cardsearch.dto.CardSearchResponseDTO"
+    <select id="selectCardsByFilter"
+            resultType="team2.pjt12.matchumoney.domain.cardsearch.dto.CardSearchResponseDTO"
             parameterType="team2.pjt12.matchumoney.domain.cardsearch.dto.CardSearchRequestDTO">
 
         SELECT DISTINCT
         cp.card_product_id AS id,
         cp.name,
         cp.type,
+        cp.issuer,
+        cp.annual_fee AS annualFee,
+        cp.pre_month_money AS preMonthMoney,
         cp.card_image_url AS imageUrl
         FROM card_product cp
         <if test="selectedBenefits != null and selectedBenefits.size() > 0">
             LEFT JOIN card_search_benefit csb ON cp.card_product_id = csb.card_id2
         </if>
         <where>
+            cp.is_available = true
+
             <!-- 카드 종류 조건 -->
             <choose>
                 <when test="creditCard == true and debitCard == true">
-                    (cp.type = '신용' OR cp.type = '체크')
+                    AND (cp.type = '신용' OR cp.type = '체크')
                 </when>
                 <when test="creditCard == true and debitCard == false">
-                    cp.type = '신용'
+                    AND cp.type = '신용'
                 </when>
                 <when test="creditCard == false and debitCard == true">
-                    cp.type = '체크'
+                    AND cp.type = '체크'
                 </when>
                 <otherwise>
-                    1=1
+                    AND 1=1
                 </otherwise>
             </choose>
 
@@ -38,7 +43,7 @@
             <if test="selectedBenefits != null and selectedBenefits.size() > 0">
                 AND (
                 <foreach item="benefit" collection="selectedBenefits" separator=" OR ">
-                    SUBSTRING_INDEX(csb.benefit_text, ' ', 1) = #{benefit}
+                    (csb.benefit_text IS NOT NULL AND SUBSTRING_INDEX(csb.benefit_text, ' ', 1) = #{benefit})
                 </foreach>
                 )
             </if>
