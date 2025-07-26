@@ -5,9 +5,9 @@ import lombok.Getter;
 
 @Getter
 public class BankLoginRequestDTO {
-    @ApiModelProperty(value = "사용자 은행 아이디", example = "STAR5D0112", required = true)
+    @ApiModelProperty(value = "사용자 은행 아이디", example = "STARA1111", required = true)
     private String id;
-    @ApiModelProperty(value = "사용자 은행 비밀번호", example = "pink6609!", required = true)
+    @ApiModelProperty(value = "사용자 은행 비밀번호", example = "12345!", required = true)
     private String password;
 //    private String bankName; // ex: "국민은행"
 }
