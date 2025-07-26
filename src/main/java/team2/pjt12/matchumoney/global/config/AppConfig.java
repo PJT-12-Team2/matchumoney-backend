@@ -65,6 +65,4 @@ public class AppConfig {
         resolver.setSuffix(".jsp");
         return resolver;
     }
-
-
 }
