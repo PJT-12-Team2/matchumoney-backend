@@ -55,7 +55,9 @@ public class SecurityConfig {
                                         "/auth/**",
                                         "/static/**",
                                         "/kakao_login_medium_narrow.png",
-                                        "page/login"
+                                        "page/login",
+                                        "/api/chatbot",
+                                        "/api/persona/**"
                                 ).permitAll()  // 허용 URL 설정
                                 .requestMatchers("/user/update").authenticated()
                                 .anyRequest().authenticated()  // 그 외 모든 요청은 인증 필요

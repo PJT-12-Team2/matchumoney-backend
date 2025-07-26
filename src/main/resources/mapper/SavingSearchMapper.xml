@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="team2.pjt12.matchumoney.domain.savingsearch.mapper.SavingSearchMapper">
+
+    <select id="findAllSavingProducts"
+            resultType="team2.pjt12.matchumoney.domain.savingsearch.dto.SavingSearchResponseDTO">
+        SELECT
+        sp.saving_product_id AS savingProductId,
+        sp.kor_co_nm AS korCoNm,
+        sp.fin_prdt_cd AS finPrdtCd,
+        sp.fin_prdt_nm AS finPrdtNm,
+        sp.max_limit AS maxLimit,
+        sp.spcl_cnd AS benefit
+        FROM saving_product sp
+        WHERE 1 = 1
+        <if test="korCoNm != null and korCoNm != ''">
+            AND sp.kor_co_nm LIKE CONCAT('%', #{korCoNm}, '%')
+        </if>
+        <if test="maxLimit != null">
+            AND CAST(REPLACE(sp.max_limit, ',', '') AS UNSIGNED) &lt;= #{maxLimit}
+        </if>
+    </select>
+
+    <select id="findOptionsByProductId"
+            resultType="team2.pjt12.matchumoney.domain.savingsearch.dto.SavingOptionDTO">
+        SELECT
+            save_trm AS saveTrm,
+            intr_rate AS intrRate,
+            intr_rate2 AS intrRate2
+        FROM saving_option
+        WHERE fin_prdt_cd = #{finPrdtCd}
+        ORDER BY CAST(save_trm AS UNSIGNED)
+    </select>
+
+
+</mapper>
