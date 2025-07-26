@@ -23,18 +23,38 @@ import java.io.IOException;
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final String SOCIAL_LOGIN_URL = "/auth/kakao-login";
+    private static final String LOGIN_URL = "/auth/login";
+    private static final String LOGOUT_URL = "/logout";
     private final JwtService jwtService;
     private final RedisTemplate<String, String> redisTemplate;
     private final UserMapper userMapper;
 
-    private static final String SOCIAL_LOGIN_URL = "/auth/kakao-login";
-    private static final String LOGIN_URL = "/auth/login";
-    private static final String LOGOUT_URL = "/logout";
+    private boolean isPermitAllRequest(String uri) {
+        return uri.startsWith("/swagger-ui") ||
+                uri.startsWith("/webjars") ||
+                uri.equals("/swagger-ui.html") ||
+                uri.startsWith("/v2/api-docs") ||
+                uri.startsWith("/v3/api-docs") ||
+                uri.startsWith("/swagger-resources") ||
+                uri.startsWith("/webjars") ||
+                uri.startsWith("/oauth/") ||
+                uri.startsWith("/auth/") ||
+                uri.startsWith("/static/") ||
+                uri.equals("/kakao_login_medium_narrow.png") ||
+                uri.equals("/page/login");
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
+        String requestURI = request.getRequestURI();
+        if (isPermitAllRequest(requestURI)) {
+            log.info("JwtAuthenticationFilter: 예외 URI {} → 필터 통과", requestURI);
+            filterChain.doFilter(request, response);
+            return;
+        }
         log.info("JwtAuthenticationFilter 시작");
 
         if (request.getRequestURI().startsWith(SOCIAL_LOGIN_URL) || request.getRequestURI().startsWith(LOGIN_URL) || request.getRequestURI().equals(LOGOUT_URL)) {
