@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import team2.pjt12.matchumoney.domain.user.domain.UserVO;
 import team2.pjt12.matchumoney.domain.user.dto.req.UpdatePasswordRequestDTO;
 import team2.pjt12.matchumoney.domain.user.dto.req.UpdateUserInfoRequestDTO;
+import team2.pjt12.matchumoney.domain.user.dto.res.UserResponseDTO;
 import team2.pjt12.matchumoney.domain.user.dto.res.UserUpdateResponseDTO;
 import team2.pjt12.matchumoney.domain.user.mapper.UserMapper;
 import team2.pjt12.matchumoney.global.exception.CustomException;
@@ -57,5 +58,21 @@ public class UserServiceImpl implements UserService {
 
         String encodedNewPassword = passwordEncoder.encode(reqDto.newPassword);
         userMapper.updatePassword(userId, encodedNewPassword);
+    }
+
+    //내 정보 조회
+    @Override
+    @Transactional(readOnly = true)
+    public UserResponseDTO getMyInfo() {
+        UserVO user = getCurrentUser();
+
+        return new UserResponseDTO(
+                user.getUserId(),
+                user.getEmail(),
+                user.getNickname(),
+                user.getProfileImageUrl(),
+                user.getGender(),
+                user.getBirthDate()
+        );
     }
 }

@@ -25,7 +25,6 @@ import team2.pjt12.matchumoney.global.jwt.JwtService;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -50,11 +49,11 @@ public class SecurityConfig {
                                         "/swagger-resources/**",
                                         "/v3/api-docs/**",
                                         "/oauth/**",
-                                        "/auth/**",
+                                        "/api/auth/**",
+                                        "/api/user/**",
                                         "/static/**",
                                         "/kakao_login_medium_narrow.png",
                                         "/page/login",
-                                        "page/login",
                                         "/webjars/**",
                                         "/api/chatbot",
                                         "/api/persona/**"
