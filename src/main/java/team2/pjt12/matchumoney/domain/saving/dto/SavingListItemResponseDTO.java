@@ -25,7 +25,7 @@ public class SavingListItemResponseDTO {
     String period;
     @ApiModelProperty(value = "한 달 최대 적금 가능 금액", example = "100000")
     String amount;
-
-//    String company_logo_url;
+    @ApiModelProperty(value = "회사 로고 이미지 url", example = "/src/assets/bank-Logos/BK_KB_Profile.png")
+    String company_image;
 //    Boolean is_starred;
 }
