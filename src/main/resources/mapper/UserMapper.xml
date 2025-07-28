@@ -45,4 +45,15 @@
         SET password = #{newPassword}
         WHERE user_id = #{userId}
     </update>
+    <update id="updatePersonaFromStart">
+        UPDATE users
+        SET persona_id = #{personaId}
+        WHERE user_id = #{userId}
+    </update>
+
+    <update id="updatePersona">
+        UPDATE users
+        SET persona_id = #{personaId}
+        WHERE user_id = #{userId}
+    </update>
 </mapper>
