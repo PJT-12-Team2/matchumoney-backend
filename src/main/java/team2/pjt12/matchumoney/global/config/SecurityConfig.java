@@ -59,7 +59,7 @@ public class SecurityConfig {
                                         "/static/**",
                                         "/kakao_login_medium_narrow.png",
                                         "page/login",
-                                        "/webjars/**"
+                                        "/webjars/**",
                                         "/api/chatbot",
                                         "/api/persona/**"
                                 ).permitAll()  // 허용 URL 설정
