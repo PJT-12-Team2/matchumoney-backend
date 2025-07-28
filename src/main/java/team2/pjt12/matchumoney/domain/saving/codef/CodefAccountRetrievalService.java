@@ -66,21 +66,21 @@ public class CodefAccountRetrievalService {
         try {
             String payload = buildTransactionPayload(connectedId, orgCode, accountNumber);
 
-            log.info("거래내역 조회 요청 - 계좌번호: {}", accountNumber);
+            //log.info("거래내역 조회 요청 - 계좌번호: {}", accountNumber);
 
             JsonNode response = codefApiClient.postJson(CodefApiConstants.TRANSACTION_LIST_URL, accessToken, payload);
             JsonNode data = response.path("data");
 
             if (data == null || data.isEmpty()) {
-                log.warn("거래내역이 존재하지 않음 - 계좌번호: {}", accountNumber);
+                //log.warn("거래내역이 존재하지 않음 - 계좌번호: {}", accountNumber);
                 return null;
             }
 
-            log.info("✅ 거래내역 조회 완료 - 계좌번호: {}", accountNumber);
+            //log.info("✅ 거래내역 조회 완료 - 계좌번호: {}", accountNumber);
             return data;
 
         } catch (Exception e) {
-            log.error("거래내역 조회 중 예외 발생 - 계좌번호: {}", accountNumber, e);
+            //log.error("거래내역 조회 중 예외 발생 - 계좌번호: {}", accountNumber, e);
             throw new RuntimeException("거래내역 조회 실패", e);
         }
     }
