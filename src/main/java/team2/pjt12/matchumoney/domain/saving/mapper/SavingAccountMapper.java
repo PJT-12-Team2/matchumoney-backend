@@ -3,6 +3,7 @@ package team2.pjt12.matchumoney.domain.saving.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import team2.pjt12.matchumoney.domain.saving.domain.DepositAccountVO;
 import team2.pjt12.matchumoney.domain.saving.domain.SavingAccountVO;
 import team2.pjt12.matchumoney.domain.saving.dto.MySavingProductResponseDTO;
 import team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO;
@@ -14,6 +15,10 @@ public interface SavingAccountMapper {
     void deleteByUserIdAndFinId(@Param("userId") Long userId, @Param("finId") Long finId);
 
     void insertSavingAccount(SavingAccountVO savingAccountVO);
+
+    void deleteDepositByUserIdAndFinId(@Param("userId") Long userId, @Param("finId") Long finId);
+
+    void insertDepositAccount(DepositAccountVO depositAccountVO);
 
     MySavingProductResponseDTO getSavingAccount(@Param("id") Long id);
 
