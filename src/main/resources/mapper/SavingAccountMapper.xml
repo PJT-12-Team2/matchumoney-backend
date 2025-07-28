@@ -11,6 +11,12 @@
         WHERE user_id = #{userId}
           AND fin_id = #{finId}
     </delete>
+    <delete id="deleteDepositByUserIdAndFinId">
+        DELETE
+        FROM mydata_user_account
+        WHERE user_id = #{userId}
+          AND fin_id = #{finId}
+    </delete>
 
     <select id="getSavingAccountList" parameterType="long"
             resultType="team2.pjt12.matchumoney.domain.saving.dto.MySavingProductResponseDTO">
@@ -102,5 +108,47 @@
                 #{commEndDate},
                 #{createdTime},
                 #{lastModifiedTime})
+    </insert>
+    <insert id="insertDepositAccount" parameterType="team2.pjt12.matchumoney.domain.saving.domain.DepositAccountVO">
+        INSERT INTO mydata_user_account (res_account,
+                                         user_id,
+                                         fin_id,
+                                         res_account_balance,
+                                         res_account_end_date,
+                                         res_account_nickname,
+                                         res_account_start_date,
+                                         res_last_tran_date,
+                                         res_account_deposit,
+                                         res_account_name,
+                                         res_account_display,
+                                         res_loan_end_date,
+                                         res_account_currency,
+                                         res_account_lifetime,
+                                         res_overdraft_acct_yn,
+                                         res_loan_kind,
+                                         res_loan_balance,
+                                         res_loan_start_date,
+                                         created_time,
+                                         last_modified_time)
+        VALUES (#{resAccount},
+                #{userId},
+                #{finId},
+                #{resAccountBalance},
+                #{resAccountEndDate},
+                #{resAccountNickname},
+                #{resAccountStartDate},
+                #{resLastTranDate},
+                #{resAccountDeposit},
+                #{resAccountName},
+                #{resAccountDisplay},
+                #{resLoanEndDate},
+                #{resAccountCurrency},
+                #{resAccountLifetime},
+                #{resOverdraftAcctYN},
+                #{resLoanKind},
+                #{resLoanBalance},
+                #{resLoanStartDate},
+                #{createdTime},
+                #{lastModifiedTime});
     </insert>
 </mapper>
