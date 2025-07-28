@@ -139,11 +139,7 @@ public class KbCardController {
         List<CardTransactionResponseDTO> responseDTOList = CardDTOConverter.toCardTransactionResponseDTOList(transactionVOList);
 
         // 카테고리별 통계 추가
-        Map<String, Long> categoryStats = transactionVOList.stream()
-                .filter(t -> t.getResMemberStoreType() != null)
-                .collect(java.util.stream.Collectors.groupingBy(
-                        CardTransactionVO::getResMemberStoreType,
-                        java.util.stream.Collectors.counting()));
+        Map<String, Long> categoryStats = kbCardService.getCategoryStatistics(transactionVOList);
 
         String message = String.format("카드 %d의 거래 내역 %d건을 조회했습니다. 카테고리별 분포: %s",
                 holdingId, responseDTOList.size(), categoryStats);

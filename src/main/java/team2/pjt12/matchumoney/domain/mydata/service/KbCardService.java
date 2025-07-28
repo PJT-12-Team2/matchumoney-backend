@@ -5,6 +5,7 @@ import team2.pjt12.matchumoney.domain.mydata.vo.CardTransactionVO;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 /**
  * KB카드 마이데이터 연동 서비스
@@ -113,4 +114,15 @@ public interface KbCardService {
      * @see CardTransactionVO
      */
     List<CardTransactionVO> getCardTransactions(Long userId, Long holdingId);
+    
+    /**
+     * 카드 거래 내역의 카테고리별 통계를 계산합니다.
+     * 
+     * resMemberStoreType이 null이 아닌 거래 내역을 대상으로
+     * 카테고리별 거래 건수를 집계합니다.
+     * 
+     * @param transactions 거래 내역 목록
+     * @return 카테고리별 거래 건수 맵 (카테고리명 -> 건수)
+     */
+    Map<String, Long> getCategoryStatistics(List<CardTransactionVO> transactions);
 }

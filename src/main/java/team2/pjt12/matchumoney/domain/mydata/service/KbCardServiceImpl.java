@@ -13,6 +13,7 @@ import team2.pjt12.matchumoney.domain.mydata.vo.CardTransactionVO;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -118,6 +119,15 @@ public class KbCardServiceImpl implements KbCardService {
     @Override
     public List<CardTransactionVO> getCardTransactions(Long userId, Long holdingId) {
         return kbCardTransactionMapper.selectKbCardTransactionsByUserIdAndHoldingId(userId, holdingId);
+    }
+
+    @Override
+    public Map<String, Long> getCategoryStatistics(List<CardTransactionVO> transactions) {
+        return transactions.stream()
+                .filter(t -> t.getResMemberStoreType() != null)
+                .collect(java.util.stream.Collectors.groupingBy(
+                        CardTransactionVO::getResMemberStoreType,
+                        java.util.stream.Collectors.counting()));
     }
 
     /**
