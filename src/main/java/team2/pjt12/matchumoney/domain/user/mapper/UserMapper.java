@@ -26,4 +26,7 @@ public interface UserMapper {
             @Param("birthDate") LocalDate birthDate);
 
     void updatePassword(@Param("userId") Long userId, @Param("newPassword") String newPassword);
+
+    // userId로 PersonaId 찾기
+    Long selectPersonaIdByUserId(Long userId);
 }

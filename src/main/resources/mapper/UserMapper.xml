@@ -45,4 +45,11 @@
         SET password = #{newPassword}
         WHERE user_id = #{userId}
     </update>
+
+    <!-- user_id로 persona_id 조회 -->
+    <select id="selectPersonaIdByUserId" resultType="long">
+        SELECT persona_id
+        FROM users
+        WHERE user_id = #{userId}
+    </select>
 </mapper>
