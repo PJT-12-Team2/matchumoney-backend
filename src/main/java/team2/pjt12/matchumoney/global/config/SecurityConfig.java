@@ -25,6 +25,7 @@ import team2.pjt12.matchumoney.global.jwt.JwtService;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -44,13 +45,19 @@ public class SecurityConfig {
                         authorizeRequests
                                 .requestMatchers(
                                         "/swagger-ui/**",
+                                        "/swagger-ui.html",
+                                        "/v2/api-docs",
                                         "/swagger-resources/**",
                                         "/v3/api-docs/**",
                                         "/oauth/**",
                                         "/auth/**",
                                         "/static/**",
                                         "/kakao_login_medium_narrow.png",
-                                        "/page/login"
+                                        "/page/login",
+                                        "page/login",
+                                        "/webjars/**",
+                                        "/api/chatbot",
+                                        "/api/persona/**"
                                 ).permitAll()  // 허용 URL 설정
                                 .requestMatchers("/user/update").authenticated()
                                 .anyRequest().authenticated()  // 그 외 모든 요청은 인증 필요
@@ -80,6 +87,7 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration); // 모든 경로에 대해 CORS 설정 적용
         return source;
     }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
