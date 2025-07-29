@@ -21,7 +21,7 @@ public enum ErrorCode {
     USER_ALREADY_EXISTS(409, "U409", "이미 존재하는 사용자입니다."),
 
     // 인증 관련 예외
-    INVALID_PASSWORD(401, "A401", "유효하지 않은 비밀번호입니다."),
+    INVALID_PASSWORD(401, "A401", "현재 비밀번호가 일치하지 않습니다."),
     SAME_PASSWORD(400, "A400", "현재 비밀번호와 새 비밀번호가 동일합니다."),
     PASSWORD_MISMATCH(400, "A400", "새 비밀번호와 확인 비밀번호가 일치하지 않습니다."),
 
