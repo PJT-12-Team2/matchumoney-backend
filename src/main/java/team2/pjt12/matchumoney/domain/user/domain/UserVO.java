@@ -2,11 +2,13 @@ package team2.pjt12.matchumoney.domain.user.domain;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
+@NoArgsConstructor
 public class UserVO {
 
     private Long userId;
@@ -26,27 +28,14 @@ public class UserVO {
     private LocalDate birthDate;
 
     @Builder
-    public UserVO(Long id, String socialProvider, String socialId, String email,
-                  String password, String nickname, String profileImageUrl,
-                  LocalDateTime createdTime, LocalDateTime lastModifiedTime, boolean socialLogin) {
-        this.userId = id;
+    public UserVO(String socialProvider, String socialId, String email,
+                  String password, String nickname, String profileImageUrl, boolean socialLogin) {
         this.socialProvider = socialProvider;
         this.socialId = socialId;
         this.email = email;
         this.password = password;
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
-        this.createdTime = createdTime;
-        this.lastModifiedTime = lastModifiedTime;
         this.isSocialLogin = socialLogin;
-    }
-
-    public void updateUserInfo(Gender gender, LocalDate birthDate) {
-        if (gender != null) {
-            this.gender = gender;
-        }
-        if (birthDate != null) {
-            this.birthDate = birthDate;
-        }
     }
 }

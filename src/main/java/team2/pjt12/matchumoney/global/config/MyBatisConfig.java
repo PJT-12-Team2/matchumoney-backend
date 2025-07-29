@@ -23,8 +23,14 @@ public class MyBatisConfig {
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
         factory.setDataSource(dataSource);
         factory.setMapperLocations(
-                new PathMatchingResourcePatternResolver().getResources("classpath:/mapper/*.xml")
+                new PathMatchingResourcePatternResolver().getResources("classpath:/mapper/**/*.xml")
         );
+
+        org.apache.ibatis.session.Configuration config = new org.apache.ibatis.session.Configuration();
+        config.setMapUnderscoreToCamelCase(true);
+        config.setLogImpl(org.apache.ibatis.logging.stdout.StdOutImpl.class);
+        factory.setConfiguration(config);
+
         return factory.getObject();
     }
 
