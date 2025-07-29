@@ -26,4 +26,6 @@ public interface UserMapper {
             @Param("birthDate") LocalDate birthDate);
 
     void updatePassword(@Param("userId") Long userId, @Param("newPassword") String newPassword);
+
+    void updatePersona(@Param("userId") Long userId, @Param("personaId") String personaId);
 }

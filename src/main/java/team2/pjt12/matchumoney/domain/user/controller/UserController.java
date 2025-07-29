@@ -13,7 +13,7 @@ import javax.validation.Valid;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/user")
+@RequestMapping("/api/user")
 @Slf4j
 public class UserController {
 
@@ -29,5 +29,11 @@ public class UserController {
     public SuccessResponse<String> updatePassword(@RequestBody @Valid UpdatePasswordRequestDTO reqDto) {
         userService.updatePassword(reqDto);
         return new SuccessResponse<>("비밀번호 수정 성공");
+    }
+
+    @PatchMapping("/update/persona")
+    public SuccessResponse<String> updatePersona(@RequestParam("persona_id") String personaId) {
+        userService.updatePersona(personaId);
+        return new SuccessResponse<>("페르소나 저장 성공");
     }
 }

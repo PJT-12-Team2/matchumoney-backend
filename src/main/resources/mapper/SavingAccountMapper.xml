@@ -11,6 +11,12 @@
         WHERE user_id = #{userId}
           AND fin_id = #{finId}
     </delete>
+    <delete id="deleteDepositByUserIdAndFinId">
+        DELETE
+        FROM mydata_user_account
+        WHERE user_id = #{userId}
+          AND fin_id = #{finId}
+    </delete>
 
     <select id="getSavingAccountList" parameterType="long"
             resultType="team2.pjt12.matchumoney.domain.saving.dto.MySavingProductResponseDTO">
@@ -38,6 +44,49 @@
     </select>
     <select id="getRecommendSavingAccountList"
             resultType="team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO">
+        SELECT sp.saving_product_id AS id,
+               sp.kor_co_nm         AS company,
+               sp.fin_prdt_nm       AS title,
+               so.intr_rate         AS base_rate,
+               so.intr_rate2        AS max_rate,
+               so.save_trm          AS period,
+               sp.max_limit         AS amount,
+               fc.company_image     as company_image
+        FROM saving_product sp
+                 JOIN saving_option so
+                      ON sp.fin_prdt_cd = so.fin_prdt_cd
+                          AND sp.fin_id = so.fin_id
+                 LEFT OUTER JOIN financial_companies fc
+                                 ON sp.kor_co_nm = fc.kor_co_nm
+        WHERE so.save_trm = #{period}
+          AND CAST(so.intr_rate AS DECIMAL(5
+            , 4))
+            > #{rate}
+        ORDER BY CAST(so.intr_rate AS DECIMAL(5, 4))
+            DESC
+    </select>
+
+    <select id="getRecommendDefaultSavingAccountList"
+            resultType="team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO">
+        SELECT sp.saving_product_id as id,
+               sp.kor_co_nm         as company,
+               sp.fin_prdt_nm       AS title,
+               so.intr_rate         as base_rate,
+               so.intr_rate2        as max_rate,
+               so.save_trm          as period,
+               sp.max_limit         as amount,
+               fc.company_image     as company_image
+        FROM saving_product sp
+                 JOIN
+             saving_option so ON sp.fin_prdt_cd = so.fin_prdt_cd AND sp.fin_id = so.fin_id
+                 LEFT OUTER JOIN financial_companies fc
+                                 ON sp.kor_co_nm = fc.kor_co_nm
+        WHERE so.save_trm = 12
+          AND so.fin_id = 11
+        ORDER BY CAST(so.intr_rate AS DECIMAL(5, 4)) DESC
+    </select>
+    <select id="getRecommendDefaultSavingAccountList"
+            resultType="team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO">
         SELECT sp.saving_product_id as id,
                sp.kor_co_nm         as company,
                sp.fin_prdt_nm       AS title,
@@ -48,8 +97,8 @@
         FROM saving_product sp
                  JOIN
              saving_option so ON sp.fin_prdt_cd = so.fin_prdt_cd AND sp.fin_id = so.fin_id
-        WHERE so.save_trm = #{period}
-          AND CAST(so.intr_rate AS DECIMAL(5, 4)) > #{rate}
+        WHERE so.save_trm = 12
+          AND so.fin_id = 11
         ORDER BY CAST(so.intr_rate AS DECIMAL(5, 4)) DESC
     </select>
 
@@ -102,5 +151,47 @@
                 #{commEndDate},
                 #{createdTime},
                 #{lastModifiedTime})
+    </insert>
+    <insert id="insertDepositAccount" parameterType="team2.pjt12.matchumoney.domain.saving.domain.DepositAccountVO">
+        INSERT INTO mydata_user_account (res_account,
+                                         user_id,
+                                         fin_id,
+                                         res_account_balance,
+                                         res_account_end_date,
+                                         res_account_nickname,
+                                         res_account_start_date,
+                                         res_last_tran_date,
+                                         res_account_deposit,
+                                         res_account_name,
+                                         res_account_display,
+                                         res_loan_end_date,
+                                         res_account_currency,
+                                         res_account_lifetime,
+                                         res_overdraft_acct_yn,
+                                         res_loan_kind,
+                                         res_loan_balance,
+                                         res_loan_start_date,
+                                         created_time,
+                                         last_modified_time)
+        VALUES (#{resAccount},
+                #{userId},
+                #{finId},
+                #{resAccountBalance},
+                #{resAccountEndDate},
+                #{resAccountNickname},
+                #{resAccountStartDate},
+                #{resLastTranDate},
+                #{resAccountDeposit},
+                #{resAccountName},
+                #{resAccountDisplay},
+                #{resLoanEndDate},
+                #{resAccountCurrency},
+                #{resAccountLifetime},
+                #{resOverdraftAcctYN},
+                #{resLoanKind},
+                #{resLoanBalance},
+                #{resLoanStartDate},
+                #{createdTime},
+                #{lastModifiedTime});
     </insert>
 </mapper>

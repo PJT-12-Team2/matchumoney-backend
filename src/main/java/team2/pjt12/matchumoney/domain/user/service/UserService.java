@@ -10,4 +10,6 @@ public interface UserService {
     UserUpdateResponseDTO updateUserInfo(UpdateUserInfoRequestDTO reqDto);
 
     void updatePassword(UpdatePasswordRequestDTO reqDto);
+
+    void updatePersona(String personaId);
 }

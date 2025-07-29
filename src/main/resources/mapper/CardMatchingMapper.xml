@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="team2.pjt12.matchumoney.domain.mydata.mapper.CardMatchingMapper">
+
+    <!-- 기본 카드 매칭 쿼리 -->
+    <select id="findMatchingCardByName" resultType="team2.pjt12.matchumoney.domain.mydata.vo.CardVO">
+        SELECT
+            card_product_id,
+            name,
+            type,
+            is_available,
+            issuer_id,
+            annual_fee,
+            pre_month_money,
+            online_only,
+            card_image_url,
+            request_pc_url,
+            request_mobile_url,
+            annual_fee_detail,
+            corp_pr_container,
+            corp_pr_detail,
+            corp_tips,
+            created_time,
+            last_modified_time,
+            persona_id
+        FROM card_product
+        WHERE
+            -- 1순위: 정확 매칭
+            name = #{inputCardName}
+
+            -- 2순위: 접미사 제거 매칭 (_교통, _비교통, _일반 등 제거)
+            OR name = TRIM(REGEXP_REPLACE(#{inputCardName}, '_[^_]*$', ''))
+
+            -- 3순위: 괄호 제거 매칭
+            OR TRIM(REGEXP_REPLACE(name, '\\([^)]*\\)', '')) = TRIM(REGEXP_REPLACE(#{inputCardName}, '\\([^)]*\\)', ''))
+
+            -- 4순위: 접미사 + 괄호 제거 매칭
+            OR TRIM(REGEXP_REPLACE(name, '\\([^)]*\\)', '')) = TRIM(REGEXP_REPLACE(REGEXP_REPLACE(#{inputCardName}, '_[^_]*$', ''), '\\([^)]*\\)', ''))
+
+            -- 5순위: 대소문자 무시 정확 매칭
+            OR UPPER(name) = UPPER(#{inputCardName})
+
+            -- 6순위: 대소문자 무시 + 접미사 제거 매칭
+            OR UPPER(name) = UPPER(TRIM(REGEXP_REPLACE(#{inputCardName}, '_[^_]*$', '')))
+
+            -- 7순위: 대소문자 무시 + 괄호 제거 매칭
+            OR UPPER(TRIM(REGEXP_REPLACE(name, '\\([^)]*\\)', ''))) = UPPER(TRIM(REGEXP_REPLACE(#{inputCardName}, '\\([^)]*\\)', '')))
+
+            -- 8순위: 대소문자 무시 + 접미사 + 괄호 제거 매칭
+            OR UPPER(TRIM(REGEXP_REPLACE(name, '\\([^)]*\\)', ''))) = UPPER(TRIM(REGEXP_REPLACE(REGEXP_REPLACE(#{inputCardName}, '_[^_]*$', ''), '\\([^)]*\\)', '')))
+
+            -- 9순위: 포함 관계 매칭 (접미사 제거 후)
+            OR name LIKE CONCAT('%', TRIM(REGEXP_REPLACE(#{inputCardName}, '_[^_]*$', '')), '%')
+
+            -- 10순위: 포함 관계 매칭 (접미사 + 괄호 제거 후)
+            OR name LIKE CONCAT('%', TRIM(REGEXP_REPLACE(REGEXP_REPLACE(#{inputCardName}, '_[^_]*$', ''), '\\([^)]*\\)', '')), '%')
+
+        ORDER BY
+            CASE
+                -- 정확 매칭 최우선
+                WHEN name = #{inputCardName} THEN 1
+
+                -- 접미사 제거 매칭
+                WHEN name = TRIM(REGEXP_REPLACE(#{inputCardName}, '_[^_]*$', '')) THEN 2
+
+                -- 괄호 제거 매칭
+                WHEN TRIM(REGEXP_REPLACE(name, '\\([^)]*\\)', '')) = TRIM(REGEXP_REPLACE(#{inputCardName}, '\\([^)]*\\)', '')) THEN 3
+
+                -- 접미사 + 괄호 제거 매칭
+                WHEN TRIM(REGEXP_REPLACE(name, '\\([^)]*\\)', '')) = TRIM(REGEXP_REPLACE(REGEXP_REPLACE(#{inputCardName}, '_[^_]*$', ''), '\\([^)]*\\)', '')) THEN 4
+
+                -- 대소문자 무시 정확 매칭
+                WHEN UPPER(name) = UPPER(#{inputCardName}) THEN 5
+
+                -- 대소문자 무시 + 접미사 제거
+                WHEN UPPER(name) = UPPER(TRIM(REGEXP_REPLACE(#{inputCardName}, '_[^_]*$', ''))) THEN 6
+
+                -- 대소문자 무시 + 괄호 제거
+                WHEN UPPER(TRIM(REGEXP_REPLACE(name, '\\([^)]*\\)', ''))) = UPPER(TRIM(REGEXP_REPLACE(#{inputCardName}, '\\([^)]*\\)', ''))) THEN 7
+
+                -- 대소문자 무시 + 접미사 + 괄호 제거
+                WHEN UPPER(TRIM(REGEXP_REPLACE(name, '\\([^)]*\\)', ''))) = UPPER(TRIM(REGEXP_REPLACE(REGEXP_REPLACE(#{inputCardName}, '_[^_]*$', ''), '\\([^)]*\\)', ''))) THEN 8
+
+                -- 포함 관계 매칭들
+                WHEN name LIKE CONCAT('%', TRIM(REGEXP_REPLACE(#{inputCardName}, '_[^_]*$', '')), '%') THEN 9
+                WHEN name LIKE CONCAT('%', TRIM(REGEXP_REPLACE(REGEXP_REPLACE(#{inputCardName}, '_[^_]*$', ''), '\\([^)]*\\)', '')), '%') THEN 10
+
+                ELSE 11
+            END
+        LIMIT 1
+    </select>
+
+    <!-- 매칭되지 않은 카드 보유 정보 조회 -->
+    <select id="findUnmatchedCardHoldings" resultType="team2.pjt12.matchumoney.domain.mydata.vo.CardHoldingVO">
+        SELECT
+            holding_id as holdingId,
+            card_id as cardId,
+            fin_id as finId,
+            discontinued,
+            card_name as cardName,
+            res_card_no as resCardNo,
+            res_sleep_yn as resSleepYn,
+            res_card_type as resCardType,
+            res_traffic_yn as resTrafficYn,
+            res_image_link as resImageLink,
+            res_issue_date as resIssueDate,
+            res_valid_period as resValidPeriod,
+            res_state as resState,
+            created_time as createdTime,
+            last_modified_time as lastModifiedTime,
+            user_id as userId,
+            connected_id as connectedId
+        FROM mydata_card_holdings
+        WHERE card_id IS NULL
+          AND user_id IS NOT NULL
+        ORDER BY created_time DESC
+    </select>
+
+    <!-- 특정 사용자의 모든 카드 보유 정보 조회 (디버그용) -->
+    <select id="findAllCardHoldingsByUserId" resultType="team2.pjt12.matchumoney.domain.mydata.vo.CardHoldingVO">
+        SELECT
+            holding_id as holdingId,
+            card_id as cardId,
+            fin_id as finId,
+            discontinued,
+            card_name as cardName,
+            res_card_no as resCardNo,
+            res_sleep_yn as resSleepYn,
+            res_card_type as resCardType,
+            res_traffic_yn as resTrafficYn,
+            res_image_link as resImageLink,
+            res_issue_date as resIssueDate,
+            res_valid_period as resValidPeriod,
+            res_state as resState,
+            created_time as createdTime,
+            last_modified_time as lastModifiedTime,
+            user_id as userId,
+            connected_id as connectedId
+        FROM mydata_card_holdings
+        WHERE user_id = #{userId}
+        ORDER BY created_time DESC
+    </select>
+
+    <!-- 특정 holding_id에 card_id 업데이트 -->
+    <update id="updateCardIdForHolding">
+        UPDATE mydata_card_holdings
+        SET card_id = #{cardId},
+            last_modified_time = NOW()
+        WHERE holding_id = #{holdingId}
+    </update>
+
+    <!-- 모든 매칭되지 않은 카드의 card_id를 일괄 업데이트 -->
+    <update id="updateAllCardMatching">
+        UPDATE mydata_card_holdings
+        SET card_id = (
+            SELECT c.card_product_id
+            FROM card_product c
+            WHERE
+                -- 1순위: 정확 매칭
+                c.name = mydata_card_holdings.card_name
+
+                -- 2순위: 접미사 제거 매칭
+                OR c.name = TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '_[^_]*$', ''))
+
+                -- 3순위: 괄호 제거 매칭
+                OR TRIM(REGEXP_REPLACE(c.name, '\\([^)]*\\)', '')) = TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '\\([^)]*\\)', ''))
+
+                -- 4순위: 접미사 + 괄호 제거 매칭
+                OR TRIM(REGEXP_REPLACE(c.name, '\\([^)]*\\)', '')) = TRIM(REGEXP_REPLACE(REGEXP_REPLACE(mydata_card_holdings.card_name, '_[^_]*$', ''), '\\([^)]*\\)', ''))
+
+                -- 5순위: 대소문자 무시 정확 매칭
+                OR UPPER(c.name) = UPPER(mydata_card_holdings.card_name)
+
+                -- 6순위: 대소문자 무시 + 접미사 제거 매칭
+                OR UPPER(c.name) = UPPER(TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '_[^_]*$', '')))
+
+                -- 7순위: 대소문자 무시 + 괄호 제거 매칭
+                OR UPPER(TRIM(REGEXP_REPLACE(c.name, '\\([^)]*\\)', ''))) = UPPER(TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '\\([^)]*\\)', '')))
+
+                -- 8순위: 대소문자 무시 + 접미사 + 괄호 제거 매칭
+                OR UPPER(TRIM(REGEXP_REPLACE(c.name, '\\([^)]*\\)', ''))) = UPPER(TRIM(REGEXP_REPLACE(REGEXP_REPLACE(mydata_card_holdings.card_name, '_[^_]*$', ''), '\\([^)]*\\)', '')))
+
+                -- 9순위: 포함 관계 매칭 (접미사 제거 후)
+                OR c.name LIKE CONCAT('%', TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '_[^_]*$', '')), '%')
+
+            ORDER BY
+                CASE
+                    WHEN c.name = mydata_card_holdings.card_name THEN 1
+                    WHEN c.name = TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '_[^_]*$', '')) THEN 2
+                    WHEN TRIM(REGEXP_REPLACE(c.name, '\\([^)]*\\)', '')) = TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '\\([^)]*\\)', '')) THEN 3
+                    WHEN TRIM(REGEXP_REPLACE(c.name, '\\([^)]*\\)', '')) = TRIM(REGEXP_REPLACE(REGEXP_REPLACE(mydata_card_holdings.card_name, '_[^_]*$', ''), '\\([^)]*\\)', '')) THEN 4
+                    WHEN UPPER(c.name) = UPPER(mydata_card_holdings.card_name) THEN 5
+                    WHEN UPPER(c.name) = UPPER(TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '_[^_]*$', ''))) THEN 6
+                    WHEN UPPER(TRIM(REGEXP_REPLACE(c.name, '\\([^)]*\\)', ''))) = UPPER(TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '\\([^)]*\\)', ''))) THEN 7
+                    WHEN UPPER(TRIM(REGEXP_REPLACE(c.name, '\\([^)]*\\)', ''))) = UPPER(TRIM(REGEXP_REPLACE(REGEXP_REPLACE(mydata_card_holdings.card_name, '_[^_]*$', ''), '\\([^)]*\\)', ''))) THEN 8
+                    ELSE 9
+                END
+            LIMIT 1
+        ),
+        last_modified_time = NOW()
+        WHERE card_id IS NULL
+          AND user_id IS NOT NULL
+          AND EXISTS (
+            SELECT 1
+            FROM card_product c
+            WHERE
+                c.name = mydata_card_holdings.card_name
+                OR c.name = TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '_[^_]*$', ''))
+                OR TRIM(REGEXP_REPLACE(c.name, '\\([^)]*\\)', '')) = TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '\\([^)]*\\)', ''))
+                OR TRIM(REGEXP_REPLACE(c.name, '\\([^)]*\\)', '')) = TRIM(REGEXP_REPLACE(REGEXP_REPLACE(mydata_card_holdings.card_name, '_[^_]*$', ''), '\\([^)]*\\)', ''))
+                OR UPPER(c.name) = UPPER(mydata_card_holdings.card_name)
+                OR UPPER(c.name) = UPPER(TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '_[^_]*$', '')))
+                OR UPPER(TRIM(REGEXP_REPLACE(c.name, '\\([^)]*\\)', ''))) = UPPER(TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '\\([^)]*\\)', '')))
+                OR UPPER(TRIM(REGEXP_REPLACE(c.name, '\\([^)]*\\)', ''))) = UPPER(TRIM(REGEXP_REPLACE(REGEXP_REPLACE(mydata_card_holdings.card_name, '_[^_]*$', ''), '\\([^)]*\\)', '')))
+                OR c.name LIKE CONCAT('%', TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '_[^_]*$', '')), '%')
+        )
+    </update>
+
+    <!-- 특정 사용자의 매칭되지 않은 카드들 업데이트 -->
+    <update id="updateCardMatchingByUserId">
+        UPDATE mydata_card_holdings
+        SET card_id = (
+            SELECT c.card_product_id
+            FROM card_product c
+            WHERE
+                -- 1순위: 정확 매칭
+                c.name = mydata_card_holdings.card_name
+                -- 2순위: 괄호 제거 후 매칭
+                OR TRIM(REGEXP_REPLACE(c.name, '\\(.*\\)', '')) = TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '\\(.*\\)', ''))
+                -- 3순위: _교통, _비교통 등 접미사 제거 후 매칭
+                OR c.name = TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '_교통$|_비교통$|_일반$', ''))
+                OR TRIM(REGEXP_REPLACE(c.name, '\\(.*\\)', '')) = TRIM(REGEXP_REPLACE(REGEXP_REPLACE(mydata_card_holdings.card_name, '_교통$|_비교통$|_일반$', ''), '\\(.*\\)', ''))
+                -- 4순위: 대소문자 무시 매칭
+                OR UPPER(c.name) = UPPER(mydata_card_holdings.card_name)
+                -- 5순위: 대소문자 무시 + 괄호 제거 매칭
+                OR UPPER(TRIM(REGEXP_REPLACE(c.name, '\\(.*\\)', ''))) = UPPER(TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '\\(.*\\)', '')))
+                -- 6순위: 대소문자 무시 + 접미사 제거 매칭
+                OR UPPER(c.name) = UPPER(TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '_교통$|_비교통$|_일반$', '')))
+                -- 7순위: 포함 관계 매칭
+                OR c.name LIKE CONCAT('%', TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '_교통$|_비교통$|_일반$', '')), '%')
+            ORDER BY
+                CASE
+                    WHEN c.name = mydata_card_holdings.card_name THEN 1
+                    WHEN TRIM(REGEXP_REPLACE(c.name, '\\(.*\\)', '')) = TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '\\(.*\\)', '')) THEN 2
+                    WHEN c.name = TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '_교통$|_비교통$|_일반$', '')) THEN 3
+                    WHEN TRIM(REGEXP_REPLACE(c.name, '\\(.*\\)', '')) = TRIM(REGEXP_REPLACE(REGEXP_REPLACE(mydata_card_holdings.card_name, '_교통$|_비교통$|_일반$', ''), '\\(.*\\)', '')) THEN 4
+                    WHEN UPPER(c.name) = UPPER(mydata_card_holdings.card_name) THEN 5
+                    WHEN UPPER(TRIM(REGEXP_REPLACE(c.name, '\\(.*\\)', ''))) = UPPER(TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '\\(.*\\)', ''))) THEN 6
+                    WHEN UPPER(c.name) = UPPER(TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '_교통$|_비교통$|_일반$', ''))) THEN 7
+                    ELSE 8
+                END
+            LIMIT 1
+        ),
+        last_modified_time = NOW()
+        WHERE user_id = #{userId}
+          AND card_id IS NULL
+          AND user_id IS NOT NULL
+          AND EXISTS (
+            SELECT 1
+            FROM card_product c
+            WHERE
+                c.name = mydata_card_holdings.card_name
+                OR TRIM(REGEXP_REPLACE(c.name, '\\(.*\\)', '')) = TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '\\(.*\\)', ''))
+                OR c.name = TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '_교통$|_비교통$|_일반$', ''))
+                OR TRIM(REGEXP_REPLACE(c.name, '\\(.*\\)', '')) = TRIM(REGEXP_REPLACE(REGEXP_REPLACE(mydata_card_holdings.card_name, '_교통$|_비교통$|_일반$', ''), '\\(.*\\)', ''))
+                OR UPPER(c.name) = UPPER(mydata_card_holdings.card_name)
+                OR UPPER(TRIM(REGEXP_REPLACE(c.name, '\\(.*\\)', ''))) = UPPER(TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '\\(.*\\)', '')))
+                OR UPPER(c.name) = UPPER(TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '_교통$|_비교통$|_일반$', '')))
+                OR c.name LIKE CONCAT('%', TRIM(REGEXP_REPLACE(mydata_card_holdings.card_name, '_교통$|_비교통$|_일반$', '')), '%')
+        )
+    </update>
+
+    <!-- 매칭 테스트용 쿼리 -->
+    <select id="testCardMatching" resultType="team2.pjt12.matchumoney.domain.mydata.vo.CardVO">
+        SELECT
+            card_product_id,
+            name,
+            type,
+            is_available,
+            issuer_id,
+            annual_fee,
+            pre_month_money,
+            online_only,
+            card_image_url,
+            request_pc_url,
+            request_mobile_url,
+            annual_fee_detail,
+            corp_pr_container,
+            corp_pr_detail,
+            corp_tips,
+            created_time,
+            last_modified_time,
+            persona_id
+        FROM card_product
+        WHERE 
+            -- 1순위: 정확 매칭
+            name = #{cardName}
+            
+            -- 2순위: 접미사 제거 매칭 (_교통, _비교통, _일반 등 제거)
+            OR name = TRIM(REGEXP_REPLACE(#{cardName}, '_[^_]*$', ''))
+            
+            -- 3순위: 괄호 제거 매칭
+            OR TRIM(REGEXP_REPLACE(name, '\\([^)]*\\)', '')) = TRIM(REGEXP_REPLACE(#{cardName}, '\\([^)]*\\)', ''))
+            
+            -- 4순위: 접미사 + 괄호 제거 매칭
+            OR TRIM(REGEXP_REPLACE(name, '\\([^)]*\\)', '')) = TRIM(REGEXP_REPLACE(REGEXP_REPLACE(#{cardName}, '_[^_]*$', ''), '\\([^)]*\\)', ''))
+            
+            -- 5순위: 대소문자 무시 정확 매칭
+            OR UPPER(name) = UPPER(#{cardName})
+            
+            -- 6순위: 대소문자 무시 + 접미사 제거 매칭
+            OR UPPER(name) = UPPER(TRIM(REGEXP_REPLACE(#{cardName}, '_[^_]*$', '')))
+            
+            -- 7순위: 대소문자 무시 + 괄호 제거 매칭
+            OR UPPER(TRIM(REGEXP_REPLACE(name, '\\([^)]*\\)', ''))) = UPPER(TRIM(REGEXP_REPLACE(#{cardName}, '\\([^)]*\\)', '')))
+            
+            -- 8순위: 대소문자 무시 + 접미사 + 괄호 제거 매칭
+            OR UPPER(TRIM(REGEXP_REPLACE(name, '\\([^)]*\\)', ''))) = UPPER(TRIM(REGEXP_REPLACE(REGEXP_REPLACE(#{cardName}, '_[^_]*$', ''), '\\([^)]*\\)', '')))
+            
+            -- 9순위: 포함 관계 매칭 (접미사 제거 후)
+            OR name LIKE CONCAT('%', TRIM(REGEXP_REPLACE(#{cardName}, '_[^_]*$', '')), '%')
+            
+        ORDER BY 
+            CASE 
+                -- 정확 매칭 최우선
+                WHEN name = #{cardName} THEN 1
+                
+                -- 접미사 제거 매칭
+                WHEN name = TRIM(REGEXP_REPLACE(#{cardName}, '_[^_]*$', '')) THEN 2
+                
+                -- 괄호 제거 매칭
+                WHEN TRIM(REGEXP_REPLACE(name, '\\([^)]*\\)', '')) = TRIM(REGEXP_REPLACE(#{cardName}, '\\([^)]*\\)', '')) THEN 3
+                
+                -- 접미사 + 괄호 제거 매칭
+                WHEN TRIM(REGEXP_REPLACE(name, '\\([^)]*\\)', '')) = TRIM(REGEXP_REPLACE(REGEXP_REPLACE(#{cardName}, '_[^_]*$', ''), '\\([^)]*\\)', '')) THEN 4
+                
+                -- 대소문자 무시 정확 매칭
+                WHEN UPPER(name) = UPPER(#{cardName}) THEN 5
+                
+                -- 대소문자 무시 + 접미사 제거
+                WHEN UPPER(name) = UPPER(TRIM(REGEXP_REPLACE(#{cardName}, '_[^_]*$', ''))) THEN 6
+                
+                -- 대소문자 무시 + 괄호 제거
+                WHEN UPPER(TRIM(REGEXP_REPLACE(name, '\\([^)]*\\)', ''))) = UPPER(TRIM(REGEXP_REPLACE(#{cardName}, '\\([^)]*\\)', ''))) THEN 7
+                
+                -- 대소문자 무시 + 접미사 + 괄호 제거
+                WHEN UPPER(TRIM(REGEXP_REPLACE(name, '\\([^)]*\\)', ''))) = UPPER(TRIM(REGEXP_REPLACE(REGEXP_REPLACE(#{cardName}, '_[^_]*$', ''), '\\([^)]*\\)', ''))) THEN 8
+                
+                -- 포함 관계 매칭들
+                WHEN name LIKE CONCAT('%', TRIM(REGEXP_REPLACE(#{cardName}, '_[^_]*$', '')), '%') THEN 9
+                
+                ELSE 10
+            END
+        LIMIT 1
+    </select>
+
+</mapper>

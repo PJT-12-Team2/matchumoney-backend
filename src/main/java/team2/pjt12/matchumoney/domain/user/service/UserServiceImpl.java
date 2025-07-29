@@ -61,4 +61,13 @@ public class UserServiceImpl implements UserService {
         String encodedNewPassword = passwordEncoder.encode(reqDto.newPassword);
         userMapper.updatePassword(userId, encodedNewPassword);
     }
+    @Override
+    @Transactional
+    public void updatePersona(String personaId) {
+        Long userId = getCurrentUser().getUserId();
+        UserVO user = userMapper.findByUserId(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        userMapper.updatePersona(userId, personaId);
+    }
 }
