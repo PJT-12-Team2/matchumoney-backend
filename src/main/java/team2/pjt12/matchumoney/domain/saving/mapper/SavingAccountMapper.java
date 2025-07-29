@@ -22,9 +22,9 @@ public interface SavingAccountMapper {
 
     MySavingProductResponseDTO getSavingAccount(@Param("id") Long id);
 
-    List<SavingListItemResponseDTO> getRecommendSavingAccountList(@Param("period") String period, @Param("rate") Double rate);
+    List<SavingListItemResponseDTO> getRecommendSavingAccountList(@Param("period") String period, @Param("rate") Double rate, @Param("user_id") Long userId);
 
-    List<SavingListItemResponseDTO> getRecommendDefaultSavingAccountList();
+    List<SavingListItemResponseDTO> getRecommendDefaultSavingAccountList(@Param("user_id") Long userId);
 
     List<MySavingProductResponseDTO> getSavingAccountList(@Param("userId") Long userId);
 }

@@ -143,7 +143,7 @@ public class SavingAccountServiceImpl implements SavingAccountService {
     @Override
     public List<SavingListItemResponseDTO> getUserRecommendedSavingAccounts(Long id) {
         if (id == -1) {
-            return savingAccountMapper.getRecommendDefaultSavingAccountList();
+            return savingAccountMapper.getRecommendDefaultSavingAccountList(userId);
         }
         MySavingProductResponseDTO mySavingProduct = savingAccountMapper.getSavingAccount(id);
         if (mySavingProduct == null) {
