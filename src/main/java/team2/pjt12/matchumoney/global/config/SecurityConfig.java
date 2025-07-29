@@ -57,7 +57,10 @@ public class SecurityConfig {
                                         "/webjars/**",
                                         "/api/chatbot",
                                         "/api/persona/**",
-                                        "/api/saving/**"
+                                        "/api/saving/**",
+                                        "/api/user/update/**",
+                                        "/api/persona-saving/recommendation"
+
                                 ).permitAll()  // 허용 URL 설정
                                 .requestMatchers("/user/update").authenticated()
                                 .anyRequest().authenticated()  // 그 외 모든 요청은 인증 필요
