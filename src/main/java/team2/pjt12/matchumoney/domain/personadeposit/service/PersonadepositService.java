@@ -4,5 +4,5 @@ import team2.pjt12.matchumoney.domain.personadeposit.dto.PersonaDepositResponseD
 
 
 public interface PersonadepositService {
-    PersonaDepositResponseDTO getRecommendedDeposit(Long userId);
+    PersonaDepositResponseDTO getRecommendedDeposit(Long personaId);
 }
