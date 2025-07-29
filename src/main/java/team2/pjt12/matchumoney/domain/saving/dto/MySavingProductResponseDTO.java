@@ -27,5 +27,8 @@ public class MySavingProductResponseDTO {
 
     @ApiModelProperty(value = "적금 기간", example = "12")
     private String period;
+
+    @ApiModelProperty(value = "유저 id", example = "1")
+    private Long user_id;
 }
 

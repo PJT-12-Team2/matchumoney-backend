@@ -6,11 +6,9 @@
 <mapper namespace="team2.pjt12.matchumoney.domain.auth.mapper.AuthMapper">
     <insert id="save" parameterType="team2.pjt12.matchumoney.domain.user.domain.UserVO" useGeneratedKeys="true" keyProperty="userId">
         INSERT INTO users (
-            social_provider, social_id, email, password, nickname, profile_image_url,
-            created_time, last_modified_time, is_social_login
+            social_provider, social_id, email, password, nickname, profile_image_url, is_social_login
         ) VALUES (
-                     #{socialProvider}, #{socialId}, #{email}, #{password}, #{nickname}, #{profileImageUrl},
-                     #{createdTime}, #{lastModifiedTime}, #{isSocialLogin}
+                     #{socialProvider}, #{socialId}, #{email}, #{password}, #{nickname}, #{profileImageUrl}, #{isSocialLogin}
                  )
     </insert>
 

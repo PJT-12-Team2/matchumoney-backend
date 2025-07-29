@@ -5,7 +5,7 @@ import lombok.Getter;
 @Getter
 public enum ErrorCode {
     // 공통 예외
-    INVALID_INPUT_VALUE(400, "C400", "잘못된 입력입니다."),
+    INVALID_INPUT_VALUE(400, "C400", "비밀번호의 형식이 맞지 않습니다."),
     METHOD_NOT_ALLOWED(405, "C405", "허용되지 않은 HTTP 메서드입니다."),
     INTERNAL_SERVER_ERROR(500, "C500", "서버 오류가 발생했습니다."),
     RESOURCE_NOT_FOUND(404, "C404", "요청한 리소스를 찾을 수 없습니다."),
@@ -18,12 +18,19 @@ public enum ErrorCode {
     EMAIL_NOT_VERIFIED(403, "U403", "검증되지 않은 이메일입니다."),
     EMAIL_NOT_AVAILABLE(409, "U409", "사용할 수 없는 이메일입니다."),
     NOT_MATCH_PASSWORD(400, "U400", "비밀번호가 일치하지 않습니다."),
+    USER_ALREADY_EXISTS(409, "U409", "이미 존재하는 사용자입니다."),
 
     // 인증 관련 예외
-    INVALID_PASSWORD(401, "A401", "유효하지 않은 비밀번호입니다."),
+    INVALID_PASSWORD(401, "A401", "현재 비밀번호가 일치하지 않습니다."),
     SAME_PASSWORD(400, "A400", "현재 비밀번호와 새 비밀번호가 동일합니다."),
     PASSWORD_MISMATCH(400, "A400", "새 비밀번호와 확인 비밀번호가 일치하지 않습니다."),
-    
+
+    // 즐겨찾기 관련 예외
+    FAVORITE_ALREADY_EXISTS(409, "F409", "이미 존재하는 즐겨찾기입니다."),
+
+    // 상품 관련 예외
+    INVALID_PRODUCT_TYPE(400, "P400", "유효하지 않은 상품 유형입니다."),
+
     // codef 관련 에러(적금)
     CODEF_ERROR(401, "F401", "CODEF에 접근할 수 없습니다."),
     CODEF_LOGIN(400, "F400", "유효하지 않은 아이디/비밀번호입니다."),
