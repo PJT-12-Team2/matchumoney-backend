@@ -24,5 +24,7 @@ public interface SavingAccountMapper {
 
     List<SavingListItemResponseDTO> getRecommendSavingAccountList(@Param("period") String period, @Param("rate") Double rate);
 
+    List<SavingListItemResponseDTO> getRecommendDefaultSavingAccountList();
+
     List<MySavingProductResponseDTO> getSavingAccountList(@Param("userId") Long userId);
 }
