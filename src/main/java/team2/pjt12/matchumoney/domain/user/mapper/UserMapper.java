@@ -55,4 +55,6 @@ public interface UserMapper {
                         @Param("productType") String productType);
 
     List<FavoriteVO> getFavorites(@Param("userId") Long userId);
+
+    void updatePersona(@Param("userId") Long userId, @Param("personaId") String personaId);
 }

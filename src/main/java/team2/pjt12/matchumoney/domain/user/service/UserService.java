@@ -13,4 +13,6 @@ public interface UserService {
     void updatePassword(UpdatePasswordRequestDTO reqDto);
 
     UserResponseDTO getMyInfo();
+
+    void updatePersona(String personaId);
 }

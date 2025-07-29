@@ -37,4 +37,10 @@ public class UserController {
         UserResponseDTO resDto = userService.getMyInfo();
         return new SuccessResponse<>(resDto, "내 정보 조회 성공");
     }
+
+    @PatchMapping("/update/persona")
+    public SuccessResponse<String> updatePersona(@RequestParam("persona_id") String personaId) {
+        userService.updatePersona(personaId);
+        return new SuccessResponse<>("페르소나 저장 성공");
+    }
 }

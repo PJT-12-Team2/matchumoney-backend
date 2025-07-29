@@ -75,4 +75,13 @@ public class UserServiceImpl implements UserService {
                 user.getBirthDate()
         );
     }
+    @Override
+    @Transactional
+    public void updatePersona(String personaId) {
+        Long userId = getCurrentUser().getUserId();
+        UserVO user = userMapper.findByUserId(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        userMapper.updatePersona(userId, personaId);
+    }
 }
