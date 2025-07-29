@@ -25,8 +25,7 @@
                res_account_start_date AS start_date,
                res_account_end_date   AS end_date,
                res_rate               AS rate,
-               res_valid_period       AS period,
-               user_id                as user_id
+               res_valid_period       AS period
         FROM mydata_saving_accounts
         WHERE user_id = #{userId}
     </select>
@@ -39,8 +38,7 @@
                res_account_start_date AS start_date,
                res_account_end_date   AS end_date,
                res_rate               AS rate,
-               res_valid_period       AS period,
-               user_id                as user_id
+               res_valid_period       AS period
         FROM mydata_saving_accounts
         WHERE account_id = #{id}
     </select>
@@ -53,24 +51,19 @@
                so.intr_rate2        AS max_rate,
                so.save_trm          AS period,
                sp.max_limit         AS amount,
-               fc.company_image     AS company_image,
-               CASE
-                   WHEN uf.favorite_id IS NOT NULL THEN TRUE
-                   ELSE FALSE
-                   END              AS is_starred
+               fc.company_image     as company_image
         FROM saving_product sp
                  JOIN saving_option so
                       ON sp.fin_prdt_cd = so.fin_prdt_cd
                           AND sp.fin_id = so.fin_id
                  LEFT OUTER JOIN financial_companies fc
-                                 ON INSTR(sp.kor_co_nm, fc.kor_co_nm) > 0
-                                     OR INSTR(fc.kor_co_nm, sp.kor_co_nm) > 0
-                 LEFT OUTER JOIN user_favorites uf
-                                 ON uf.saving_product_id = sp.saving_product_id
-                                     AND uf.user_id = #{user_id}
+                                 ON sp.kor_co_nm = fc.kor_co_nm
         WHERE so.save_trm = #{period}
-          AND CAST(so.intr_rate AS DECIMAL(5, 4)) > #{rate}
-        ORDER BY CAST(so.intr_rate AS DECIMAL(5, 4)) DESC
+          AND CAST(so.intr_rate AS DECIMAL(5
+            , 4))
+            > #{rate}
+        ORDER BY CAST(so.intr_rate AS DECIMAL(5, 4))
+            DESC
     </select>
 
     <select id="getRecommendDefaultSavingAccountList"
@@ -82,24 +75,16 @@
                so.intr_rate2        as max_rate,
                so.save_trm          as period,
                sp.max_limit         as amount,
-               fc.company_image     as company_image,
-               CASE
-                   WHEN uf.favorite_id IS NOT NULL THEN TRUE
-                   ELSE FALSE
-                   END              AS is_starred
+               fc.company_image     as company_image
         FROM saving_product sp
                  JOIN
              saving_option so ON sp.fin_prdt_cd = so.fin_prdt_cd AND sp.fin_id = so.fin_id
                  LEFT OUTER JOIN financial_companies fc
                                  ON sp.kor_co_nm = fc.kor_co_nm
-                 LEFT OUTER JOIN user_favorites uf
-                                 ON uf.saving_product_id = sp.saving_product_id
-                                     AND uf.user_id = #{user_id}
         WHERE so.save_trm = 12
           AND so.fin_id = 11
         ORDER BY CAST(so.intr_rate AS DECIMAL(5, 4)) DESC
     </select>
-
     <insert id="insertSavingAccount" parameterType="team2.pjt12.matchumoney.domain.saving.domain.SavingAccountVO">
         INSERT INTO mydata_saving_accounts (res_account,
                                             user_id,

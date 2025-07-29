@@ -58,7 +58,8 @@ public class SecurityConfig {
                                         "/api/chatbot",
                                         "/api/persona/**",
                                         "/api/saving/**",
-                                        "/api/user/update/**"
+                                        "/api/user/update/**",
+                                        "/api/persona-saving/recommendation"
 
                                 ).permitAll()  // 허용 URL 설정
                                 .requestMatchers("/user/update").authenticated()
