@@ -39,7 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 uri.startsWith("/swagger-resources") ||
                 uri.startsWith("/webjars") ||
                 uri.startsWith("/oauth/") ||
-                uri.startsWith("/auth/") ||
+                uri.startsWith("/api/auth/") ||
                 uri.startsWith("/static/") ||
                 uri.equals("/kakao_login_medium_narrow.png") ||
                 uri.equals("/page/login");

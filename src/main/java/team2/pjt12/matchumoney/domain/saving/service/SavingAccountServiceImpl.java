@@ -142,16 +142,22 @@ public class SavingAccountServiceImpl implements SavingAccountService {
     //내 계좌에 대한 추천 리스트
     @Override
     public List<SavingListItemResponseDTO> getUserRecommendedSavingAccounts(Long id) {
+        Long userId = getCurrentUser().getUserId();
+        if (id == -1) {
+            return savingAccountMapper.getRecommendDefaultSavingAccountList(userId);
+        }
         MySavingProductResponseDTO mySavingProduct = savingAccountMapper.getSavingAccount(id);
         if (mySavingProduct == null) {
 //            log.warn("해당 ID로 조회된 적금 계좌가 없습니다. id={}", id);
-            throw new CustomException(ErrorCode.CODEF_ERROR);
+            throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
+        }
+        if (mySavingProduct.getUser_id() != userId) {
+            throw new CustomException(ErrorCode.USER_NOT_AUTHORIZED);
         }
 //        log.info(String.valueOf(mySavingProduct));
         String period = mySavingProduct.getPeriod();
         double rate = Double.parseDouble(mySavingProduct.getRate());
 
-
-        return savingAccountMapper.getRecommendSavingAccountList(period, rate);
+        return savingAccountMapper.getRecommendSavingAccountList(period, rate, userId);
     }
 }
