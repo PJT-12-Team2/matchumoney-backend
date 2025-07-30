@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="team2.pjt12.matchumoney.domain.personasaving.mapper.PersonaSavingMapper">
+
+    <select id="findByPersonaId" resultType="team2.pjt12.matchumoney.domain.personasaving.dto.SavingProductDTO">
+        SELECT id, name, bank, bank_initial AS bankInitial, details, term, min_amount AS minAmount
+        FROM saving_product
+        WHERE persona_id = #{personaId}
+        ORDER BY RAND()
+            LIMIT 3
+    </select>
+
+</mapper>

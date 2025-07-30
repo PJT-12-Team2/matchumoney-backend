@@ -27,5 +27,6 @@ public class SavingListItemResponseDTO {
     String amount;
     @ApiModelProperty(value = "회사 로고 이미지 url", example = "/src/assets/bank-Logos/BK_KB_Profile.png")
     String company_image;
-//    Boolean is_starred;
+    @ApiModelProperty(value = "즐겨찾기 여부", example = "false")
+    Boolean is_starred;
 }

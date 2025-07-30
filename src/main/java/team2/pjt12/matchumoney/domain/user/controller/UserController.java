@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import team2.pjt12.matchumoney.domain.user.dto.req.UpdatePasswordRequestDTO;
 import team2.pjt12.matchumoney.domain.user.dto.req.UpdateUserInfoRequestDTO;
+import team2.pjt12.matchumoney.domain.user.dto.res.UserResponseDTO;
 import team2.pjt12.matchumoney.domain.user.dto.res.UserUpdateResponseDTO;
 import team2.pjt12.matchumoney.domain.user.service.UserService;
 import team2.pjt12.matchumoney.global.success.SuccessResponse;
@@ -29,6 +30,12 @@ public class UserController {
     public SuccessResponse<String> updatePassword(@RequestBody @Valid UpdatePasswordRequestDTO reqDto) {
         userService.updatePassword(reqDto);
         return new SuccessResponse<>("비밀번호 수정 성공");
+    }
+
+    @GetMapping("/me")
+    public SuccessResponse<UserResponseDTO> getMyInfo() {
+        UserResponseDTO resDto = userService.getMyInfo();
+        return new SuccessResponse<>(resDto, "내 정보 조회 성공");
     }
 
     @PatchMapping("/update/persona")

@@ -20,7 +20,7 @@ public class DepositProductController {
      * 모든 예금 상품 조회 (프론트엔드에서 호출하는 엔드포인트)
      * @return 예금 상품 목록 (minAmount 포함)
      */
-    @GetMapping("/products")
+    @GetMapping("/recommendations/allProducts")
     public ResponseEntity<List<DepositProductResponseDTO>> getAllDepositProducts() {
         List<DepositProductResponseDTO> products = depositProductService.getAllDepositProducts();
         return ResponseEntity.ok(products);
@@ -39,18 +39,41 @@ public class DepositProductController {
     }
 
     /**
-     * 상품 코드로 예금 상품 조회
-     * @param productCode 상품 코드
-     * @return 예금 상품 정보
+     * 사용자 보유 금액과 상품 최소 가입 금액을 비교하여 가입 가능한 상품만 조회
+     * 실제 가입 가능한 상품들만 보여줌
+     *
+     * @param userId 조회할 사용자 ID
+     * @return 사용자가 가입 가능한 예금 상품 목록 (보유 금액 >= 최소 가입 금액)
      */
-    @GetMapping("/products/{productCode}")
-    public ResponseEntity<DepositProductResponseDTO> getDepositProductByCode(
-            @PathVariable String productCode) {
-        DepositProductResponseDTO product = depositProductService.getDepositProductByCode(productCode);
-        if (product != null) {
-            return ResponseEntity.ok(product);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
+//    @GetMapping("/recommendations/history/{userId}")
+//    public ResponseEntity<List<DepositProductResponseDTO>> getAffordableProducts(
+//            @PathVariable("userId") String userId) {
+//
+////        log.info("사용자 가입 가능한 상품 조회 요청: userId={}", userId);
+//
+//        try {
+//            // 서비스에서 사용자가 가입 가능한 상품 목록 조회
+//            List<DepositProductResponseDTO> products =
+//                    depositProductService.getAffordableProducts(userId);
+//
+////            log.info("사용자 가입 가능한 상품 조회 성공: userId={}, 상품수={}",
+////                    userId, products.size());
+//
+//            // 성공 응답 (200 OK)
+//            return ResponseEntity.ok(products);
+//
+//        } catch (RuntimeException e) {
+////            log.error("사용자 가입 가능한 상품 조회 실패: userId={}, error={}",
+////                    userId, e.getMessage());
+//
+//            // 비즈니스 로직 오류 응답 (400 Bad Request)
+//            return ResponseEntity.badRequest().build();
+//
+//        } catch (Exception e) {
+////            log.error("사용자 가입 가능한 상품 조회 중 시스템 오류: userId={}", userId, e);
+//
+//            // 시스템 오류 응답 (500 Internal Server Error)
+//            return ResponseEntity.internalServerError().build();
+//        }
+//    }
 }
