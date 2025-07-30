@@ -39,7 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 uri.startsWith("/swagger-resources") ||
                 uri.startsWith("/webjars") ||
                 uri.startsWith("/oauth/") ||
-                uri.startsWith("/auth/") ||
+                uri.startsWith("/api/auth/") ||
                 uri.startsWith("/static/") ||
                 uri.equals("/kakao_login_medium_narrow.png") ||
                 uri.equals("/page/login");
@@ -62,6 +62,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
         log.info("JwtAuthenticationFilter: 요청 URI {}", request.getRequestURI());
+        // Authorization 헤더 로깅
+        String rawAuthHeader = request.getHeader("Authorization");
+        log.info("Authorization Header: {}", rawAuthHeader);
+
         // 리프레시 토큰이 있는 경우 -> 새 액세스 토큰 발급
         String refreshToken = jwtService
                 .extractRefreshToken(request)
@@ -73,6 +77,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 .extractAccessToken(request)
                 .filter(jwtService::isTokenValid)
                 .orElse(null);
+
+        if (accessToken == null) {
+            log.warn("❌ 액세스 토큰이 null입니다. Authorization 헤더 확인 필요");
+        }
 
         log.info("Request URI: {}", request.getRequestURI());
         log.info("AccessToken: {}", accessToken);
@@ -103,11 +111,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (accessToken != null) {
             // Redis 블랙리스트 확인 (로그아웃된 토큰인지 검사)
-            if (redisTemplate.opsForValue().get("blacklist:" + accessToken) != null) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("this token is expired token");
-                return;
-            }
+//            if (redisTemplate.opsForValue().get("blacklist:" + accessToken) != null) {
+//                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//                response.getWriter().write("this token is expired token");
+//                return;
+//            }
             // 정상적인 토큰이면 인증 정보 저장
             authenticateUser(accessToken);
         }

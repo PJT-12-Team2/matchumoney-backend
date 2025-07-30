@@ -5,9 +5,9 @@ import lombok.Getter;
 @Getter
 public final class UserUpdateResponseDTO {
 
-    private final Long memberId;
+    private final Long userId;
 
-    public UserUpdateResponseDTO(Long memberId) {
-        this.memberId = memberId;
+    public UserUpdateResponseDTO(Long userId) {
+        this.userId = userId;
     }
 }
