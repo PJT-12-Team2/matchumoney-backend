@@ -58,7 +58,9 @@ public class SecurityConfig {
                                         "/api/chatbot",
                                         "/api/persona/**",
                                         "/api/saving/**",
-                                        "/api/deposits/**"          // 테스트용
+                                        "/api/user/update/**",
+                                        "/api/persona-saving/recommendation"
+
                                 ).permitAll()  // 허용 URL 설정
                                 .requestMatchers("/user/update").authenticated()
                                 .anyRequest().authenticated()  // 그 외 모든 요청은 인증 필요
