@@ -57,7 +57,7 @@ public class CodefConnectedIdProvider {
             throw new CustomException(ErrorCode.CODEF_LOGIN);
         }
 
-        log.info("✅ Connected ID 생성 성공 - connectedId: {}", connectedId);
+        //log.info("✅ Connected ID 생성 성공 - connectedId: {}", connectedId);
         return connectedId;
     }
 
