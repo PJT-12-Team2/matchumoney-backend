@@ -14,10 +14,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @ApiModel(description = "페르소나 이름과 추천 예금 상품 리스트 DTO")
-public class PersonaDepositResponseDTO {
+public class PersonadepositResponseDTO {
     @ApiModelProperty(value = "페르소나 이름", example = "거북이")
     private String personaName;
 
     @ApiModelProperty(value = "추천 예금 상품 리스트")
-    private List<PersonaDepositDTO> deposits;
+    private List<PersonadepositDTO> deposits;
 }
