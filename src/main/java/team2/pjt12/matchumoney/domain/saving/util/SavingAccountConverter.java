@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import team2.pjt12.matchumoney.domain.saving.domain.SavingAccountVO;
 import team2.pjt12.matchumoney.domain.saving.dto.SavingAccountDto;
+import team2.pjt12.matchumoney.global.exception.CustomException;
+import team2.pjt12.matchumoney.global.exception.ErrorCode;
 
 import java.time.LocalDateTime;
 
@@ -48,8 +50,7 @@ public class SavingAccountConverter {
             return vo;
 
         } catch (Exception e) {
-//            log.error("데이터 변환 중 예외 발생", e);
-            throw new RuntimeException("데이터 변환 실패", e);
+            throw new CustomException(ErrorCode.DATA_CONVERSION_FAILED);
         }
     }
 }
