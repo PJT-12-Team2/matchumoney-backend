@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- AccountMapper 인터페이스와 연결되는 XML 매퍼 -->
+<mapper namespace="team2.pjt12.matchumoney.domain.deposit.mapper.UserDepositMapper">
+    <!-- 계좌 정보 조회를 위한 ResultMap 정의 -->
+    <!-- 데이터베이스 컬럼명과 VO 필드명 매핑 -->
+    <resultMap id="AccountResultMap" type="team2.pjt12.matchumoney.domain.deposit.domain.UserDepositVO">
+        <id property="accountNo" column="res_account"/>                    <!-- 계좌번호 (Primary Key) -->
+        <result property="userId" column="user_id"/>                       <!-- 사용자 ID -->
+        <result property="balance" column="res_account_balance"/>          <!-- 계좌 잔액 -->
+        <result property="accountName" column="res_account_name"/>         <!-- 계좌명 -->
+        <result property="nickname" column="nickname"/>                    <!-- 이름 -->
+    </resultMap>
+
+    <!--
+        특정 사용자의 모든 계좌 정보를 조회하는 쿼리
+        매개변수: userId (String 타입)
+        반환: AccountVO 리스트
+    -->
+    <select id="getAccountsByUserId"
+            parameterType="string"
+            resultMap="AccountResultMap">
+        SELECT
+            mua.res_account,            -- 계좌번호
+            mua.user_id,                -- 사용자 ID
+            mua.res_account_balance,    -- 계좌 잔액
+            mua.res_account_name,       -- 계좌명
+            mua.res_account_display,    -- 계좌 표시명
+            u.nickname                  -- 사용자 닉네임
+        FROM mydata_user_account mua
+                 INNER JOIN users u ON mua.user_id = u.user_id
+        WHERE mua.user_id = #{userId}           -- 매개변수로 받은 사용자 ID로 필터링
+        ORDER BY mua.res_account_balance DESC   -- 잔액이 높은 순으로 정렬
+    </select>
+
+</mapper>
