@@ -1,5 +1,6 @@
 package team2.pjt12.matchumoney.domain.saving.codef;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -10,11 +11,13 @@ import team2.pjt12.matchumoney.global.config.CodefConfig;
 import team2.pjt12.matchumoney.global.exception.CustomException;
 import team2.pjt12.matchumoney.global.exception.ErrorCode;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
@@ -55,10 +58,17 @@ public class CodefApiClient {
 //            log.info("✅ Access Token 발급 성공");
             return accessToken;
 
-        } catch (CustomException e) {
-            throw e;
+        } catch (HttpTimeoutException e) {
+            log.error("CODEF API 타임아웃", e);
+            throw new CustomException(ErrorCode.CODEF_TIMEOUT);
+        } catch (JsonProcessingException e) {
+            log.error("CODEF 응답 파싱 실패", e);
+            throw new CustomException(ErrorCode.CODEF_RESPONSE_PARSE_ERROR);
+        } catch (IOException e) {
+            log.error("CODEF 통신 오류", e);
+            throw new CustomException(ErrorCode.CODEF_COMMUNICATION_ERROR);
         } catch (Exception e) {
-//            log.error("Access Token 요청 중 예외 발생", e);
+            log.error("CODEF 통신 오류", e);
             throw new CustomException(ErrorCode.CODEF_ERROR);
         }
     }
@@ -77,8 +87,8 @@ public class CodefApiClient {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() >= 400) {
-//               log.error("❌ API 호출 실패 - URL: {}, Status: {}, Body: {}",
-//                        url, response.statusCode(), response.body());
+                log.error("❌ API 호출 실패 - URL: {}, Status: {}, Body: {}",
+                        url, response.statusCode(), response.body());
                 throw new CustomException(ErrorCode.CODEF_ERROR);
             }
 
@@ -88,7 +98,7 @@ public class CodefApiClient {
         } catch (CustomException e) {
             throw e;
         } catch (Exception e) {
-//            log.error("API 호출 중 예외 발생 - URL: {}", url, e);
+            log.error("API 호출 중 예외 발생 - URL: {}", url, e);
             throw new CustomException(ErrorCode.CODEF_ERROR);
         }
     }
