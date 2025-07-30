@@ -28,4 +28,6 @@ public class DepositVO {
     private BigDecimal dclsEndDay;      // 공시종료일
     private Long finCoSubmDay;          // 금융회사제출일
     private List<DepositOptionVO> depositOptions; // 연결된 옵션 목록
+    private Integer minAmountInt;       // 최소 금액(숫자) - 사용자 계좌 잔액이랑 비교용
+
 }
