@@ -1,25 +1,32 @@
 package team2.pjt12.matchumoney.domain.personasaving.controller;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import team2.pjt12.matchumoney.domain.personasaving.dto.SavingProductDTO;
-import team2.pjt12.matchumoney.domain.personasaving.service.PersonaSavingService;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.*;
+import team2.pjt12.matchumoney.domain.personasaving.dto.PersonasavingResponseDTO;
+import team2.pjt12.matchumoney.domain.personasaving.service.PersonasavingService;
+import team2.pjt12.matchumoney.global.success.SuccessResponse;
 
 @RestController
-@RequestMapping("/api/persona-saving")
+@RequestMapping("/api/savings/recommendations")
 @RequiredArgsConstructor
-public class PersonaSavingController {
+@Api(tags = "Persona Saving Recommendations",
+        description = "페르소나 기반 적금상품 추천 API")
+public class PersonasavingController {
 
-    private final PersonaSavingService personaSavingService;
+    private final PersonasavingService personasavingService;
 
-    @GetMapping("/recommendation")
-    public ResponseEntity<List<SavingProductDTO>> getRecommended(@RequestParam Long personaId) {
-        return ResponseEntity.ok(personaSavingService.getRecommendedByPersona(personaId));
+    @ApiOperation(
+            value = "페르소나 적금 추천 조회",
+            notes = "personaId에 해당하는 적금 상품 중 무작위 3개를 추천합니다."
+    )
+    @GetMapping("/by-persona/{personaId}")
+    public ResponseEntity<SuccessResponse<PersonasavingResponseDTO>> getPersonaSavingRecommendations(
+            @ApiParam(value = "페르소나 ID", example = "1") @PathVariable Long personaId) {
+        PersonasavingResponseDTO response = personasavingService.getRecommendedSaving(personaId);
+        return ResponseEntity.ok(new SuccessResponse<>(response));
     }
 }
