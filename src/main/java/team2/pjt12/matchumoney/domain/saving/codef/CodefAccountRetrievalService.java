@@ -4,9 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import team2.pjt12.matchumoney.domain.saving.domain.DepositAccountVO;
 import team2.pjt12.matchumoney.domain.saving.mapper.SavingAccountMapper;
+import team2.pjt12.matchumoney.global.exception.CodefApiException;
+import team2.pjt12.matchumoney.global.exception.CodefApiSubError;
+import team2.pjt12.matchumoney.global.exception.CustomException;
+import team2.pjt12.matchumoney.global.exception.ErrorCode;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -24,65 +27,96 @@ public class CodefAccountRetrievalService {
     private final SavingAccountMapper savingAccountMapper;
 
     //계좌 목록 조회
-    @Transactional
     public List<JsonNode> retrieveAccountList(String accessToken, String connectedId, String orgCode) {
-        try {
-            String payload = buildAccountListPayload(connectedId, orgCode);
 
-            log.info("계좌 목록 조회 요청 - 은행코드: {}", orgCode);
+        String payload = buildAccountListPayload(connectedId, orgCode);
 
-            JsonNode response = codefApiClient.postJson(CodefApiConstants.ACCOUNT_LIST_URL, accessToken, payload);
-            JsonNode accountList = response.path("data").path("resDepositTrust");
+        log.info("계좌 목록 조회 요청 - 은행코드: {}", orgCode);
 
-            if (!accountList.isArray()) {
-                log.warn("계좌 목록이 배열 형태가 아님 - 응답: {}", response.toPrettyString());
-                return new ArrayList<>();
-            }
-            Long userId = getCurrentUser().getUserId();
-            savingAccountMapper.deleteDepositByUserIdAndFinId(userId, 4L);
-            List<JsonNode> savingAccounts = new ArrayList<>();
-            for (JsonNode account : accountList) {
-                String depositType = account.path("resAccountDeposit").asText();
-                if (CodefApiConstants.DEPOSIT_TYPE_SAVINGS.equals(depositType)) {
-                    savingAccounts.add(account);
-                } else if (CodefApiConstants.DEPOSIT_TYPE_DEPOSIT.equals(depositType)) {
-                    DepositAccountVO depositAccountVO = new DepositAccountVO(account, userId, 4L);
-                    savingAccountMapper.insertDepositAccount(depositAccountVO);
+        JsonNode response = codefApiClient.postJson(CodefApiConstants.ACCOUNT_LIST_URL, accessToken, payload);
+
+        String resultCode = response.path("result").path("code").asText();
+
+        //성공하지 못하면
+        if (!"CF-00000".equals(resultCode)) {
+            String message = response.path("result").path("message").asText();
+
+            List<CodefApiSubError> subErrorList = new ArrayList<>();
+            JsonNode errorList = response.path("data").path("errorList");
+            if (errorList != null && errorList.isArray()) {
+                for (JsonNode err : errorList) {
+                    subErrorList.add(new CodefApiSubError(
+                            err.path("code").asText(),
+                            err.path("message").asText()
+                    ));
                 }
             }
-
-
-            log.info("✅ 적금 계좌 {}개 조회 완료", savingAccounts.size());
-            return savingAccounts;
-
-        } catch (Exception e) {
-            log.error("계좌 목록 조회 중 예외 발생", e);
-            throw new RuntimeException("계좌 목록 조회 실패", e);
+            throw new CodefApiException(resultCode, message, subErrorList);
         }
+
+        JsonNode accountList = response.path("data").path("resDepositTrust");
+
+        if (!accountList.isArray()) {
+            log.warn("계좌 목록이 배열 형태가 아님 - 응답: {}", response.toPrettyString());
+            return new ArrayList<>();
+        }
+
+        Long userId = getCurrentUser().getUserId();
+        //예금 지워
+        savingAccountMapper.deleteDepositByUserIdAndFinId(userId, Long.valueOf(CodefApiConstants.ORG_CODE_KB));
+        //적금 객체 반환
+        List<JsonNode> savingAccounts = new ArrayList<>();
+        log.info(accountList.toPrettyString());
+        for (JsonNode account : accountList) {
+            //종류
+            String depositType = account.path("resAccountDeposit").asText();
+            if (CodefApiConstants.DEPOSIT_TYPE_SAVINGS.equals(depositType)) {
+                savingAccounts.add(account);
+            } else if (CodefApiConstants.DEPOSIT_TYPE_DEPOSIT.equals(depositType)) {
+                DepositAccountVO depositAccountVO = new DepositAccountVO(account, userId, Long.valueOf(CodefApiConstants.ORG_CODE_KB));
+                savingAccountMapper.insertDepositAccount(depositAccountVO);
+            }
+        }
+        log.info("✅ 적금 계좌 {}개 조회 완료", savingAccounts.size());
+        return savingAccounts;
     }
 
     //거래 내역 조회
     public JsonNode retrieveTransactionHistory(String accessToken, String connectedId, String orgCode, String accountNumber) {
-        try {
-            String payload = buildTransactionPayload(connectedId, orgCode, accountNumber);
+        String payload = buildTransactionPayload(connectedId, orgCode, accountNumber);
 
-            //log.info("거래내역 조회 요청 - 계좌번호: {}", accountNumber);
+        log.info("거래내역 조회 요청 - 계좌번호: {}", accountNumber);
+        JsonNode response = codefApiClient.postJson(CodefApiConstants.TRANSACTION_LIST_URL, accessToken, payload);
 
-            JsonNode response = codefApiClient.postJson(CodefApiConstants.TRANSACTION_LIST_URL, accessToken, payload);
-            JsonNode data = response.path("data");
+        String resultCode = response.path("result").path("code").asText();
 
-            if (data == null || data.isEmpty()) {
-                //log.warn("거래내역이 존재하지 않음 - 계좌번호: {}", accountNumber);
-                return null;
+        //성공하지 못하면
+        if (!"CF-00000".equals(resultCode)) {
+            String message = response.path("result").path("message").asText();
+
+            List<CodefApiSubError> subErrorList = new ArrayList<>();
+            JsonNode errorList = response.path("data").path("errorList");
+            if (errorList != null && errorList.isArray()) {
+                for (JsonNode err : errorList) {
+                    subErrorList.add(new CodefApiSubError(
+                            err.path("code").asText(),
+                            err.path("message").asText()
+                    ));
+                }
             }
-
-            //log.info("✅ 거래내역 조회 완료 - 계좌번호: {}", accountNumber);
-            return data;
-
-        } catch (Exception e) {
-            //log.error("거래내역 조회 중 예외 발생 - 계좌번호: {}", accountNumber, e);
-            throw new RuntimeException("거래내역 조회 실패", e);
+            throw new CodefApiException(resultCode, message, subErrorList);
         }
+
+        JsonNode data = response.path("data");
+        log.info(data.toPrettyString());
+        if (data == null || data.isEmpty()) {
+            log.warn("거래내역이 존재하지 않음 - 계좌번호: {}", accountNumber);
+            throw new CustomException(ErrorCode.CODEF_ERROR);
+        }
+
+        log.info("✅ 거래내역 조회 완료 - 계좌번호: {}", accountNumber);
+        return data;
+
     }
 
     private String buildAccountListPayload(String connectedId, String orgCode) {
@@ -94,6 +128,7 @@ public class CodefAccountRetrievalService {
                 """, connectedId, orgCode);
     }
 
+    //각 계좌 조회
     private String buildTransactionPayload(String connectedId, String orgCode, String accountNumber) {
         //오늘까지로 조회되도록(미래일 경우 오류 발생)
         String endDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
