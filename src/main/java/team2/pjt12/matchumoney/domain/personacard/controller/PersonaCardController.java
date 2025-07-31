@@ -13,6 +13,7 @@ import team2.pjt12.matchumoney.domain.personacard.dto.PersonaCardResponseDTO;
 import team2.pjt12.matchumoney.domain.personacard.service.PersonaCardService;
 import team2.pjt12.matchumoney.global.jwt.JwtService;
 import team2.pjt12.matchumoney.global.success.SuccessResponse;
+import team2.pjt12.matchumoney.global.util.SecurityUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
@@ -51,8 +52,7 @@ public class PersonaCardController {
     }
     @GetMapping("/user/persona-id")
     public ResponseEntity<Map<String, Object>> getPersonaId(HttpServletRequest request) {
-        Long userId = jwtService.getUserIdFromToken(request)
-                .orElseThrow(() -> new RuntimeException("userId 추출 실패"));
+        Long userId = SecurityUtils.getCurrentUser().getUserId();
 
         Long personaId = personaCardService.getPersonaIdByUserId(userId);
 
@@ -62,8 +62,7 @@ public class PersonaCardController {
     }
     @GetMapping("/user/recommendation")
     public ResponseEntity<SuccessResponse<PersonaCardResponseDTO>> getUserPersonaRecommendation(HttpServletRequest request) {
-        Long userId = jwtService.getUserIdFromToken(request)
-                .orElseThrow(() -> new RuntimeException("userId 추출 실패"));
+        Long userId = SecurityUtils.getCurrentUser().getUserId();
 
         Long personaId = personaCardService.getPersonaIdByUserId(userId);
         PersonaCardResponseDTO response = personaCardService.getRecommendedCards(personaId);

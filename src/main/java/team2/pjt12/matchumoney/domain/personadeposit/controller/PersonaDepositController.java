@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import team2.pjt12.matchumoney.domain.personadeposit.dto.PersonaDepositResponseDTO;
 import team2.pjt12.matchumoney.domain.personadeposit.service.PersonaDepositService;
 import team2.pjt12.matchumoney.global.success.SuccessResponse;
+import team2.pjt12.matchumoney.global.util.SecurityUtils;
 import team2.pjt12.matchumoney.global.jwt.JwtService;
 
 import javax.servlet.http.HttpServletRequest;
@@ -48,9 +49,8 @@ public class PersonaDepositController {
     }
 
     @GetMapping("/user/persona-id")
-    public ResponseEntity<Map<String, Object>> getPersonaId(HttpServletRequest request) {
-        Long userId = jwtService.getUserIdFromToken(request)
-                .orElseThrow(() -> new RuntimeException("userId 추출 실패"));
+    public ResponseEntity<Map<String, Object>> getPersonaId() {
+        Long userId = SecurityUtils.getCurrentUser().getUserId();
 
         Long personaId = personaDepositService.getPersonaIdByUserId(userId);
 
@@ -60,8 +60,7 @@ public class PersonaDepositController {
     }
     @GetMapping("/user/recommendation")
     public ResponseEntity<SuccessResponse<PersonaDepositResponseDTO>> getUserPersonaRecommendation(HttpServletRequest request) {
-        Long userId = jwtService.getUserIdFromToken(request)
-                .orElseThrow(() -> new RuntimeException("userId 추출 실패"));
+        Long userId = SecurityUtils.getCurrentUser().getUserId();
 
         Long personaId = personaDepositService.getPersonaIdByUserId(userId);
         PersonaDepositResponseDTO response = personaDepositService.getRecommendedDeposit(personaId);
