@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @ApiModel(description = "추천 예금 상품 정보 DTO")
-public class PersonadepositDTO {
+public class PersonaDepositDTO {
     @ApiModelProperty(value = "예금 상품 ID", example = "1")
     private Long depositId; // deposit_product_id (deposit_product)
 

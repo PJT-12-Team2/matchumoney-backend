@@ -1,4 +1,4 @@
-package team2.pjt12.matchumoney.domain.personasaving.controller;
+package team2.pjt12.matchumoney.domain.personadeposit.controller;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -7,31 +7,30 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import team2.pjt12.matchumoney.domain.personadeposit.dto.PersonaDepositResponseDTO;
-import team2.pjt12.matchumoney.domain.personasaving.dto.PersonaSavingResponseDTO;
-import team2.pjt12.matchumoney.domain.personasaving.service.PersonaSavingService;
-import team2.pjt12.matchumoney.global.jwt.JwtService;
+import team2.pjt12.matchumoney.domain.personadeposit.service.PersonaDepositService;
 import team2.pjt12.matchumoney.global.success.SuccessResponse;
 import team2.pjt12.matchumoney.global.util.SecurityUtils;
+import team2.pjt12.matchumoney.global.jwt.JwtService;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/savings/recommendations")
+@RequestMapping("/api/deposits/recommendations")
 @RequiredArgsConstructor
-@Api(tags = "Persona Saving Recommendations",
-        description = "페르소나 기반 적금상품 추천 API")
-public class PersonaSavingController {
+@Api(tags = "Persona Deposit Recommendations",
+        description = "페르소나 기반 예금상품 추천 API")
+public class PersonaDepositController {
     private final JwtService jwtService;
-    private final PersonaSavingService personaSavingService;
+    private final PersonaDepositService personaDepositService;
 
     @ApiOperation(
-            value = "페르소나 적금 추천 조회",
-            notes = "personaId에 해당하는 적금 상품 중 무작위 3개를 추천합니다."
+            value = "페르소나 예금 추천 조회",
+            notes = "personaId에 해당하는 예금 상품 중 무작위 3개를 추천합니다."
     )
     @GetMapping("/by-persona/{personaId}")
-    public ResponseEntity<SuccessResponse<PersonaSavingResponseDTO>> getPersonaDepositRecommendations(
+    public ResponseEntity<SuccessResponse<PersonaDepositResponseDTO>> getPersonaDepositRecommendations(
             @ApiParam(value = "페르소나 ID", example = "1") @PathVariable String personaId) {
 
         if (personaId == null || personaId.equalsIgnoreCase("null")) {
@@ -45,25 +44,26 @@ public class PersonaSavingController {
             throw new IllegalArgumentException("유효한 숫자 형태의 personaId가 필요합니다.");
         }
 
-        PersonaSavingResponseDTO response = personaSavingService.getRecommendedSaving(parsedPersonaId);
+        PersonaDepositResponseDTO response = personaDepositService.getRecommendedDeposit(parsedPersonaId);
         return ResponseEntity.ok(new SuccessResponse<>(response));
     }
+
     @GetMapping("/user/persona-id")
-    public ResponseEntity<Map<String, Object>> getPersonaId(HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> getPersonaId() {
         Long userId = SecurityUtils.getCurrentUser().getUserId();
 
-        Long personaId = personaSavingService.getPersonaIdByUserId(userId);
+        Long personaId = personaDepositService.getPersonaIdByUserId(userId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("personaId", personaId);
         return ResponseEntity.ok(response);
     }
     @GetMapping("/user/recommendation")
-    public ResponseEntity<SuccessResponse<PersonaSavingResponseDTO>> getUserPersonaRecommendation(HttpServletRequest request) {
+    public ResponseEntity<SuccessResponse<PersonaDepositResponseDTO>> getUserPersonaRecommendation(HttpServletRequest request) {
         Long userId = SecurityUtils.getCurrentUser().getUserId();
 
-        Long personaId = personaSavingService.getPersonaIdByUserId(userId);
-        PersonaSavingResponseDTO response = personaSavingService.getRecommendedSaving(personaId);
+        Long personaId = personaDepositService.getPersonaIdByUserId(userId);
+        PersonaDepositResponseDTO response = personaDepositService.getRecommendedDeposit(personaId);
 
         return ResponseEntity.ok(new SuccessResponse<>(response));
     }

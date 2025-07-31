@@ -147,4 +147,22 @@ public class JwtServiceImpl implements JwtService {
     public void sendAccessToken(HttpServletResponse response, String newAccessToken) {
         response.setHeader(accessTokenHeader, "Bearer " + newAccessToken);
     }
+
+    @Override
+    public Optional<Long> getUserIdFromToken(HttpServletRequest request) {
+        return extractAccessToken(request)
+                .filter(this::isTokenValid)
+                .map(token -> {
+                    try {
+                        Claims claims = Jwts.parserBuilder()
+                                .setSigningKey(secretKey) // ✅ 하드코딩 말고 필드 사용
+                                .build()
+                                .parseClaimsJws(token)
+                                .getBody();
+                        return Long.valueOf(claims.get("userId").toString());
+                    } catch (Exception e) {
+                        return null;
+                    }
+                });
+    }
 }
