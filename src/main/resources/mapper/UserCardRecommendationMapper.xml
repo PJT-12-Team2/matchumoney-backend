@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="team2.pjt12.matchumoney.domain.cardrecommendation.mapper.UserCardRecommendationMapper">
+
+    <!-- 결과 매핑 -->
+    <resultMap id="UserCardRecommendationResultMap" type="team2.pjt12.matchumoney.domain.cardrecommendation.vo.UserCardRecommendationVO">
+        <id property="recommendationId" column="recommendation_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="cardId" column="card_id"/>
+        <result property="cardName" column="card_name"/>
+        <result property="cardType" column="card_type"/>
+        <result property="issuer" column="issuer"/>
+        <result property="estimatedBenefit" column="estimated_benefit"/>
+        <result property="annualFee" column="annual_fee"/>
+        <result property="preMonthMoney" column="pre_month_money"/>
+        <result property="cardImageUrl" column="card_image_url"/>
+        <result property="requestPcUrl" column="request_pc_url"/>
+        <result property="requestMobileUrl" column="request_mobile_url"/>
+        <result property="recommendedAt" column="recommended_at"/>
+    </resultMap>
+
+    <!-- 추천 카드 저장 -->
+    <insert id="insertRecommendation" parameterType="team2.pjt12.matchumoney.domain.cardrecommendation.vo.UserCardRecommendationVO">
+        INSERT INTO user_card_recommendations (
+            user_id,
+            card_id,
+            card_name,
+            card_type,
+            issuer,
+            estimated_benefit,
+            annual_fee,
+            pre_month_money,
+            card_image_url,
+            request_pc_url,
+            request_mobile_url,
+            recommended_at
+        ) VALUES (
+            #{userId},
+            #{cardId},
+            #{cardName},
+            #{cardType},
+            #{issuer},
+            #{estimatedBenefit},
+            #{annualFee},
+            #{preMonthMoney},
+            #{cardImageUrl},
+            #{requestPcUrl},
+            #{requestMobileUrl},
+            CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <!-- 사용자의 모든 추천 카드 조회 -->
+    <select id="selectRecommendationsByUserId" parameterType="Long" resultMap="UserCardRecommendationResultMap">
+        SELECT 
+            recommendation_id,
+            user_id,
+            card_id,
+            card_name,
+            card_type,
+            issuer,
+            estimated_benefit,
+            annual_fee,
+            pre_month_money,
+            card_image_url,
+            request_pc_url,
+            request_mobile_url,
+            recommended_at
+        FROM user_card_recommendations 
+        WHERE user_id = #{userId}
+        ORDER BY estimated_benefit DESC, recommended_at DESC
+    </select>
+
+    <!-- 사용자의 추천 카드 삭제 -->
+    <delete id="deleteRecommendationsByUserId" parameterType="Long">
+        DELETE FROM user_card_recommendations 
+        WHERE user_id = #{userId}
+    </delete>
+
+    <!-- 특정 카드의 추천 삭제 -->
+    <delete id="deleteRecommendationsByUserIdAndCardId">
+        DELETE FROM user_card_recommendations 
+        WHERE user_id = #{userId} AND card_id = #{cardId}
+    </delete>
+
+    <!-- 사용자의 추천 카드 개수 조회 -->
+    <select id="countRecommendationsByUserId" parameterType="Long" resultType="int">
+        SELECT COUNT(*) 
+        FROM user_card_recommendations 
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 배치 삽입 -->
+    <insert id="insertRecommendationsBatch" parameterType="java.util.List">
+        INSERT INTO user_card_recommendations (
+            user_id,
+            card_id,
+            card_name,
+            card_type,
+            issuer,
+            estimated_benefit,
+            annual_fee,
+            pre_month_money,
+            card_image_url,
+            request_pc_url,
+            request_mobile_url,
+            recommended_at
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+                #{item.userId},
+                #{item.cardId},
+                #{item.cardName},
+                #{item.cardType},
+                #{item.issuer},
+                #{item.estimatedBenefit},
+                #{item.annualFee},
+                #{item.preMonthMoney},
+                #{item.cardImageUrl},
+                #{item.requestPcUrl},
+                #{item.requestMobileUrl},
+                CURRENT_TIMESTAMP
+            )
+        </foreach>
+    </insert>
+
+</mapper>
