@@ -1,7 +1,7 @@
 package team2.pjt12.matchumoney.domain.personacard.service;
 
-import team2.pjt12.matchumoney.domain.personacard.dto.PersonaCardRecommendationResponseDTO;
+import team2.pjt12.matchumoney.domain.personacard.dto.PersonacardResponseDTO;
 
 public interface PersonacardService {
-    PersonaCardRecommendationResponseDTO getRecommendedCards(Long personaId);
+    PersonacardResponseDTO getRecommendedCards(Long personaId);
 }
