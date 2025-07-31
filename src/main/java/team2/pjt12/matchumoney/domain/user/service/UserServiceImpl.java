@@ -5,14 +5,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import team2.pjt12.matchumoney.domain.cardsearch.dto.CardSearchResponseDTO;
+import team2.pjt12.matchumoney.domain.deposit.dto.res.DepositProductResponseDTO;
+import team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO;
 import team2.pjt12.matchumoney.domain.user.domain.UserVO;
 import team2.pjt12.matchumoney.domain.user.dto.req.UpdatePasswordRequestDTO;
 import team2.pjt12.matchumoney.domain.user.dto.req.UpdateUserInfoRequestDTO;
+import team2.pjt12.matchumoney.domain.user.dto.res.MyPageResponseDTO;
 import team2.pjt12.matchumoney.domain.user.dto.res.UserResponseDTO;
 import team2.pjt12.matchumoney.domain.user.dto.res.UserUpdateResponseDTO;
 import team2.pjt12.matchumoney.domain.user.mapper.UserMapper;
 import team2.pjt12.matchumoney.global.exception.CustomException;
 import team2.pjt12.matchumoney.global.exception.ErrorCode;
+
+import java.util.List;
 
 import static team2.pjt12.matchumoney.global.util.SecurityUtils.getCurrentUser;
 
@@ -65,6 +71,9 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public UserResponseDTO getMyInfo() {
         UserVO user = getCurrentUser();
+        if (user == null) {
+            throw new CustomException(ErrorCode.USER_NOT_FOUND);
+        }
 
         return new UserResponseDTO(
                 user.getUserId(),
@@ -83,5 +92,26 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         userMapper.updatePersona(userId, personaId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MyPageResponseDTO getMyPage() {
+        Long userId = getCurrentUser().getUserId();
+        UserVO user = userMapper.findByUserId(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        List<DepositProductResponseDTO> favoriteDeposits = userMapper.getFavoriteDeposits(userId);
+        List<SavingListItemResponseDTO> favoriteSavings = userMapper.getFavoriteSavings(userId);
+        List<CardSearchResponseDTO> favoriteCards = userMapper.getFavoriteCards(userId);
+
+        return new MyPageResponseDTO(
+                user.getNickname(),
+                user.getPersonaId(),
+                user.getExp(),
+                favoriteDeposits,
+                favoriteSavings,
+                favoriteCards
+        );
     }
 }
