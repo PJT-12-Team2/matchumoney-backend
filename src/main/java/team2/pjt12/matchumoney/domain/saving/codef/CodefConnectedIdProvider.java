@@ -1,7 +1,9 @@
 package team2.pjt12.matchumoney.domain.saving.codef;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -13,7 +15,9 @@ import team2.pjt12.matchumoney.global.exception.CustomException;
 import team2.pjt12.matchumoney.global.exception.ErrorCode;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -26,9 +30,9 @@ public class CodefConnectedIdProvider {
     /**
      * CODEF Connected ID 생성
      */
-    public String createConnectedId(String accessToken, String bankId, String password, String orgCode) {
+    public String createConnectedId(String accessToken, String bankId, String password, String orgCode, String birthDate) throws JsonProcessingException {
         String encryptedPassword = RsaEncryptor.encryptRSA(password, config.getPublicKey());
-        String payload = buildConnectedIdPayload(bankId, encryptedPassword, orgCode);
+        String payload = buildConnectedIdPayload(bankId, encryptedPassword, orgCode, birthDate);
 
         log.info("Connected ID 생성 요청 - 은행코드: {}, 사용자ID: {}", orgCode, bankId);
 
@@ -62,31 +66,29 @@ public class CodefConnectedIdProvider {
     }
 
 
-    private String buildConnectedIdPayload(String bankId, String encryptedPassword, String orgCode) {
-//        생일 여기에 추가(리스트 조회)
-        return String.format("""
-                        {
-                          "accountList": [
-                            {
-                              "countryCode": "%s",
-                              "businessType": "%s",
-                              "clientType": "%s",
-                              "organization": "%s",
-                              "loginType": "%s",
-                              "id": "%s",
-                              "password": "%s",
-                            "birthDate": "20011203"
-                            }
-                          ]
-                        }
-                        """,
-                CodefApiConstants.COUNTRY_CODE_KR,
-                CodefApiConstants.BUSINESS_TYPE_BANK,
-                CodefApiConstants.CLIENT_TYPE_PERSONAL,
-                orgCode,
-                CodefApiConstants.LOGIN_TYPE_ID_PASSWORD,
-                bankId,
-                encryptedPassword
-        );
+    private String buildConnectedIdPayload(String bankId, String encryptedPassword, String orgCode, String birthDate)
+            throws JsonProcessingException {
+
+        Map<String, Object> account = new HashMap<>();
+        account.put("countryCode", CodefApiConstants.COUNTRY_CODE_KR);
+        account.put("businessType", CodefApiConstants.BUSINESS_TYPE_BANK);
+        account.put("clientType", CodefApiConstants.CLIENT_TYPE_PERSONAL);
+        account.put("organization", orgCode);
+        account.put("loginType", CodefApiConstants.LOGIN_TYPE_ID_PASSWORD);
+        account.put("id", bankId);
+        account.put("password", encryptedPassword);
+
+        // 생년월일이 필요한 경우만 추가
+        if (birthDate != null && !birthDate.isBlank()) {
+            account.put("birthDate", birthDate);
+        }
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("accountList", List.of(account));
+
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(body);
     }
+
 }
+

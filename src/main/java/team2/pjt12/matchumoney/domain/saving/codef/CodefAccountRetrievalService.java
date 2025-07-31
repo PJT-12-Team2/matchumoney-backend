@@ -82,8 +82,8 @@ public class CodefAccountRetrievalService {
     }
 
     //거래 내역 조회
-    public JsonNode retrieveTransactionHistory(String accessToken, String connectedId, String orgCode, String accountNumber) {
-        String payload = buildTransactionPayload(connectedId, orgCode, accountNumber);
+    public JsonNode retrieveTransactionHistory(String accessToken, String connectedId, String orgCode, String accountNumber, String birthDate) {
+        String payload = buildTransactionPayload(connectedId, orgCode, accountNumber, birthDate);
 
         log.info("거래내역 조회 요청 - 계좌번호: {}", accountNumber);
         JsonNode response = codefApiClient.postJson(CodefApiConstants.TRANSACTION_LIST_URL, accessToken, payload);
@@ -129,7 +129,7 @@ public class CodefAccountRetrievalService {
     }
 
     //각 계좌 조회
-    private String buildTransactionPayload(String connectedId, String orgCode, String accountNumber) {
+    private String buildTransactionPayload(String connectedId, String orgCode, String accountNumber, String birthDate) {
         //오늘까지로 조회되도록(미래일 경우 오류 발생)
         String endDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
@@ -142,8 +142,8 @@ public class CodefAccountRetrievalService {
                   "endDate": "%s",
                   "orderBy": "0",
                   "inquiryType": "1",
-                  "birthDate": ""
+                  "birthDate": "%s"
                 }
-                """, connectedId, orgCode, accountNumber, CodefApiConstants.DEFAULT_START_DATE, endDate);
+                """, connectedId, orgCode, accountNumber, CodefApiConstants.DEFAULT_START_DATE, endDate, birthDate);
     }
 }
