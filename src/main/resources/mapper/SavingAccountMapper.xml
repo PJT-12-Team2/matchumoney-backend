@@ -46,21 +46,21 @@
     </select>
 
 
-    <resultMap id="SavingListItemMap" type="team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO">
-        <result column="id" property="id"/>
-        <result column="company" property="company"/>
-        <result column="title" property="title"/>
-        <result column="base_rate" property="base_rate" javaType="java.lang.String"/>
-        <result column="max_rate" property="max_rate" javaType="java.lang.String"/>
-        <result column="period" property="period"/>
-        <result column="amount" property="amount"/>
-        <result column="company_image" property="company_image"/>
-        <result column="is_starred" property="is_starred" javaType="java.lang.Boolean"/>
-    </resultMap>
+<!--    <resultMap id="SavingListItemMap" type="team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO">-->
+<!--        <result column="id" property="id"/>-->
+<!--        <result column="company" property="company"/>-->
+<!--        <result column="title" property="title"/>-->
+<!--        <result column="base_rate" property="base_rate" javaType="java.lang.String"/>-->
+<!--        <result column="max_rate" property="max_rate" javaType="java.lang.String"/>-->
+<!--        <result column="period" property="period"/>-->
+<!--        <result column="amount" property="amount"/>-->
+<!--        <result column="company_image" property="company_image"/>-->
+<!--        <result column="is_starred" property="is_starred" javaType="java.lang.Boolean"/>-->
+<!--    </resultMap>-->
 
 
     <select id="getRecommendSavingAccountList"
-            resultMap="SavingListItemMap">
+            resultType="team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO">
         SELECT sp.saving_product_id AS id,
                sp.kor_co_nm         AS company,
                sp.fin_prdt_nm       AS title,
@@ -90,7 +90,7 @@
     </select>
 
     <select id="getRecommendDefaultSavingAccountList"
-            resultMap="SavingListItemMap">
+            resultType="team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO">
         SELECT sp.saving_product_id as id,
                sp.kor_co_nm         as company,
                sp.fin_prdt_nm       AS title,

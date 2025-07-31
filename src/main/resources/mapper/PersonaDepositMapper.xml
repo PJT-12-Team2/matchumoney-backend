@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="team2.pjt12.matchumoney.domain.personadeposit.mapper.PersonadepositMapper">
+<mapper namespace="team2.pjt12.matchumoney.domain.personadeposit.mapper.PersonaDepositMapper">
 
     <!-- persona_id로 persona_name 조회 -->
     <select id="selectPersonaNameById" resultType="string">
@@ -14,7 +14,7 @@
 
     <!-- persona_id로 예금 상품 조회 -->
     <select id="selectDepositsByPersonaId"
-            resultType="team2.pjt12.matchumoney.domain.personadeposit.dto.PersonadepositDTO">
+            resultType="team2.pjt12.matchumoney.domain.personadeposit.dto.PersonaDepositDTO">
         SELECT dp.deposit_product_id AS depositId,
                dp.kor_co_nm          AS bankName,
                dp.fin_prdt_nm        AS productName,

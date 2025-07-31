@@ -12,10 +12,10 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @ApiModel(description = "페르소나 이름과 추천 카드 상품 리스트 DTO")
-public class PersonacardResponseDTO {
+public class PersonaCardResponseDTO {
     @ApiModelProperty(value = "페르소나 이름", example = "거북이")
     private String personaName;
 
     @ApiModelProperty(value = "추천 카드 상품 리스트")
-    private List<PersonacardDTO> cards;
+    private List<PersonaCardDTO> cards;
 }
