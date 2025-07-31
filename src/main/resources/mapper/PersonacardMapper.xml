@@ -5,20 +5,26 @@
 
 <mapper namespace="team2.pjt12.matchumoney.domain.personacard.mapper.PersonacardMapper">
 
-    <select id="findPersonaNameById" resultType="string">
+    <!-- persona_id로 persona_name 조회 -->
+    <select id="selectPersonaNameById" resultType="string">
         SELECT name_ko
         FROM persona_types
         WHERE persona_id = #{personaId}
     </select>
 
-    <select id="findCardsByPersonaId"
-            resultType="team2.pjt12.matchumoney.domain.personacard.dto.RecommendedCardDTO">
+    <!-- persona_id로 카드 상품 조회 -->
+    <select id="selectCardsByPersonaId"
+            resultType="team2.pjt12.matchumoney.domain.personacard.dto.PersonacardDTO">
         SELECT
-            card_product_id AS cardProductId,
-            name,
-            card_image_url AS cardImageUrl
+            card_product_id AS cardId,
+            name AS cardName,
+            card_image_url AS cardImageUrl,
+            type AS cardType,
+            issuer,
+            annual_fee AS annualFee,
+            pre_month_money AS preMonthMoney
         FROM card_product
-        WHERE persona_id = #{personaId}
+        WHERE persona_id = #{personaId} AND is_available = true
     </select>
 
 </mapper>
