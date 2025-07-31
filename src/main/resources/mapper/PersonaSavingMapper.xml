@@ -2,14 +2,28 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="team2.pjt12.matchumoney.domain.personasaving.mapper.PersonaSavingMapper">
 
-    <select id="findByPersonaId" resultType="team2.pjt12.matchumoney.domain.personasaving.dto.SavingProductDTO">
-        SELECT id, name, bank, bank_initial AS bankInitial, details, term, min_amount AS minAmount
-        FROM saving_product
+<mapper namespace="team2.pjt12.matchumoney.domain.personasaving.mapper.PersonasavingMapper">
+
+    <!-- persona_id로 persona_name 조회 -->
+    <select id="selectPersonaNameById" resultType="string">
+        SELECT name_ko
+        FROM persona_types
         WHERE persona_id = #{personaId}
-        ORDER BY RAND()
-            LIMIT 3
     </select>
 
+    <!-- persona_id로 적금 상품 조회 -->
+    <select id="selectSavingsByPersonaId"
+            resultType="team2.pjt12.matchumoney.domain.personasaving.dto.PersonasavingDTO">
+        SELECT sp.saving_product_id AS savingId,
+               sp.kor_co_nm         AS bankName,
+               sp.fin_prdt_nm       AS savingName,
+               so.intr_rate         AS basicRate,
+               so.intr_rate2        AS maxRate,
+               fc.company_image     AS companyImage
+        FROM saving_product sp
+                 JOIN saving_option so ON sp.fin_prdt_cd = so.fin_prdt_cd
+                 JOIN financial_companies fc ON sp.fin_co_no2 = fc.fin_co_no
+        WHERE sp.persona_id = #{personaId}
+    </select>
 </mapper>

@@ -1,4 +1,4 @@
-package team2.pjt12.matchumoney.domain.personadeposit.dto;
+package team2.pjt12.matchumoney.domain.personasaving.dto;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -13,11 +13,11 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ApiModel(description = "페르소나 이름과 추천 예금 상품 리스트 DTO")
-public class PersonadepositResponseDTO {
+@ApiModel(description = "페르소나 이름과 추천 적금 상품 리스트 DTO")
+public class PersonasavingResponseDTO {
     @ApiModelProperty(value = "페르소나 이름", example = "거북이")
     private String personaName;
 
-    @ApiModelProperty(value = "추천 예금 상품 리스트")
-    private List<PersonadepositDTO> deposits;
+    @ApiModelProperty(value = "추천 적금 상품 리스트")
+    private List<PersonasavingDTO> savings;
 }

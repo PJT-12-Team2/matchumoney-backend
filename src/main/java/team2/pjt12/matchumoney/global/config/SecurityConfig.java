@@ -60,7 +60,9 @@ public class SecurityConfig {
                                         "/api/saving/**",
                                         "/api/user/update/**",
                                         "/api/persona-saving/recommendation",
-                                        "/api/deposits/**"
+                                        "/api/deposits/**",
+                                        "/api/savings/**",
+                                        "/api/cards/**"
                                 ).permitAll()  // 허용 URL 설정
                                 .requestMatchers("/user/update").authenticated()
                                 .anyRequest().authenticated()  // 그 외 모든 요청은 인증 필요

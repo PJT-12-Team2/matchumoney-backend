@@ -14,7 +14,7 @@
 
     <!-- persona_id로 예금 상품 조회 -->
     <select id="selectDepositsByPersonaId"
-            resultType="team2.pjt12.matchumoney.domain.personadeposit.dto.PersonaDepositDTO">
+            resultType="team2.pjt12.matchumoney.domain.personadeposit.dto.PersonadepositDTO">
         SELECT dp.deposit_product_id AS depositId,
                dp.kor_co_nm          AS bankName,
                dp.fin_prdt_nm        AS productName,
