@@ -1,8 +1,8 @@
 package team2.pjt12.matchumoney.domain.personadeposit.service;
 
-import team2.pjt12.matchumoney.domain.personadeposit.dto.PersonaDepositResponseDTO;
+import team2.pjt12.matchumoney.domain.personadeposit.dto.PersonadepositResponseDTO;
 
 
 public interface PersonadepositService {
-    PersonaDepositResponseDTO getRecommendedDeposit(Long personaId);
+    PersonadepositResponseDTO getRecommendedDeposit(Long personaId);
 }

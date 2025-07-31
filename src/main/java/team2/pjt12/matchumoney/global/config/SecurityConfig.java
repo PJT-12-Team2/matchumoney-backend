@@ -61,6 +61,7 @@ public class SecurityConfig {
                                         "/api/user/update/**",
                                         "/api/persona-saving/recommendation",
                                         "/api/deposits/**",
+                                        "/api/savings/**",
                                         "/api/cards/**"
                                 ).permitAll()  // 허용 URL 설정
                                 .requestMatchers("/user/update").authenticated()
