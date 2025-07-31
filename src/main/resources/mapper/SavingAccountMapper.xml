@@ -44,8 +44,23 @@
         FROM mydata_saving_accounts
         WHERE account_id = #{id}
     </select>
+
+
+    <resultMap id="SavingListItemMap" type="team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO">
+        <result column="id" property="id"/>
+        <result column="company" property="company"/>
+        <result column="title" property="title"/>
+        <result column="base_rate" property="base_rate" javaType="java.lang.String"/>
+        <result column="max_rate" property="max_rate" javaType="java.lang.String"/>
+        <result column="period" property="period"/>
+        <result column="amount" property="amount"/>
+        <result column="company_image" property="company_image"/>
+        <result column="is_starred" property="is_starred" javaType="java.lang.Boolean"/>
+    </resultMap>
+
+
     <select id="getRecommendSavingAccountList"
-            resultType="team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO">
+            resultMap="SavingListItemMap">
         SELECT sp.saving_product_id AS id,
                sp.kor_co_nm         AS company,
                sp.fin_prdt_nm       AS title,
@@ -66,7 +81,8 @@
                                  ON INSTR(sp.kor_co_nm, fc.kor_co_nm) > 0
                                      OR INSTR(fc.kor_co_nm, sp.kor_co_nm) > 0
                  LEFT OUTER JOIN user_favorites uf
-                                 ON uf.saving_product_id = sp.saving_product_id
+                                 ON uf.saving_product_id =
+                                    sp.saving_product_id
                                      AND uf.user_id = #{user_id}
         WHERE so.save_trm = #{period}
           AND CAST(so.intr_rate AS DECIMAL(5, 4)) > #{rate}
@@ -74,7 +90,7 @@
     </select>
 
     <select id="getRecommendDefaultSavingAccountList"
-            resultType="team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO">
+            resultMap="SavingListItemMap">
         SELECT sp.saving_product_id as id,
                sp.kor_co_nm         as company,
                sp.fin_prdt_nm       AS title,
@@ -89,7 +105,8 @@
                    END              AS is_starred
         FROM saving_product sp
                  JOIN
-             saving_option so ON sp.fin_prdt_cd = so.fin_prdt_cd AND sp.fin_id = so.fin_id
+             saving_option so
+             ON sp.fin_prdt_cd = so.fin_prdt_cd AND sp.fin_id = so.fin_id
                  LEFT OUTER JOIN financial_companies fc
                                  ON sp.kor_co_nm = fc.kor_co_nm
                  LEFT OUTER JOIN user_favorites uf

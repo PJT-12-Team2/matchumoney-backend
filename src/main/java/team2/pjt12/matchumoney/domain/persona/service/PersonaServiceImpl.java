@@ -47,4 +47,32 @@ public class PersonaServiceImpl implements PersonaService {
                 .recommendations(recommendations)
                 .build();
     }
+
+    @Override
+    public PersonaResponseDTO getPersonaDetailById(Long personaId) {
+        log.info("Fetching persona detail for persona_id: {}", personaId);
+
+        // persona 정보 조회
+        Map<String, Object> personaInfo = personaMapper.findPersonaInfoById(personaId);
+        if (personaInfo == null) {
+            throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
+        }
+
+        // 태그/추천 조회
+        List<String> tags = personaMapper.findTagsById(personaId);
+        List<RecommendationDTO> recommendations = personaMapper.findRecommendationsById(personaId);
+
+        // DTO 변환
+        return PersonaResponseDTO.builder()
+                .code(null) // code는 없으므로 null 또는 생략
+                .nameKo((String) personaInfo.get("name_ko"))
+                .quote((String) personaInfo.get("quote"))
+                .userType((String) personaInfo.get("user_type"))
+                .description((String) personaInfo.get("description"))
+                .imageUrl((String) personaInfo.get("image_url"))
+                .tags(tags)
+                .recommendations(recommendations)
+                .build();
+    }
+
 }

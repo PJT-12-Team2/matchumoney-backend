@@ -16,9 +16,14 @@ public class PersonaController {
 
     private final PersonaService personaService;
 
-    @GetMapping("/{code}")
-    public ResponseEntity<PersonaResponseDTO> getPersonaDetail(@PathVariable String code) {
-        PersonaResponseDTO response = personaService.getPersonaDetail(code);
+    @GetMapping("/{id}")
+    public ResponseEntity<PersonaResponseDTO> getPersonaDetail(@PathVariable("id") String personaId) {
+        PersonaResponseDTO response = personaService.getPersonaDetail(personaId);
         return ResponseEntity.ok(response);
     }
-}
+    @GetMapping("/api/persona/{personaId}")
+    public ResponseEntity<PersonaResponseDTO> getPersonaById(@PathVariable Long personaId) {
+        PersonaResponseDTO response = personaService.getPersonaDetailById(personaId);
+        return ResponseEntity.ok(response);
+    }
+    }

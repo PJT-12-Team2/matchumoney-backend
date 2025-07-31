@@ -1,12 +1,13 @@
 package team2.pjt12.matchumoney.domain.personasaving.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import team2.pjt12.matchumoney.domain.personasaving.dto.SavingProductDTO;
+import team2.pjt12.matchumoney.domain.personasaving.dto.PersonaSavingDTO;
 
 import java.util.List;
 
 @Mapper
 public interface PersonaSavingMapper {
-    List<SavingProductDTO> findByPersonaId(Long personaId);
+    String selectPersonaNameById(Long personaId);
+    Long findPersonaIdByUserId(Long userId);
+    List<PersonaSavingDTO> selectSavingsByPersonaId(Long personaId);
 }

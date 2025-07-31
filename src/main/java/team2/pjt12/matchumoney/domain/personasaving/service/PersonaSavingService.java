@@ -1,19 +1,12 @@
 package team2.pjt12.matchumoney.domain.personasaving.service;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import team2.pjt12.matchumoney.domain.personasaving.dto.SavingProductDTO;
-import team2.pjt12.matchumoney.domain.personasaving.mapper.PersonaSavingMapper;
 
-import java.util.List;
+import team2.pjt12.matchumoney.domain.personasaving.dto.PersonaSavingResponseDTO;
 
-@Service
-@RequiredArgsConstructor
-public class PersonaSavingService {
+public interface PersonaSavingService {
+    PersonaSavingResponseDTO getRecommendedSaving(Long personaId);
 
-    private final PersonaSavingMapper mapper;
+    Long getPersonaIdByUserId(Long userId);
 
-    public List<SavingProductDTO> getRecommendedByPersona(Long personaId) {
-        return mapper.findByPersonaId(personaId);
-    }
+
 }

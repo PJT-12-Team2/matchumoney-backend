@@ -4,16 +4,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import team2.pjt12.matchumoney.domain.personadeposit.dto.PersonaDepositDTO;
 import team2.pjt12.matchumoney.domain.personadeposit.dto.PersonaDepositResponseDTO;
-import team2.pjt12.matchumoney.domain.personadeposit.mapper.PersonadepositMapper;
-
+import team2.pjt12.matchumoney.domain.personadeposit.mapper.PersonaDepositMapper;
+import team2.pjt12.matchumoney.domain.user.domain.UserVO;
+import team2.pjt12.matchumoney.domain.user.mapper.UserMapper;
 import java.util.Collections;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class PersonadepositServiceImpl implements PersonadepositService {
+public class PersonaDepositServiceImpl implements PersonaDepositService {
 
-    private final PersonadepositMapper personadepositMapper;
+    private final PersonaDepositMapper personadepositMapper;
+    private final UserMapper userMapper;
     private static final int RECOMMENDATION_LIMIT = 3;
 
     // personaId로 personaName 조회
@@ -40,5 +42,12 @@ public class PersonadepositServiceImpl implements PersonadepositService {
                 .personaName(personaName)
                 .deposits(deposits)
                 .build();
+    }
+
+    @Override
+    public Long getPersonaIdByUserId(Long userId) {
+        return userMapper.findByUserId(userId)
+                .map(UserVO::getPersonaId)
+                .orElseThrow(() -> new RuntimeException("해당 유저의 persona_id를 찾을 수 없습니다."));
     }
 }

@@ -18,4 +18,10 @@ public interface PersonaMapper {
 
     // 페르소나 추천 상품 목록 조회
     List<RecommendationDTO> findRecommendationsByCode(@Param("code") String code);
+
+    Map<String, Object> findPersonaInfoById(@Param("personaId") Long personaId);
+
+    List<String> findTagsById(@Param("personaId") Long personaId);
+
+    List<RecommendationDTO> findRecommendationsById(@Param("personaId") Long personaId);
 }

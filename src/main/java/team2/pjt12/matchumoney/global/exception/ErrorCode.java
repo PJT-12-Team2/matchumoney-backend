@@ -34,8 +34,14 @@ public enum ErrorCode {
     // codef 관련 에러(적금)
     CODEF_ERROR(401, "F401", "CODEF에 접근할 수 없습니다."),
     CODEF_LOGIN(400, "F400", "유효하지 않은 아이디/비밀번호입니다."),
-    CODEF_SAVING(400, "F500", "적금을 불러오는 중에 에러가 발생했습니다."),
-    CODEF_NOT_FOUND(400, "F500", "적금을 불러오는 중에 에러가 발생했습니다.");
+    RSA_ENCRYPTION_FAIL(500, "C500", "암호화 중 오류  발생했습니다."),
+    DATA_CONVERSION_FAILED(401, "C401", "데이터 변환에 실패했습니다."),
+    DB_SAVING_INSERT_FAILED(500, "S500", "적금 계좌 저장 중 오류가 발생했습니다."),
+    DB_SAVING_DELETE_FAILED(500, "S500", "적금 계좌 삭제 중 오류가 발생했습니다."),
+    CODEF_TIMEOUT(504, "C504", "CODEF API 응답이 지연되었습니다."),
+    CODEF_RESPONSE_PARSE_ERROR(500, "C505", "CODEF 응답 파싱 중 오류 발생"),
+    CODEF_COMMUNICATION_ERROR(502, "C502", "CODEF API 통신 오류"),
+    ;
 
     private final int status;
     private final String code;

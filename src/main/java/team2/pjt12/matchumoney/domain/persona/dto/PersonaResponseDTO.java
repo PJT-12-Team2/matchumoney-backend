@@ -8,6 +8,7 @@ import java.util.List;
 @Getter
 @Builder
 public class PersonaResponseDTO {
+    private Long id;
     private String code;
     private String nameKo;
     private String quote;
