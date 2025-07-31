@@ -1,6 +1,7 @@
 // 6. 개선된 메인 서비스
 package team2.pjt12.matchumoney.domain.saving.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -67,15 +68,18 @@ public class SavingAccountServiceImpl implements SavingAccountService {
                     accessToken,
                     requestDto.getId(),
                     requestDto.getPassword(),
-                    CodefApiConstants.ORG_CODE_KB
+                    CodefApiConstants.ORG_CODE_KB,
+                    requestDto.getBirthDate()
             );
         } catch (CustomException e) {
             log.error("Connected ID 생성 실패 - {}", e.getErrorCode().getMessage());
             throw e;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
         }
 
         // 3. 계좌 목록 조회 및 저장
-        processAccountSynchronization(accessToken, connectedId, userId);
+        processAccountSynchronization(accessToken, connectedId, userId, requestDto.getBirthDate());
 
         // 4. 동기화된 계좌 목록 반환
         List<MySavingProductResponseDTO> result = savingAccountMapper.getSavingAccountList(userId);
@@ -86,7 +90,7 @@ public class SavingAccountServiceImpl implements SavingAccountService {
 
     //계좌 동기화 처리
     @Transactional(rollbackFor = Exception.class)
-    public void processAccountSynchronization(String accessToken, String connectedId, Long userId) {
+    public void processAccountSynchronization(String accessToken, String connectedId, Long userId, String birthDate) {
         Long finId;
         try {
             finId = Long.parseLong(CodefApiConstants.ORG_CODE_KB);
@@ -120,7 +124,7 @@ public class SavingAccountServiceImpl implements SavingAccountService {
             String accountNumber = account.path("resAccount").asText();
 
             try {
-                if (processTransactionHistory(accessToken, connectedId, accountNumber, userId, finId)) {
+                if (processTransactionHistory(accessToken, connectedId, accountNumber, userId, finId, birthDate)) {
                     processedCount++;
                 } else {
                     failedAccounts.add(accountNumber);
@@ -142,14 +146,14 @@ public class SavingAccountServiceImpl implements SavingAccountService {
 
     //거래내역 처리
     private boolean processTransactionHistory(String accessToken, String connectedId,
-                                              String accountNumber, Long userId, Long finId) {
+                                              String accountNumber, Long userId, Long finId, String birthDate) {
 
         JsonNode transactionData = codefAccountRetrievalService.retrieveTransactionHistory(
-                accessToken, connectedId, CodefApiConstants.ORG_CODE_KB, accountNumber
+                accessToken, connectedId, CodefApiConstants.ORG_CODE_KB, accountNumber, birthDate
         );
 
         SavingAccountVO vo = dataTransformService.transformToVO(transactionData, userId, finId);
-        
+
         try {
             savingAccountMapper.insertSavingAccount(vo);
         } catch (Exception e) {
