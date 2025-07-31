@@ -10,6 +10,7 @@ import team2.pjt12.matchumoney.domain.mydata.mapper.KbCardTransactionMapper;
 import team2.pjt12.matchumoney.domain.mydata.util.KBCardApiUtil;
 import team2.pjt12.matchumoney.domain.mydata.vo.CardHoldingVO;
 import team2.pjt12.matchumoney.domain.mydata.vo.CardTransactionVO;
+import team2.pjt12.matchumoney.domain.cardrecommendation.service.CardRecommendationRefreshService;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -27,6 +28,7 @@ public class KbCardServiceImpl implements KbCardService {
     private final CardMatchingService cardMatchingService;
     private final MerchantCategoryService merchantCategoryService;
     private final KBCardApiUtil kbCardApiUtil;
+    private final CardRecommendationRefreshService cardRecommendationRefreshService;
 
 
     @Override
@@ -113,6 +115,20 @@ public class KbCardServiceImpl implements KbCardService {
         }
         
         log.info("거래 내역 저장 완료 - 총 {}건 저장됨", transactions.size());
+        
+        // 거래내역 업데이트 후 추천 카드 재계산 트리거 (비동기)
+        try {
+            if (cardInfo.getCardId() != null) { // 카드고릴라 매칭이 된 카드만
+                log.info("사용자 {}의 카드 {} 추천 재계산 트리거", userId, cardInfo.getCardId());
+                cardRecommendationRefreshService.refreshRecommendationsForUserCard(userId, cardInfo.getCardId());
+            } else {
+                log.debug("카드고릴라 매칭이 되지 않은 카드로 추천 재계산을 건너뜁니다. 카드명: {}", cardInfo.getCardName());
+            }
+        } catch (Exception e) {
+            log.warn("추천 재계산 트리거 중 오류 발생하였으나 거래내역 저장은 성공: 사용자 {}, 카드 {}", 
+                userId, cardInfo.getCardId(), e);
+        }
+        
         return transactions;
     }
 
