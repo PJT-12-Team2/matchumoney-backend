@@ -51,6 +51,7 @@ public class JwtServiceImpl implements JwtService {
         Date expiryDate = new Date(now.getTime() + accessTokenExpireTime);
         return Jwts.builder()
                 .setSubject(email)
+                .claim("userId", user.getUserId())
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(secretKey, SignatureAlgorithm.HS256)
@@ -146,5 +147,23 @@ public class JwtServiceImpl implements JwtService {
     @Override
     public void sendAccessToken(HttpServletResponse response, String newAccessToken) {
         response.setHeader(accessTokenHeader, "Bearer " + newAccessToken);
+    }
+
+    @Override
+    public Optional<Long> getUserIdFromToken(HttpServletRequest request) {
+        return extractAccessToken(request)
+                .filter(this::isTokenValid)
+                .map(token -> {
+                    try {
+                        Claims claims = Jwts.parserBuilder()
+                                .setSigningKey(secretKey) // ✅ 하드코딩 말고 필드 사용
+                                .build()
+                                .parseClaimsJws(token)
+                                .getBody();
+                        return Long.valueOf(claims.get("userId").toString());
+                    } catch (Exception e) {
+                        return null;
+                    }
+                });
     }
 }

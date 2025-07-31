@@ -66,6 +66,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String rawAuthHeader = request.getHeader("Authorization");
         log.info("Authorization Header: {}", rawAuthHeader);
 
+        // ====== 토큰 추출 및 검증 디버깅 코드 ======
+        String extractedToken = jwtService.extractAccessToken(request).orElse("null");
+        log.info("🔍 추출된 AccessToken (검사용): {}", extractedToken);
+
+        boolean isValid = jwtService.extractAccessToken(request)
+                                  .filter(jwtService::isTokenValid)
+                                  .isPresent();
+        log.info("✅ isTokenValid 결과: {}", isValid);
+        // ======================================
+
         // 리프레시 토큰이 있는 경우 -> 새 액세스 토큰 발급
         String refreshToken = jwtService
                 .extractRefreshToken(request)
@@ -131,10 +141,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         user -> {
                             UserDetailsImpl userDetails = new UserDetailsImpl(user);
                             Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-
-                            SecurityContext context = SecurityContextHolder.createEmptyContext();
-                            context.setAuthentication(authentication);
-                            SecurityContextHolder.setContext(context);
+                            SecurityContextHolder.getContext().setAuthentication(authentication);
                         }
                 )
         );

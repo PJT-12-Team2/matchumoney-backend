@@ -10,7 +10,7 @@ import lombok.Getter;
 @Builder
 @AllArgsConstructor
 @ApiModel(description = "추천 카드 상품 정보 DTO")
-public class PersonacardDTO {
+public class PersonaCardDTO {
     @ApiModelProperty(value = "카드 ID", example = "1")
     private Long cardId; // 카드 ID (card_product의 card_product_id)
 

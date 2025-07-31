@@ -27,4 +27,10 @@ public interface JwtService {
     void sendAccessAndRefreshToken(HttpServletResponse response,
                                    String accessToken,
                                    String refreshToken);
+
+    /**
+     * Extracts the userId directly from the JWT access token's claims.
+     * Assumes the token includes a "userId" claim of type Long.
+     */
+    Optional<Long> getUserIdFromToken(HttpServletRequest request);
 }
