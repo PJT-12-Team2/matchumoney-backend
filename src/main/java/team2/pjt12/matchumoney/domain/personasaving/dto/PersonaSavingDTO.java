@@ -28,4 +28,7 @@ public class PersonaSavingDTO {
 
     @ApiModelProperty(value = "금융사 로고 이미지 URL", example = "/src/assets/bankLogo_images/BK_KB_Profile.png")
     private String companyImage; // company_image (financial_companies)
+
+    @ApiModelProperty(value = "매월 적금 가능 금액", example = "1000000")
+    private Long maxLimit;
 }

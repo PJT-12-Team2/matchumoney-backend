@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import team2.pjt12.matchumoney.domain.personasaving.dto.PersonaSavingDTO;
 import team2.pjt12.matchumoney.domain.personasaving.dto.PersonaSavingResponseDTO;
 
+import team2.pjt12.matchumoney.domain.personasaving.mapper.PersonaSavingMapper;
 import team2.pjt12.matchumoney.domain.user.domain.UserVO;
 import team2.pjt12.matchumoney.domain.user.mapper.UserMapper;
 import java.util.Collections;
@@ -13,7 +14,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class PersonaSavingServiceImpl implements PersonaSavingService {
-    private final PersonaSavingMapper personasavingMapper;
+    private final PersonaSavingMapper personaSavingMapper;
     private final UserMapper userMapper;
     private static final int RECOMMENDATION_LIMIT = 3;
 
@@ -28,7 +29,7 @@ public class PersonaSavingServiceImpl implements PersonaSavingService {
 
     // personaId에 맞는 적금 추천 3개
     private List<PersonaSavingDTO> getRandomizedSavings(Long personaId) {
-        List<PersonaSavingDTO> allSavings = personasavingMapper.selectSavingsByPersonaId(personaId);
+        List<PersonaSavingDTO> allSavings = personaSavingMapper.selectSavingsByPersonaId(personaId);
         Collections.shuffle(allSavings);
         return allSavings.stream()
                 .limit(RECOMMENDATION_LIMIT).toList();

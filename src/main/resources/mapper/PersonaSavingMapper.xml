@@ -21,7 +21,8 @@
             dp.fin_prdt_nm        AS savingName,
             MAX(do.intr_rate)     AS basicRate,
             MAX(do.intr_rate2)    AS maxRate,
-            fc.company_image      AS companyImage
+            fc.company_image      AS companyImage,
+            dp.max_limit          AS maxLimit
         FROM saving_product dp
                  JOIN saving_option do ON dp.fin_prdt_cd = do.fin_prdt_cd
                  JOIN financial_companies fc ON dp.fin_id = fc.fin_id
