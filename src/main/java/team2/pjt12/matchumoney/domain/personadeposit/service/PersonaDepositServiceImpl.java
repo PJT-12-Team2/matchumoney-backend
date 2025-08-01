@@ -5,7 +5,8 @@ import org.springframework.stereotype.Service;
 import team2.pjt12.matchumoney.domain.personadeposit.dto.PersonaDepositDTO;
 import team2.pjt12.matchumoney.domain.personadeposit.dto.PersonaDepositResponseDTO;
 import team2.pjt12.matchumoney.domain.personadeposit.mapper.PersonaDepositMapper;
-
+import team2.pjt12.matchumoney.domain.user.domain.UserVO;
+import team2.pjt12.matchumoney.domain.user.mapper.UserMapper;
 import java.util.Collections;
 import java.util.List;
 
@@ -13,13 +14,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PersonaDepositServiceImpl implements PersonaDepositService {
 
-    private final PersonaDepositMapper personaDepositMapper;
+    private final PersonaDepositMapper personadepositMapper;
+    private final UserMapper userMapper;
     private static final int RECOMMENDATION_LIMIT = 3;
 
     // personaId로 personaName 조회
     @Override
     public PersonaDepositResponseDTO getRecommendedDeposit(Long personaId) {
-        String personaName = personaDepositMapper.selectPersonaNameById(personaId);
+        String personaName = personadepositMapper.selectPersonaNameById(personaId);
         List<PersonaDepositDTO> recommendedDeposits = getRandomizedDeposits(personaId);
 
         return buildRecommendationResponse(personaName, recommendedDeposits);
@@ -27,7 +29,7 @@ public class PersonaDepositServiceImpl implements PersonaDepositService {
 
     // personaId에 맞는 예금 추천 3개
     private List<PersonaDepositDTO> getRandomizedDeposits(Long personaId) {
-        List<PersonaDepositDTO> allDeposits = personaDepositMapper.selectDepositsByPersonaId(personaId);
+        List<PersonaDepositDTO> allDeposits = personadepositMapper.selectDepositsByPersonaId(personaId);
         Collections.shuffle(allDeposits);
         return allDeposits.stream()
                 .limit(RECOMMENDATION_LIMIT).toList();
@@ -40,5 +42,12 @@ public class PersonaDepositServiceImpl implements PersonaDepositService {
                 .personaName(personaName)
                 .deposits(deposits)
                 .build();
+    }
+
+    @Override
+    public Long getPersonaIdByUserId(Long userId) {
+        return userMapper.findByUserId(userId)
+                .map(UserVO::getPersonaId)
+                .orElseThrow(() -> new RuntimeException("해당 유저의 persona_id를 찾을 수 없습니다."));
     }
 }

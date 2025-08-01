@@ -9,4 +9,5 @@ import java.util.List;
 public interface PersonaCardMapper {
     String selectPersonaNameById(Long personaId);
     List<PersonaCardDTO> selectCardsByPersonaId(Long personaId);
+    Long findPersonaIdByUserId(Long userId);
 }

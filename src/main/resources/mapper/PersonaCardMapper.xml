@@ -27,4 +27,9 @@
         WHERE persona_id = #{personaId} AND is_available = true
     </select>
 
+    <select id="findPersonaIdByUserId" resultType="long">
+        SELECT persona_id
+        FROM users
+        WHERE user_id = #{userId}
+    </select>
 </mapper>

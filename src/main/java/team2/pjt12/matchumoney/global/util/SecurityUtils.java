@@ -34,4 +34,9 @@ public class SecurityUtils {
         // 그 외에는 예외 처리
         throw new CustomException(ErrorCode.USER_NOT_AUTHORIZED);
     }
+    
+    public static Long getCurrentUserId() {
+        UserVO currentUser = getCurrentUser();
+        return currentUser.getUserId();
+    }
 }

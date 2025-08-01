@@ -25,6 +25,7 @@ import team2.pjt12.matchumoney.global.jwt.JwtService;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -61,7 +62,7 @@ public class SecurityConfig {
                                         "/api/user/update/**",
                                         "/api/persona-saving/recommendation",
                                         "/api/deposits/**",
-                                        "/api/savings/**",
+                                        "/api/deposit/**",
                                         "/api/cards/**"
                                 ).permitAll()  // 허용 URL 설정
                                 .requestMatchers("/user/update").authenticated()

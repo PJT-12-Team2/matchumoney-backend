@@ -51,4 +51,5 @@ public class UserController {
         userService.updatePersona(personaId);
         return new SuccessResponse<>("페르소나 저장 성공");
     }
+
 }
