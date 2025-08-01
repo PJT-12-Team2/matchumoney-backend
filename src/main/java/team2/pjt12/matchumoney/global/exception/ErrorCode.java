@@ -19,6 +19,7 @@ public enum ErrorCode {
     EMAIL_NOT_AVAILABLE(409, "U409", "사용할 수 없는 이메일입니다."),
     NOT_MATCH_PASSWORD(400, "U400", "비밀번호가 일치하지 않습니다."),
     USER_ALREADY_EXISTS(409, "U409", "이미 존재하는 사용자입니다."),
+    PERSONA_NOT_FOUND(404, "P404", "해당 페르소나를 찾을 수 없습니다."),
 
     // 인증 관련 예외
     INVALID_PASSWORD(401, "A401", "현재 비밀번호가 일치하지 않습니다."),

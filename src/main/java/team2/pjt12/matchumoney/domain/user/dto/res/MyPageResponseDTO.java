@@ -3,6 +3,7 @@ package team2.pjt12.matchumoney.domain.user.dto.res;
 import lombok.Getter;
 import team2.pjt12.matchumoney.domain.cardsearch.dto.CardSearchResponseDTO;
 import team2.pjt12.matchumoney.domain.deposit.dto.res.DepositProductResponseDTO;
+import team2.pjt12.matchumoney.domain.persona.dto.PersonaSimpleResponseDTO;
 import team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO;
 
 import java.util.List;
@@ -10,7 +11,7 @@ import java.util.List;
 @Getter
 public final class MyPageResponseDTO {
     private final String nickname;
-    private final Long personaId;
+    private final PersonaSimpleResponseDTO persona;
     private final Integer exp;
 
     private final List<DepositProductResponseDTO> favoriteDeposits;
@@ -19,14 +20,14 @@ public final class MyPageResponseDTO {
 
     public MyPageResponseDTO(
             String nickname,
-            Long personaId,
+            PersonaSimpleResponseDTO persona,
             Integer exp,
             List<DepositProductResponseDTO> favoriteDeposits,
             List<SavingListItemResponseDTO> favoriteSavings,
             List<CardSearchResponseDTO> favoriteCards
     ) {
         this.nickname = nickname;
-        this.personaId = personaId;
+        this.persona = persona;
         this.exp = exp;
         this.favoriteDeposits = favoriteDeposits;
         this.favoriteSavings = favoriteSavings;

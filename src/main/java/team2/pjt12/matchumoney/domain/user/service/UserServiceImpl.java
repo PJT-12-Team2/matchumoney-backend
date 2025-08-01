@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team2.pjt12.matchumoney.domain.cardsearch.dto.CardSearchResponseDTO;
 import team2.pjt12.matchumoney.domain.deposit.dto.res.DepositProductResponseDTO;
+import team2.pjt12.matchumoney.domain.persona.dto.PersonaResponseDTO;
+import team2.pjt12.matchumoney.domain.persona.dto.PersonaSimpleResponseDTO;
 import team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO;
 import team2.pjt12.matchumoney.domain.user.domain.UserVO;
 import team2.pjt12.matchumoney.domain.user.dto.req.UpdatePasswordRequestDTO;
@@ -98,6 +100,8 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public MyPageResponseDTO getMyPage() {
         Long userId = getCurrentUser().getUserId();
+        PersonaSimpleResponseDTO persona = userMapper.getPersonaByUserId(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.PERSONA_NOT_FOUND));
         UserVO user = userMapper.findByUserId(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
@@ -107,7 +111,7 @@ public class UserServiceImpl implements UserService {
 
         return new MyPageResponseDTO(
                 user.getNickname(),
-                user.getPersonaId(),
+                persona,
                 user.getExp(),
                 favoriteDeposits,
                 favoriteSavings,

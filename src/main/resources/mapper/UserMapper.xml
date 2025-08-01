@@ -207,4 +207,15 @@
             nickname         AS nickname,
             email            AS email,
     </select>
+
+    <select id="getPersonaByUserId" resultType="team2.pjt12.matchumoney.domain.persona.dto.PersonaSimpleResponseDTO">
+        SELECT
+            name_ko         AS nameKo,
+            quote           AS quote,
+            image_url       AS imageUrl
+        FROM persona_types
+        WHERE persona_id = (
+            SELECT persona_id FROM users WHERE user_id = #{userId}
+        )
+    </select>
 </mapper>
