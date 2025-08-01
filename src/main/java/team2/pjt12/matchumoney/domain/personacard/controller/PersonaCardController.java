@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import team2.pjt12.matchumoney.domain.personacard.dto.PersonaCardResponseDTO;
 import team2.pjt12.matchumoney.domain.personacard.service.PersonaCardService;
-import team2.pjt12.matchumoney.global.jwt.JwtService;
 import team2.pjt12.matchumoney.global.success.SuccessResponse;
 import team2.pjt12.matchumoney.global.util.SecurityUtils;
 
@@ -25,7 +24,6 @@ import java.util.Map;
 @Api(tags = "Persona Card Recommendations",
         description = "페르소나 기반 카드상품 추천 API")
 public class PersonaCardController {
-    private final JwtService jwtService;
     private final PersonaCardService personaCardService;
 
     @ApiOperation(

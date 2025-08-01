@@ -7,6 +7,4 @@ public interface PersonaSavingService {
     PersonaSavingResponseDTO getRecommendedSaving(Long personaId);
 
     Long getPersonaIdByUserId(Long userId);
-
-
 }

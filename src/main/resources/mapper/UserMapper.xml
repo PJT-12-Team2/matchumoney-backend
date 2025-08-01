@@ -107,6 +107,88 @@
         FROM user_favorites
         WHERE user_id = #{userId}
     </select>
+
+    <!-- 상품 별 즐겨찾기 조회 -->
+    <select id="getFavoriteDeposits" resultType="team2.pjt12.matchumoney.domain.deposit.dto.res.DepositProductResponseDTO">
+        SELECT
+            dp.kor_co_nm AS bank_name,
+            dp.fin_prdt_nm AS product_name,
+            dp.etc_note AS etc_note,
+            opt.max_save_trm,
+            opt.max_intr_rate,
+            opt.max_intr_rate2
+        FROM user_favorites uf
+                 JOIN deposit_product dp ON uf.deposit_product_id = dp.deposit_product_id
+                 LEFT JOIN (
+            SELECT *
+            FROM (
+                     SELECT
+                         fin_prdt_cd,
+                         save_trm AS max_save_trm,
+                         intr_rate AS max_intr_rate,
+                         intr_rate2 AS max_intr_rate2,
+                         ROW_NUMBER() OVER (
+          PARTITION BY fin_prdt_cd
+          ORDER BY CASE WHEN save_trm = 12 THEN 1 ELSE 2 END, save_trm DESC
+        ) AS rn
+                     FROM deposit_option
+                 ) tmp
+            WHERE rn = 1
+        ) opt ON dp.fin_prdt_cd = opt.fin_prdt_cd
+        WHERE uf.user_id = #{userId}
+    </select>
+
+    <select id="getFavoriteSavings" resultType="team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO">
+        SELECT
+            sp.saving_product_id   AS id,
+            sp.kor_co_nm           AS company,
+            sp.fin_prdt_nm         AS title,
+            opt.intr_rate          AS base_rate,
+            opt.intr_rate2         AS max_rate,
+            opt.save_trm           AS period,
+            sp.max_limit           AS amount,
+            fc.company_image       AS company_image,
+            TRUE                   AS is_starred
+        FROM user_favorites uf
+                 JOIN saving_product sp
+                      ON uf.saving_product_id = sp.saving_product_id
+                 LEFT JOIN (
+            SELECT *
+            FROM (
+                     SELECT *,
+                            ROW_NUMBER() OVER (
+                                   PARTITION BY fin_prdt_cd
+                                   ORDER BY
+                                     CASE WHEN save_trm = 12 THEN 1
+                                          WHEN save_trm = 6 THEN 2
+                                          WHEN save_trm = 1 THEN 3
+                                          ELSE 4 END
+                               ) AS rn
+                     FROM saving_option
+                 ) ranked
+            WHERE rn = 1
+        ) opt ON sp.fin_prdt_cd = opt.fin_prdt_cd
+                 LEFT JOIN financial_companies fc
+                           ON sp.kor_co_nm LIKE CONCAT('%', fc.kor_co_nm, '%')
+        WHERE uf.user_id = #{userId}
+        ORDER BY CAST(opt.intr_rate AS DECIMAL(5, 4)) DESC
+    </select>
+
+    <select id="getFavoriteCards" resultType="team2.pjt12.matchumoney.domain.cardsearch.dto.CardSearchResponseDTO">
+        SELECT
+            c.card_product_id     AS id,
+            c.name                AS name,
+            c.type                AS type,
+            c.card_image_url      AS imageUrl,
+            c.issuer_id           AS issuer,
+            c.annual_fee          AS annualFee,
+            c.pre_month_money     AS preMonthMoney
+        FROM user_favorites uf
+                 JOIN card_product c ON uf.card_product_id = c.card_product_id
+        WHERE uf.user_id = #{userId}
+    </select>
+
+
     <update id="updatePersonaFromStart">
         UPDATE users
         SET persona_id = #{personaId}
@@ -118,4 +200,22 @@
         SET persona_id = #{personaId}
         WHERE user_id = #{userId}
     </update>
+
+    <select id="getMyPage">
+        SELECT
+            user_id          AS userId,
+            nickname         AS nickname,
+            email            AS email,
+    </select>
+
+    <select id="getPersonaByUserId" resultType="team2.pjt12.matchumoney.domain.persona.dto.PersonaSimpleResponseDTO">
+        SELECT
+            name_ko         AS nameKo,
+            quote           AS quote,
+            image_url       AS imageUrl
+        FROM persona_types
+        WHERE persona_id = (
+            SELECT persona_id FROM users WHERE user_id = #{userId}
+        )
+    </select>
 </mapper>

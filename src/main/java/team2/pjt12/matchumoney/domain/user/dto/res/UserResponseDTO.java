@@ -6,7 +6,7 @@ import team2.pjt12.matchumoney.domain.user.domain.Gender;
 import java.time.LocalDate;
 
 @Getter
-public class UserResponseDTO {
+public final class UserResponseDTO {
     private final Long userId;
     private final String email;
     private final String nickname;

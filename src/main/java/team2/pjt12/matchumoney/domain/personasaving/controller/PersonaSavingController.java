@@ -6,7 +6,6 @@ import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import team2.pjt12.matchumoney.domain.personadeposit.dto.PersonaDepositResponseDTO;
 import team2.pjt12.matchumoney.domain.personasaving.dto.PersonaSavingResponseDTO;
 import team2.pjt12.matchumoney.domain.personasaving.service.PersonaSavingService;
 import team2.pjt12.matchumoney.global.jwt.JwtService;
