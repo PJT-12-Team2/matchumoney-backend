@@ -47,6 +47,8 @@ out/
 .vscode/
 /src/main/generated/
 
+.DS_Store
+
 *.sql
 .idea/
 .idea/
