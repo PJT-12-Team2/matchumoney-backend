@@ -5,6 +5,16 @@
 
 <mapper namespace="team2.pjt12.matchumoney.domain.personacard.mapper.PersonaCardMapper">
 
+    <resultMap id="PersonaCardResultMap" type="team2.pjt12.matchumoney.domain.personacard.dto.PersonaCardDTO">
+        <result property="cardId" column="cardId"/>
+        <result property="cardName" column="cardName"/>
+        <result property="cardImageUrl" column="cardImageUrl"/>
+        <result property="cardType" column="cardType"/>
+        <result property="issuer" column="issuer"/>
+        <result property="annualFee" column="annualFee"/>
+        <result property="preMonthMoney" column="preMonthMoney"/>
+    </resultMap>
+
     <!-- persona_id로 persona_name 조회 -->
     <select id="selectPersonaNameById" resultType="string">
         SELECT name_ko
@@ -14,7 +24,7 @@
 
     <!-- persona_id로 카드 상품 조회 -->
     <select id="selectCardsByPersonaId"
-            resultType="team2.pjt12.matchumoney.domain.personacard.dto.PersonaCardDTO">
+            resultMap="PersonaCardResultMap">
         SELECT
             card_product_id AS cardId,
             name AS cardName,
@@ -31,5 +41,14 @@
         SELECT persona_id
         FROM users
         WHERE user_id = #{userId}
+    </select>
+
+    <!-- 카드 ID로 혜택 상위 3개 조회 -->
+    <select id="selectTop3BenefitsByCardId" resultType="string">
+        SELECT title
+        FROM card_parsed_benefit
+        WHERE card_id2 = #{cardId}
+        ORDER BY value DESC
+            LIMIT 3
     </select>
 </mapper>

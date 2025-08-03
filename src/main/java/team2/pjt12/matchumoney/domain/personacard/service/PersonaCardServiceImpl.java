@@ -2,6 +2,7 @@ package team2.pjt12.matchumoney.domain.personacard.service;
 
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import team2.pjt12.matchumoney.domain.personacard.dto.PersonaCardDTO;
 import team2.pjt12.matchumoney.domain.personacard.dto.PersonaCardResponseDTO;
@@ -12,6 +13,7 @@ import team2.pjt12.matchumoney.domain.user.mapper.UserMapper;
 import java.util.Collections;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PersonaCardServiceImpl implements PersonaCardService {
@@ -23,6 +25,7 @@ public class PersonaCardServiceImpl implements PersonaCardService {
     // personaId로 personaName 조회
     @Override
     public PersonaCardResponseDTO getRecommendedCards(Long personaId) {
+        log.info("⭐ personaId: {}", personaId);
         String personaName = personaCardMapper.selectPersonaNameById(personaId);
         List<PersonaCardDTO> recommendedCards = getRandomizedCards(personaId);
 
@@ -32,9 +35,23 @@ public class PersonaCardServiceImpl implements PersonaCardService {
     // personaId에 맞는 카드 추천 3개
     private List<PersonaCardDTO> getRandomizedCards(Long personaId) {
         List<PersonaCardDTO> allCards = personaCardMapper.selectCardsByPersonaId(personaId);
+        log.info("🎯 조회된 카드 수: {}", allCards.size());
         Collections.shuffle(allCards);
-        return allCards.stream()
-                .limit(RECOMMENDATION_LIMIT).toList();
+        List<PersonaCardDTO> recommendedCards = allCards.stream()
+                .limit(RECOMMENDATION_LIMIT)
+                .toList();
+
+        log.info("🎯 실제 추천 카드 수: {}", recommendedCards.size());
+
+        // 혜택 top3
+        for (PersonaCardDTO card : recommendedCards) {
+            log.info("⭐️ CardId: {}", card.getCardId());
+            List<String> topBenefits = personaCardMapper.selectTop3BenefitsByCardId(card.getCardId());
+            log.info("⭐️ CardId {}'s benefit': {}", card.getCardId(), topBenefits);
+            card.setTopBenefits(topBenefits);
+        }
+
+        return recommendedCards;
     }
 
     // build
