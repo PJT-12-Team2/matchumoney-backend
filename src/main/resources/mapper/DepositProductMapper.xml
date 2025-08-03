@@ -29,15 +29,18 @@
                          ROW_NUMBER() OVER (
                              PARTITION BY fin_prdt_cd
                              ORDER BY
-                                 CASE WHEN save_trm = 12 THEN 1 ELSE 2 END,
-                                 save_trm DESC
+                                 CASE
+                                     WHEN save_trm = 12 THEN 1          -- 가장 우선
+                                     WHEN save_trm &lt; 12 THEN 2          -- 그 다음
+                                     ELSE 3                             -- 제외 대상
+                                     END,
+                                 save_trm DESC                          -- 같은 우선순위면 큰 기간 먼저
                              ) AS rn
                      FROM deposit_option
                  ) tmp
             WHERE rn = 1
         )
     </sql>
-
 
     <!--  모든 예금 상품 출력  -->
     <select id="findAllDepositProducts" resultMap="DepositProductResponseMap">
@@ -51,9 +54,8 @@
         FROM deposit_product dp
         LEFT JOIN <include refid="optionBySaveTerm12OrMax"/> opt
         ON dp.fin_prdt_cd = opt.fin_prdt_cd
-        ORDER BY dp.kor_co_nm, dp.fin_prdt_nm
+        ORDER BY opt.max_intr_rate DESC
     </select>
-
 
     <!-- 은행별 예금 상품 조회 -->
     <select id="findDepositProductsByBankName" parameterType="string" resultMap="DepositProductResponseMap">
@@ -66,8 +68,8 @@
         opt.max_intr_rate2
         FROM deposit_product dp
         LEFT JOIN <include refid="optionBySaveTerm12OrMax"/> opt
-        ON dp.fin_prdt_cd = opt.fin_prdt_cd AND opt.rn = 1
+        ON dp.fin_prdt_cd = opt.fin_prdt_cd
         WHERE dp.kor_co_nm = #{bankName}
-        ORDER BY dp.fin_prdt_nm
+        ORDER BY opt.max_intr_rate DESC
     </select>
 </mapper>
