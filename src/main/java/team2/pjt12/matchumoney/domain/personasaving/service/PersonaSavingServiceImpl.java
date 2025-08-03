@@ -21,7 +21,7 @@ public class PersonaSavingServiceImpl implements PersonaSavingService {
     // personaId로 personaName 조회
     @Override
     public PersonaSavingResponseDTO getRecommendedSaving(Long personaId) {
-        String personaName = personaSavingMapper.selectPersonaNameById(personaId);
+        String personaName = personasavingMapper.selectPersonaNameById(personaId);
         List<PersonaSavingDTO> recommendedSavings = getRandomizedSavings(personaId);
 
         return buildRecommendationResponse(personaName, recommendedSavings);
