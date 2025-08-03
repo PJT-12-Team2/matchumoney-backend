@@ -20,4 +20,5 @@ public class DepositProductResponseDTO {
     private BigDecimal maxIntrRate;     // 최대 기본금리 (intr_rate)
     private BigDecimal maxIntrRate2;    // 최대 우대금리 (intr_rate2)
     private String minAmount;           // 최소 금액 (ServiceImpl에서 etcNote로부터 추출)
+    private String userNickname;        //유저아이디
 }

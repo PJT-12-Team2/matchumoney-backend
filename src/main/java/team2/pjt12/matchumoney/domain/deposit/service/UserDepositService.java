@@ -14,11 +14,4 @@ public interface UserDepositService {
      * @throws RuntimeException 사용자가 존재하지 않거나 조회 중 오류 발생시
      */
     List<UserDepositResponseDTO> getAccountsByUserId(String userId);
-
-    /**
-     * 사용자 잔액 기반으로 가입 가능한 상품 추천
-     * @param request 사용자 ID와 잔액 정보
-     * @return 가입 가능한 상품 리스트
-     */
-    List<DepositProductResponseDTO> getProductsByBalance(BalanceRequestDTO request);
 }
