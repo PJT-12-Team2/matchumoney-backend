@@ -19,4 +19,10 @@ public interface DepositProductService {
      */
     List<DepositProductResponseDTO> getDepositProductsByBank(String bankName);
 
+    /**
+     * 사용자 잔액 기반으로 가입 가능한 상품 추천
+     * @param request 사용자 ID와 잔액 정보
+     * @return 가입 가능한 상품 리스트
+     */
+    List<DepositProductResponseDTO> getProductsByBalance(BalanceRequestDTO request);
 }

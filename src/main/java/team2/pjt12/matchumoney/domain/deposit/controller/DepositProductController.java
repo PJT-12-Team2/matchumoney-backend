@@ -1,13 +1,15 @@
 package team2.pjt12.matchumoney.domain.deposit.controller;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import team2.pjt12.matchumoney.domain.deposit.dto.req.BalanceRequestDTO;
 import team2.pjt12.matchumoney.domain.deposit.dto.res.DepositProductResponseDTO;
 import team2.pjt12.matchumoney.domain.deposit.service.DepositProductService;
-
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/deposits")
 @CrossOrigin(origins = "*")
@@ -27,53 +29,34 @@ public class DepositProductController {
     }
 
     /**
-     * 은행별 예금 상품 조회
-     * @param bankName 은행명
-     * @return 해당 은행의 예금 상품 목록
+     * KB국민은행 예금 상품만 조회 (계좌가 없는 사용자용)
+     * @return KB국민은행 예금 상품 목록
      */
-    @GetMapping("/products/bank/{bankName}")
-    public ResponseEntity<List<DepositProductResponseDTO>> getDepositProductsByBank(
-            @PathVariable String bankName) {
-        List<DepositProductResponseDTO> products = depositProductService.getDepositProductsByBank(bankName);
+    @GetMapping("/recommendations/kb-products")
+    public ResponseEntity<List<DepositProductResponseDTO>> getKBDepositProducts() {
+        List<DepositProductResponseDTO> products = depositProductService.getDepositProductsByBank("국민은행");
         return ResponseEntity.ok(products);
     }
 
-    /**
-     * 사용자 보유 금액과 상품 최소 가입 금액을 비교하여 가입 가능한 상품만 조회
-     * 실제 가입 가능한 상품들만 보여줌
-     *
-     * @param userId 조회할 사용자 ID
-     * @return 사용자가 가입 가능한 예금 상품 목록 (보유 금액 >= 최소 가입 금액)
-     */
-//    @GetMapping("/recommendations/history/{userId}")
-//    public ResponseEntity<List<DepositProductResponseDTO>> getAffordableProducts(
-//            @PathVariable("userId") String userId) {
-//
-////        log.info("사용자 가입 가능한 상품 조회 요청: userId={}", userId);
-//
-//        try {
-//            // 서비스에서 사용자가 가입 가능한 상품 목록 조회
-//            List<DepositProductResponseDTO> products =
-//                    depositProductService.getAffordableProducts(userId);
-//
-////            log.info("사용자 가입 가능한 상품 조회 성공: userId={}, 상품수={}",
-////                    userId, products.size());
-//
-//            // 성공 응답 (200 OK)
-//            return ResponseEntity.ok(products);
-//
-//        } catch (RuntimeException e) {
-////            log.error("사용자 가입 가능한 상품 조회 실패: userId={}, error={}",
-////                    userId, e.getMessage());
-//
-//            // 비즈니스 로직 오류 응답 (400 Bad Request)
-//            return ResponseEntity.badRequest().build();
-//
-//        } catch (Exception e) {
-////            log.error("사용자 가입 가능한 상품 조회 중 시스템 오류: userId={}", userId, e);
-//
-//            // 시스템 오류 응답 (500 Internal Server Error)
-//            return ResponseEntity.internalServerError().build();
-//        }
-//    }
+    @PostMapping("/recommendations/byBalance")
+    public ResponseEntity<List<DepositProductResponseDTO>> getProductsByBalance(@RequestBody BalanceRequestDTO request) {
+        log.info("잔액 기반 상품 추천 API 호출: userId={}, balance={}, accountNumber={}",
+                request.getUserId(), request.getBalance(), request.getAccountNumber());
+
+        try {
+            // 🔍 요청 데이터 상세 로깅
+            log.debug("요청 DTO 전체: {}", request);
+
+            List<DepositProductResponseDTO> products = depositProductService.getProductsByBalance(request);
+            log.info("추천 상품 {}개 조회 완료", products.size());
+            return ResponseEntity.ok(products);
+        } catch (IllegalArgumentException e) {
+            log.error("잘못된 요청 파라미터: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("잔액 기반 상품 추천 API 오류: userId={}, balance={}, 상세오류:",
+                    request.getUserId(), request.getBalance(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }
