@@ -9,6 +9,7 @@ import team2.pjt12.matchumoney.domain.deposit.dto.res.DepositProductResponseDTO;
 import team2.pjt12.matchumoney.domain.deposit.mapper.DepositProductMapper;
 
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -20,17 +21,23 @@ public class DepositProductServiceImpl implements DepositProductService {
 
     private final DepositProductMapper depositProductMapper;
 
+    private static final Pattern AMOUNT_PATTERN = Pattern.compile("([0-9]+)([십백천만억]?)만원");
+    private static final Map<String, Integer> UNIT_MULTIPLIERS = Map.of(
+            "십", 10,
+            "백", 100,
+            "천", 1_000,
+            "만", 10_000,
+            "억", 100_000_000
+    );
+
+    private static final long[] UNITS = {100_000_000L, 10_000L, 1_000L, 100L};
+    private static final String[] UNIT_NAMES = {"억", "만", "천", "백"};
+
     @Override
     @Transactional(readOnly = true)
     public List<DepositProductResponseDTO> getAllDepositProducts() {
         List<DepositProductResponseDTO> products = depositProductMapper.findAllDepositProducts();
-
-        // 각 상품의 최소 금액 추출 및 설정 (직접 처리)
-        products.forEach(product -> {
-            String minAmount = extractMinAmountAsString(product.getEtcNote());
-            product.setMinAmount(minAmount);
-        });
-
+        products.forEach(this::setMinAmountForDisplay);
         return products;
     }
 
@@ -45,12 +52,7 @@ public class DepositProductServiceImpl implements DepositProductService {
         }
 
         List<DepositProductResponseDTO> products = depositProductMapper.findDepositProductsByBankName(bankName.trim());
-
-        // 은행별 조회에서도 minAmount 설정
-        products.forEach(product -> {
-            String minAmount = extractMinAmountAsString(product.getEtcNote());
-            product.setMinAmount(minAmount);
-        });
+        products.forEach(this::setMinAmountForDisplay);
 
         log.info("{}의 예금 상품 수: {}", bankName, products.size());
         return products;
@@ -61,44 +63,20 @@ public class DepositProductServiceImpl implements DepositProductService {
         log.info("잔액 기반 상품 추천 시작: userId={}, balance={}", request.getUserId(), request.getBalance());
 
         try {
-            // 1. 입력 검증
-            if (request.getUserId() == null || request.getBalance() == null) {
-                log.error("필수 파라미터 누락: userId={}, balance={}", request.getUserId(), request.getBalance());
-                throw new IllegalArgumentException("userId와 balance는 필수입니다");
-            }
+            validateRequest(request);
 
-            // 2. 모든 상품 조회
             List<DepositProductResponseDTO> allProducts = depositProductMapper.findAllDepositProducts();
             log.info("전체 상품 수: {}", allProducts.size());
 
-            // 3. 잔액 기반 필터링
             List<DepositProductResponseDTO> filteredProducts = allProducts.stream()
-                    .filter(product -> {
-                        try {
-                            // 최소 금액 추출
-                            Long minAmount = extractMinAmountAsLong(product.getEtcNote());
-
-                            // 금액 추출 실패한 상품은 포함 (제한 없음으로 간주)
-                            if (minAmount == -1L) {
-                                return true;
-                            }
-
-                            // 사용자 잔액이 최소 금액 이상인 경우만 포함
-                            return request.getBalance() >= minAmount;
-                        } catch (Exception e) {
-                            log.warn("상품 필터링 중 오류: {}", e.getMessage());
-                            return true; // 오류 시 포함
-                        }
-                    })
+                    .filter(product -> isProductAvailableForBalance(product, request.getBalance()))
                     .collect(Collectors.toList());
 
-            // 4. 화면 표시용 minAmount 설정
-            filteredProducts.forEach(product -> {
-                String minAmount = extractMinAmountAsString(product.getEtcNote());
-                product.setMinAmount(minAmount);
-            });
+            filteredProducts.forEach(this::setMinAmountForDisplay);
 
-            log.info("필터링된 상품 수: {} (전체: {})", filteredProducts.size(), allProducts.size());
+            log.info("필터링 결과: 사용자 잔액 {}원으로 가입 가능한 상품 {}개 (전체: {}개)",
+                    request.getBalance(), filteredProducts.size(), allProducts.size());
+
             return filteredProducts;
 
         } catch (Exception e) {
@@ -107,22 +85,58 @@ public class DepositProductServiceImpl implements DepositProductService {
         }
     }
 
+    private void validateRequest(BalanceRequestDTO request) {
+        if (request.getUserId() == null || request.getBalance() == null) {
+            log.error("필수 파라미터 누락: userId={}, balance={}", request.getUserId(), request.getBalance());
+            throw new IllegalArgumentException("userId와 balance는 필수입니다");
+        }
+    }
+
+    private boolean isProductAvailableForBalance(DepositProductResponseDTO product, Long userBalance) {
+        try {
+            Long minAmount = extractMinAmountAsLong(product.getEtcNote());
+
+            // 최소 금액 정보가 없으면 가입 가능으로 처리
+            if (minAmount == -1L) {
+                log.debug("상품 '{}' - 최소 금액 정보 없음, 가입 가능으로 처리", product.getProductName());
+                return true;
+            }
+
+            boolean available = userBalance >= minAmount;
+            log.debug("상품 '{}' - 사용자 잔액: {}원, 최소 금액: {}원, 가입 가능: {}",
+                    product.getProductName(), userBalance, minAmount, available);
+
+            return available;
+        } catch (Exception e) {
+            log.warn("상품 '{}' 필터링 중 오류: {}, 가입 가능으로 처리", product.getProductName(), e.getMessage());
+            return true;
+        }
+    }
+
+    private void setMinAmountForDisplay(DepositProductResponseDTO product) {
+        String minAmount = extractMinAmountAsString(product.getEtcNote());
+        product.setMinAmount(minAmount);
+    }
+
     /**
-     * 문자열로 최소 금액 추출 (화면 표시용)
+     * etcNote에서 최소 금액을 추출하여 한국어 형태로 반환
      */
     private String extractMinAmountAsString(String etcNote) {
         if (etcNote == null || etcNote.trim().isEmpty()) {
-            return "제한 없음";
+            return "null";
         }
 
         try {
-            Pattern pattern = Pattern.compile("([0-9,]+(?:만|천|백)?)[\\s]*원");
-            Matcher matcher = pattern.matcher(etcNote);
-
+            Matcher matcher = AMOUNT_PATTERN.matcher(etcNote);
             if (matcher.find()) {
-                return matcher.group(1) + "원";
+                int number = Integer.parseInt(matcher.group(1));
+                String unit = matcher.group(2);
+                int multiplier = UNIT_MULTIPLIERS.getOrDefault(unit, 1);
+                long amount = (long) number * multiplier * 10_000;
+
+                return formatKoreanAmount(amount);
             }
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
             log.warn("최소 금액 문자열 추출 실패: {}", e.getMessage());
         }
 
@@ -130,37 +144,76 @@ public class DepositProductServiceImpl implements DepositProductService {
     }
 
     /**
+     * 금액을 한국어 단위로 변환 (예: 1000000 → 100만원)
+     */
+    private String formatKoreanAmount(long amount) {
+        if (amount == 0) return "0원";
+
+        StringBuilder result = new StringBuilder();
+
+        for (int i = 0; i < UNITS.length; i++) {
+            long unitValue = amount / UNITS[i];
+            if (unitValue > 0) {
+                result.append(unitValue).append(UNIT_NAMES[i]);
+                amount %= UNITS[i];
+            }
+        }
+
+        if (amount > 0) {
+            result.append(amount);
+        }
+
+        return result.append("원").toString();
+    }
+
+    /**
      * etcNote에서 최소 금액을 추출하여 Long 타입으로 반환 (계산용)
      */
     private Long extractMinAmountAsLong(String etcNote) {
         if (etcNote == null || etcNote.trim().isEmpty()) {
-            return -1L; // 정보가 없으면 -1 반환 (제한 없음)
+            log.debug("etcNote가 비어있음");
+            return -1L;
         }
 
-        try {
-            // 개선된 정규식으로 금액 추출
-            // "1만원", "10만원", "100만원", "1,000원", "10,000원" 등을 모두 캐치
-            Pattern pattern = Pattern.compile("([0-9,]+(?:만|천|백)?)[\\s]*원");
-            Matcher matcher = pattern.matcher(etcNote);
+        log.debug("원본 etcNote: '{}'", etcNote);
 
-            if (matcher.find()) {
-                String amountStr = matcher.group(1);
-                Long convertedAmount = convertKoreanNumberToLong(amountStr);
+        // 기존 패턴으로 먼저 시도
+        Matcher matcher = AMOUNT_PATTERN.matcher(etcNote);
+        if (matcher.find()) {
+            try {
+                int number = Integer.parseInt(matcher.group(1));
+                String unit = matcher.group(2);
+                int multiplier = UNIT_MULTIPLIERS.getOrDefault(unit, 1);
+                long amount = (long) number * multiplier * 10_000;
 
-                if (convertedAmount > 0) {
-                    return convertedAmount;
-                }
+                log.debug("AMOUNT_PATTERN 매칭: number={}, unit='{}', multiplier={}, 최종금액={}원",
+                        number, unit, multiplier, amount);
+                return amount;
+            } catch (NumberFormatException e) {
+                log.warn("AMOUNT_PATTERN 숫자 파싱 실패: {}", e.getMessage());
             }
-        } catch (Exception e) {
-            log.warn("최소 금액 Long 추출 실패: etcNote={}, error={}", etcNote, e.getMessage());
         }
 
-        return -1L; // 추출 실패 시 -1 반환 (제한 없음)
+        // 대안 패턴으로 시도
+        Pattern alternativePattern = Pattern.compile("([0-9,]+(?:만|천|백)?)[\\s]*원");
+        Matcher altMatcher = alternativePattern.matcher(etcNote);
+
+        if (altMatcher.find()) {
+            String amountStr = altMatcher.group(1);
+            log.debug("대안 패턴 매칭: amountStr='{}'", amountStr);
+
+            Long convertedAmount = convertKoreanNumberToLong(amountStr);
+            log.debug("변환된 금액: {}원", convertedAmount);
+
+            return convertedAmount > 0 ? convertedAmount : -1L;
+        }
+
+        log.debug("금액 패턴 매칭 실패");
+        return -1L;
     }
 
     /**
      * 한국어 숫자를 Long 타입으로 변환 (계산용)
-     * 예: "1만" -> 10000, "10만" -> 100000, "100만" -> 1000000, "1,000" -> 1000
      */
     private Long convertKoreanNumberToLong(String amount) {
         try {
@@ -168,60 +221,61 @@ public class DepositProductServiceImpl implements DepositProductService {
                 return 0L;
             }
 
-            // 쉼표 제거
+            log.debug("변환 시작: '{}'", amount);
             amount = amount.replace(",", "").trim();
             long result = 0L;
 
             if (amount.contains("만")) {
-                // "만" 처리
                 String[] parts = amount.split("만");
+                log.debug("만 단위 분리: {}", java.util.Arrays.toString(parts));
+
                 if (parts.length > 0 && !parts[0].isEmpty()) {
                     long manValue = Long.parseLong(parts[0]);
                     result = manValue * 10000;
+                    log.debug("만 단위: {} -> {}원", manValue, result);
                 }
 
-                // 만 뒤에 추가 숫자 처리 (예: "1만5천")
                 if (parts.length > 1 && !parts[1].isEmpty()) {
-                    String remainder = parts[1];
-                    if (remainder.contains("천")) {
-                        String cheonStr = remainder.replace("천", "");
-                        if (!cheonStr.isEmpty()) {
-                            result += Long.parseLong(cheonStr) * 1000;
-                        }
-                    } else if (remainder.contains("백")) {
-                        String baekStr = remainder.replace("백", "");
-                        if (!baekStr.isEmpty()) {
-                            result += Long.parseLong(baekStr) * 100;
-                        }
-                    } else {
-                        // 만 뒤에 순수 숫자가 있는 경우
-                        if (!remainder.isEmpty()) {
-                            result += Long.parseLong(remainder);
-                        }
-                    }
+                    long subAmount = parseSubUnit(parts[1]);
+                    result += subAmount;
+                    log.debug("하위 단위: {} -> 총 {}원", subAmount, result);
                 }
             } else if (amount.contains("천")) {
-                // "천" 단위만 있는 경우
                 String cheonStr = amount.replace("천", "");
                 if (!cheonStr.isEmpty()) {
                     result = Long.parseLong(cheonStr) * 1000;
+                    log.debug("천 단위: {} -> {}원", cheonStr, result);
                 }
             } else if (amount.contains("백")) {
-                // "백" 단위만 있는 경우
                 String baekStr = amount.replace("백", "");
                 if (!baekStr.isEmpty()) {
                     result = Long.parseLong(baekStr) * 100;
+                    log.debug("백 단위: {} -> {}원", baekStr, result);
                 }
             } else {
-                // 순수 숫자인 경우
                 result = Long.parseLong(amount);
+                log.debug("순수 숫자: {} -> {}원", amount, result);
             }
 
+            log.debug("최종 변환 결과: {}원", result);
             return result;
 
         } catch (NumberFormatException e) {
-            log.warn("한국어 숫자 변환 실패: amount={}, error={}", amount, e.getMessage());
-            return 0L; // 변환 실패 시 0L 반환
+            log.warn("한국어 숫자 변환 실패: amount='{}', error={}", amount, e.getMessage());
+            return 0L;
         }
+    }
+
+    private long parseSubUnit(String remainder) {
+        if (remainder.contains("천")) {
+            String cheonStr = remainder.replace("천", "");
+            return !cheonStr.isEmpty() ? Long.parseLong(cheonStr) * 1000 : 0;
+        } else if (remainder.contains("백")) {
+            String baekStr = remainder.replace("백", "");
+            return !baekStr.isEmpty() ? Long.parseLong(baekStr) * 100 : 0;
+        } else if (!remainder.isEmpty()) {
+            return Long.parseLong(remainder);
+        }
+        return 0;
     }
 }
