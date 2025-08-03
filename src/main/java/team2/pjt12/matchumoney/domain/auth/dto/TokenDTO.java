@@ -10,4 +10,5 @@ public class TokenDTO {
     private final String accessToken;
     private final Long userId;
     private final String nickname;
+    private final Long personaId;
 }

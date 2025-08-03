@@ -118,6 +118,7 @@ public class AuthServiceImpl implements AuthService{
                 .accessToken(accessToken)
                 .userId(user.getUserId())
                 .nickname(user.getNickname())
+                .personaId(user.getPersonaId())
                 .build();
     }
 
