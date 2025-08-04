@@ -9,7 +9,7 @@ import java.util.*;
  * 가맹점명을 기반으로 소비 분야를 분류하는 서비스
  * 
  * @author MatchuMoney Team
- * @since 1.0
+ * @since 1.0ㄴ
  */
 @Slf4j
 @Service
@@ -38,7 +38,7 @@ public class MerchantCategoryService {
             "커피빈", "COFFEE BEAN", "할리스", "HOLLYS", "탐앤탐스", "TOM N TOMS",
             "메가커피", "MEGA", "카페베네", "CAFFE BENE", "엔젤인어스", "ANGEL-IN-US",
             "드롭탑", "커피", "COFFEE", "카페", "CAFE", "BEAN", "원두", "라떼", "아메리카노",
-            "빽다방", "컴포즈커피", "더벤티", "폴바셋", "파스쿠찌"
+            "빽다방", "컴포즈커피", "더벤티", "폴바셋", "파스쿠찌", "설빙"
         ));
         
         // 교통 (모빌리티, 대중교통)
@@ -73,12 +73,12 @@ public class MerchantCategoryService {
             "찜닭", "치킨", "hamburger", "레스토랑", "RESTAURANT", "푸드", "FOOD",
             "김밥", "떡볶이", "순대", "라면", "국수", "냉면", "비빔밥", "돈까스",
             "세종김밥떡볶이", "신사골감자탕", "천지샤브샤브", "혼다라멘", "엽기떡볶이",
-            "칼국수", "고을칼국수", "감자탕", "샤브샤브", "라멘", "빈프라임", "모모야"
+            "칼국수", "고을칼국수", "감자탕", "샤브샤브", "라멘", "모모야",
+                "써브웨이","더개미", "The개미", "채움", "알고"
         ));
         
         // 주점/술집
-        CATEGORY_KEYWORDS.put("주점", Arrays.asList(
-            "레전드", "호프", "맥주", "술집", "주점", "호텔N", "바", "BAR",
+        CATEGORY_KEYWORDS.put("주점", Arrays.asList("호프", "맥주", "술집", "주점", "바", "BAR",
             "칵테일", "위스키", "소주", "맥주집", "치킨호프"
         ));
         
@@ -91,8 +91,7 @@ public class MerchantCategoryService {
         // 쇼핑/백화점
         CATEGORY_KEYWORDS.put("쇼핑", Arrays.asList(
             "백화점", "롯데백화점", "신세계백화점", "현대백화점", "갤러리아",
-            "행복한백화점", "아울렛", "OUTLET", "쇼핑몰", "MALL", "빈티지", "1978빈티지",
-            "더개미", "The개미"
+            "행복한백화점", "아울렛", "OUTLET", "쇼핑몰", "MALL", "빈티지", "1978빈티지", "빈프라임"
         ));
         
         // 결제서비스
@@ -116,7 +115,7 @@ public class MerchantCategoryService {
         CATEGORY_KEYWORDS.put("문화", Arrays.asList(
             "교보문고", "KYOBO", "영풍문고", "알라딘", "YES24", "서점", "도서관",
             "박물관", "미술관", "전시관", "콘서트", "공연", "뮤지컬", "연극",
-            "아트센터", "문화센터", "갤러리", "GALLERY", "북스", "BOOKS"
+            "아트센터", "문화센터", "갤러리", "GALLERY", "북스", "BOOKS", "레전드"
         ));
         
         // 화장품 (뷰티, 화장품)
@@ -125,7 +124,7 @@ public class MerchantCategoryService {
             "미샤", "MISSHA", "더페이스샵", "THE FACE SHOP", "이니스프리", "INNISFREE",
             "에뛰드하우스", "ETUDE HOUSE", "네이처리퍼블릭", "NATURE REPUBLIC",
             "화장품", "코스메틱", "COSMETIC", "뷰티", "BEAUTY", "향수", "PERFUME",
-            "토니앤가이", "아모레퍼시픽", "LG생활건강", "헤라", "설화수", "라네즈"
+            "토니앤가이", "아모레퍼시픽", "LG생활건강", "헤라", "설화수", "라네즈", "씨제이올리브네트웍스"
         ));
         
         // 온라인쇼핑
