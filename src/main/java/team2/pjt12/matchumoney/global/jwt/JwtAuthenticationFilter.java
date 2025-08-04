@@ -42,7 +42,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 uri.startsWith("/api/auth/") ||
                 uri.startsWith("/static/") ||
                 uri.equals("/kakao_login_medium_narrow.png") ||
-                uri.equals("/page/login");
+                uri.equals("/page/login") ||
+                uri.startsWith("/api/users/me/");
     }
 
     @Override
