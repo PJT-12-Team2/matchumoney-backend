@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import team2.pjt12.matchumoney.domain.personasaving.dto.PersonaSavingDTO;
 import team2.pjt12.matchumoney.domain.personasaving.dto.PersonaSavingResponseDTO;
 
+import team2.pjt12.matchumoney.domain.personasaving.mapper.PersonaSavingMapper;
 import team2.pjt12.matchumoney.domain.user.domain.UserVO;
 import team2.pjt12.matchumoney.domain.user.mapper.UserMapper;
 import java.util.Collections;
@@ -20,7 +21,7 @@ public class PersonaSavingServiceImpl implements PersonaSavingService {
     // personaId로 personaName 조회
     @Override
     public PersonaSavingResponseDTO getRecommendedSaving(Long personaId) {
-        String personaName = personaSavingMapper.selectPersonaNameById(personaId);
+        String personaName = personasavingMapper.selectPersonaNameById(personaId);
         List<PersonaSavingDTO> recommendedSavings = getRandomizedSavings(personaId);
 
         return buildRecommendationResponse(personaName, recommendedSavings);

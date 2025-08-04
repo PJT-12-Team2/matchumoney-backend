@@ -3,8 +3,6 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="team2.pjt12.matchumoney.domain.deposit.mapper.DepositProductMapper">
-
-    <!-- 결과 매핑 -->
     <resultMap id="DepositProductResponseMap" type="team2.pjt12.matchumoney.domain.deposit.dto.res.DepositProductResponseDTO">
         <result property="bankName" column="bank_name"/>
         <result property="productName" column="product_name"/>
@@ -14,9 +12,14 @@
         <result property="maxIntrRate2" column="max_intr_rate2"/>
     </resultMap>
 
+    <!--  개월 수가 여러인 경우 12개월이 나오게  -->
     <sql id="optionBySaveTerm12OrMax">
         (
-            SELECT *
+            SELECT
+                fin_prdt_cd,
+                max_save_trm,
+                max_intr_rate,
+                max_intr_rate2
             FROM (
                      SELECT
                          fin_prdt_cd,
@@ -26,9 +29,12 @@
                          ROW_NUMBER() OVER (
                              PARTITION BY fin_prdt_cd
                              ORDER BY
-                                 -- 12개월이 가장 우선순위, 없으면 긴 순서
-                                 CASE WHEN save_trm = 12 THEN 1 ELSE 2 END,
-                                 save_trm DESC
+                                 CASE
+                                     WHEN save_trm = 12 THEN 1          -- 가장 우선
+                                     WHEN save_trm &lt; 12 THEN 2          -- 그 다음
+                                     ELSE 3                             -- 제외 대상
+                                     END,
+                                 save_trm DESC                          -- 같은 우선순위면 큰 기간 먼저
                              ) AS rn
                      FROM deposit_option
                  ) tmp
@@ -36,6 +42,7 @@
         )
     </sql>
 
+    <!--  모든 예금 상품 출력  -->
     <select id="findAllDepositProducts" resultMap="DepositProductResponseMap">
         SELECT
         dp.kor_co_nm AS bank_name,
@@ -47,7 +54,7 @@
         FROM deposit_product dp
         LEFT JOIN <include refid="optionBySaveTerm12OrMax"/> opt
         ON dp.fin_prdt_cd = opt.fin_prdt_cd
-        ORDER BY dp.kor_co_nm, dp.fin_prdt_nm
+        ORDER BY opt.max_intr_rate DESC
     </select>
 
     <!-- 은행별 예금 상품 조회 -->
@@ -61,70 +68,8 @@
         opt.max_intr_rate2
         FROM deposit_product dp
         LEFT JOIN <include refid="optionBySaveTerm12OrMax"/> opt
-        ON dp.fin_prdt_cd = opt.fin_prdt_cd AND opt.rn = 1
+        ON dp.fin_prdt_cd = opt.fin_prdt_cd
         WHERE dp.kor_co_nm = #{bankName}
-        ORDER BY dp.fin_prdt_nm
+        ORDER BY opt.max_intr_rate DESC
     </select>
-
-    <!-- 상품 코드로 예금 상품 조회 -->
-    <select id="findDepositProductByCode" parameterType="string" resultMap="DepositProductResponseMap">
-        SELECT
-        dp.kor_co_nm as bank_name,
-        dp.fin_prdt_nm as product_name,
-        dp.etc_note as etc_note,
-        opt.max_save_trm,
-        opt.max_intr_rate,
-        opt.max_intr_rate2
-        FROM deposit_product dp
-        LEFT JOIN <include refid="optionBySaveTerm12OrMax"/> opt
-        ON dp.fin_prdt_cd = opt.fin_prdt_cd AND opt.rn = 1
-        WHERE dp.fin_prdt_cd = #{productCode}
-    </select>
-
-    <!-- 금리 범위로 예금 상품 조회 -->
-    <select id="findDepositProductsByInterestRate" resultMap="DepositProductResponseMap">
-        SELECT
-        dp.kor_co_nm as bank_name,
-        dp.fin_prdt_nm as product_name,
-        dp.etc_note as etc_note,
-        opt.max_save_trm,
-        opt.max_intr_rate,
-        opt.max_intr_rate2
-        FROM deposit_product dp
-        LEFT JOIN <include refid="optionBySaveTerm12OrMax"/> opt
-        ON dp.fin_prdt_cd = opt.fin_prdt_cd AND opt.rn = 1
-        WHERE 1=1
-        <if test="minRate != null">
-            AND opt.max_intr_rate >= #{minRate}
-        </if>
-        <if test="maxRate != null">
-            AND opt.max_intr_rate &lt;= #{maxRate}
-        </if>
-        ORDER BY opt.max_intr_rate DESC, dp.kor_co_nm
-    </select>
-
-    <!-- 저축 기간으로 예금 상품 조회 -->
-    <select id="findDepositProductsBySaveTerm" parameterType="int" resultMap="DepositProductResponseMap">
-        SELECT DISTINCT
-            dp.kor_co_nm as bank_name,
-            dp.fin_prdt_nm as product_name,
-            dp.etc_note as etc_note,
-            do2.save_trm as max_save_trm,
-            do2.intr_rate as max_intr_rate,
-            do2.intr_rate2 as max_intr_rate2
-        FROM deposit_product dp
-                 INNER JOIN deposit_option do1 ON dp.fin_prdt_cd = do1.fin_prdt_cd
-                 LEFT JOIN (
-            SELECT
-                fin_prdt_cd,
-                save_trm,
-                intr_rate,
-                intr_rate2,
-                ROW_NUMBER() OVER (PARTITION BY fin_prdt_cd ORDER BY save_trm DESC) as rn
-            FROM deposit_option
-        ) do2 ON dp.fin_prdt_cd = do2.fin_prdt_cd AND do2.rn = 1
-        WHERE do1.save_trm = #{saveTrm}
-        ORDER BY do2.intr_rate DESC, dp.kor_co_nm
-    </select>
-
 </mapper>

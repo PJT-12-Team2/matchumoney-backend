@@ -19,20 +19,18 @@
         매개변수: userId (String 타입)
         반환: AccountVO 리스트
     -->
-    <select id="getAccountsByUserId"
-            parameterType="string"
-            resultMap="AccountResultMap">
+    <select id="getAccountsByUserId" parameterType="string" resultMap="AccountResultMap">
         SELECT
-            mua.res_account,            -- 계좌번호
-            mua.user_id,                -- 사용자 ID
-            mua.res_account_balance,    -- 계좌 잔액
-            mua.res_account_name,       -- 계좌명
-            mua.res_account_display,    -- 계좌 표시명
-            u.nickname                  -- 사용자 닉네임
+            mua.res_account,
+            mua.user_id,
+            mua.res_account_balance,
+            mua.res_account_name,
+            mua.res_account_display,
+            COALESCE(u.nickname, '사용자') as nickname  -- null 체크 추가
         FROM mydata_user_account mua
                  INNER JOIN users u ON mua.user_id = u.user_id
-        WHERE mua.user_id = #{userId}           -- 매개변수로 받은 사용자 ID로 필터링
-        ORDER BY mua.res_account_balance DESC   -- 잔액이 높은 순으로 정렬
+        WHERE mua.user_id = #{userId}
+        ORDER BY mua.res_account_balance DESC
     </select>
 
 </mapper>

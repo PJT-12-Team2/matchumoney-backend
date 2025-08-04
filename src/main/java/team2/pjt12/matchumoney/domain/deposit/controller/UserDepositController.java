@@ -30,19 +30,4 @@ public class UserDepositController {
             return ResponseEntity.internalServerError().build();
         }
     }
-
-    @PostMapping("/recommendations/byBalance")
-    public ResponseEntity<List<DepositProductResponseDTO>> getProductsByBalance(@RequestBody BalanceRequestDTO request) {
-        log.info("잔액 기반 상품 추천 API 호출: userId={}, balance={}", request.getUserId(), request.getBalance());
-
-        try {
-            List<DepositProductResponseDTO> products = userDepositService.getProductsByBalance(request);
-            log.info("추천 상품 {}개 조회 완료", products.size());
-            return ResponseEntity.ok(products);
-        } catch (Exception e) {
-            log.error("잔액 기반 상품 추천 API 오류: userId={}, balance={}",
-                    request.getUserId(), request.getBalance(), e);
-            return ResponseEntity.internalServerError().build();
-        }
-    }
 }
