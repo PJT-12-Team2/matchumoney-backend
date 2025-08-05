@@ -50,7 +50,12 @@ public class AuthServiceImpl implements AuthService{
 
         String jwt = jwtService.createAccessToken(user);
 
-        return new LoginResponseDTO(jwt);
+        return LoginResponseDTO.builder()
+                .accessToken(jwt)
+                .userId(user.getUserId())
+                .nickname(user.getNickname())
+                .personaId(user.getPersonaId())
+                .build();
     }
 
     private UserVO registerUser(SocialUserInfo info) {
