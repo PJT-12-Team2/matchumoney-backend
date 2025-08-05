@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @ApiModel(description = "추천 상품 목록 정보 DTO")
 public class SavingListItemResponseDTO {
     @ApiModelProperty(value = "적금 상품 번호", example = "1")
-    String id;
+    Long id;
     @ApiModelProperty(value = "적금 상품 발행 은행", example = "수협은행")
     String company;
     @ApiModelProperty(value = "적금 상품 제목", example = "Sh적금")
