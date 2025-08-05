@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="team2.pjt12.matchumoney.domain.compare.mapper.CompareProductMapper">
+
+    <select id="selectSavingProductsByIds"
+            resultType="team2.pjt12.matchumoney.domain.compare.dto.CompareSavingResponseDTO">
+        SELECT
+        sp.saving_product_id AS id,
+        sp.kor_co_nm AS korCoName,
+        sp.fin_prdt_nm AS finPrdtName,
+        sp.join_way AS joinWay,
+        sp.mtrt_int AS maturityInterest,
+        sp.spcl_cnd AS specialCondition,
+        sp.join_member AS joinMember,
+        sp.etc_note AS etcNote,
+        sp.max_limit AS maxLimit,
+        fc.company_image AS companyImage,
+        CASE
+        WHEN uf.favorite_id IS NOT NULL THEN TRUE
+        ELSE FALSE
+        END AS isStarred
+        FROM saving_product sp
+        LEFT JOIN user_favorites uf ON sp.saving_product_id = uf.saving_product_id
+        LEFT JOIN financial_companies fc ON sp.kor_co_nm = fc.kor_co_nm
+        WHERE sp.saving_product_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+    <select id="selectRatesBySavingProductIds" resultType="team2.pjt12.matchumoney.domain.compare.dto.RateDTO">
+        SELECT
+        sp. saving_product_id AS id,
+        save_trm AS period,
+        intr_rate AS baseRate,
+        intr_rate2 AS maxRate,
+        intr_rate_type_nm AS interestType,
+        rsrv_type_nm AS savingMethod
+        FROM saving_product sp
+        LEFT OUTER JOIN saving_option so
+        ON sp.fin_prdt_cd = so.fin_prdt_cd AND sp.fin_id = so.fin_id
+        WHERE sp.saving_product_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+    <select id="selectDepositProductsByIds"
+            resultType="team2.pjt12.matchumoney.domain.compare.dto.CompareDepositResponseDTO">SELECT
+        dp.deposit_product_id AS id,
+        dp.kor_co_nm AS korCoName,
+        dp.fin_prdt_nm AS finPrdtName,
+        dp.join_way AS joinWay,
+        dp.mtrt_int AS maturityInterest,
+        dp.spcl_cnd AS specialCondition,
+        dp.join_member AS joinMember,
+        dp.etc_note AS etcNote,
+        dp.max_limit AS maxLimit,
+        fc.company_image AS companyImage,
+        CASE
+        WHEN uf.favorite_id IS NOT NULL THEN TRUE
+        ELSE FALSE
+        END AS isStarred
+        FROM deposit_product dp
+        LEFT JOIN user_favorites uf ON dp.deposit_product_id = uf.deposit_product_id
+        LEFT JOIN financial_companies fc ON dp.kor_co_nm = fc.kor_co_nm
+        WHERE dp.deposit_product_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+    <select id="selectRatesByDepositProductIds"
+            resultType="team2.pjt12.matchumoney.domain.compare.dto.RateDTO">
+        SELECT
+        dp. deposit_product_id AS id,
+        save_trm AS period,
+        intr_rate AS baseRate,
+        intr_rate2 AS maxRate,
+        intr_rate_type_nm AS interestType
+        FROM deposit_product dp
+        LEFT OUTER JOIN deposit_option so
+        ON dp.fin_prdt_cd = so.fin_prdt_cd AND dp.fin_id = so.fin_id
+        WHERE dp.deposit_product_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+    <select id="selectAllSavingProducts"
+            resultType="team2.pjt12.matchumoney.domain.compare.dto.SearchProductResponseDTO">
+        SELECT sp.saving_product_id AS id,
+               sp.kor_co_nm         AS korCoName,
+               sp.fin_prdt_nm       AS finPrdtName,
+               fc.company_image     AS image
+        FROM saving_product sp
+                 LEFT JOIN financial_companies fc ON sp.kor_co_nm = fc.kor_co_nm
+    </select>
+    <select id="selectAllDepositProducts"
+            resultType="team2.pjt12.matchumoney.domain.compare.dto.SearchProductResponseDTO">
+        SELECT dp.deposit_product_id AS id,
+               dp.kor_co_nm          AS korCoName,
+               dp.fin_prdt_nm        AS finPrdtName,
+               fc.company_image      AS image
+        FROM deposit_product dp
+                 LEFT JOIN financial_companies fc ON dp.kor_co_nm = fc.kor_co_nm
+    </select>
+    <select id="selectAllCardProducts"
+            resultType="team2.pjt12.matchumoney.domain.compare.dto.SearchProductResponseDTO">
+        SELECT cp.card_product_id AS id,
+               cp.name            AS finPrdtName,
+               cp.issuer          AS korCoName,
+               cp.card_image_url  AS image
+        FROM card_product cp
+        WHERE is_available = true
+    </select>
+
+</mapper>
