@@ -46,17 +46,17 @@
     </select>
 
 
-<!--    <resultMap id="SavingListItemMap" type="team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO">-->
-<!--        <result column="id" property="id"/>-->
-<!--        <result column="company" property="company"/>-->
-<!--        <result column="title" property="title"/>-->
-<!--        <result column="base_rate" property="base_rate" javaType="java.lang.String"/>-->
-<!--        <result column="max_rate" property="max_rate" javaType="java.lang.String"/>-->
-<!--        <result column="period" property="period"/>-->
-<!--        <result column="amount" property="amount"/>-->
-<!--        <result column="company_image" property="company_image"/>-->
-<!--        <result column="is_starred" property="is_starred" javaType="java.lang.Boolean"/>-->
-<!--    </resultMap>-->
+    <!--    <resultMap id="SavingListItemMap" type="team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO">-->
+    <!--        <result column="id" property="id"/>-->
+    <!--        <result column="company" property="company"/>-->
+    <!--        <result column="title" property="title"/>-->
+    <!--        <result column="base_rate" property="base_rate" javaType="java.lang.String"/>-->
+    <!--        <result column="max_rate" property="max_rate" javaType="java.lang.String"/>-->
+    <!--        <result column="period" property="period"/>-->
+    <!--        <result column="amount" property="amount"/>-->
+    <!--        <result column="company_image" property="company_image"/>-->
+    <!--        <result column="is_starred" property="is_starred" javaType="java.lang.Boolean"/>-->
+    <!--    </resultMap>-->
 
 
     <select id="getRecommendSavingAccountList"
@@ -83,7 +83,7 @@
                  LEFT OUTER JOIN user_favorites uf
                                  ON uf.saving_product_id =
                                     sp.saving_product_id
-                                     AND uf.user_id = #{user_id}
+                                     AND uf.user_id = #{userId}
         WHERE so.save_trm = #{period}
           AND CAST(so.intr_rate AS DECIMAL(5, 4)) > #{rate}
         ORDER BY CAST(so.intr_rate AS DECIMAL(5, 4)) DESC
@@ -111,7 +111,7 @@
                                  ON sp.kor_co_nm = fc.kor_co_nm
                  LEFT OUTER JOIN user_favorites uf
                                  ON uf.saving_product_id = sp.saving_product_id
-                                     AND uf.user_id = #{user_id}
+                                     AND uf.user_id = #{userId}
         WHERE so.save_trm = 12
           AND so.fin_id = 11
         ORDER BY CAST(so.intr_rate AS DECIMAL(5, 4)) DESC

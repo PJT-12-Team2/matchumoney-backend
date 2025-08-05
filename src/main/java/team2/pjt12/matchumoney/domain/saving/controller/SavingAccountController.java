@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import team2.pjt12.matchumoney.domain.saving.dto.BankLoginRequestDTO;
 import team2.pjt12.matchumoney.domain.saving.dto.MySavingProductResponseDTO;
@@ -32,8 +33,11 @@ public class SavingAccountController implements SavingAccountApi {
     }
 
     @Override
-    public ResponseEntity<List<SavingListItemResponseDTO>> getRecommendSavingAccountList(@PathVariable("id") Long id) {
-        List<SavingListItemResponseDTO> accountList = savingAccountService.getUserRecommendedSavingAccounts(id);
-        return ResponseEntity.ok(accountList);
+    public ResponseEntity<List<SavingListItemResponseDTO>> getRecommendSavingAccountList(
+            @PathVariable("id") Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        List<SavingListItemResponseDTO> accountPage = savingAccountService.getUserRecommendedSavingAccounts(id, page, size);
+        return ResponseEntity.ok(accountPage);
     }
 }
