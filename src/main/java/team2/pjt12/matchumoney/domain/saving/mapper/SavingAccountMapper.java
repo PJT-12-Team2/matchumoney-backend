@@ -3,6 +3,7 @@ package team2.pjt12.matchumoney.domain.saving.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.session.RowBounds;
 import team2.pjt12.matchumoney.domain.saving.domain.DepositAccountVO;
 import team2.pjt12.matchumoney.domain.saving.domain.SavingAccountVO;
 import team2.pjt12.matchumoney.domain.saving.dto.MySavingProductResponseDTO;
@@ -22,9 +23,14 @@ public interface SavingAccountMapper {
 
     MySavingProductResponseDTO getSavingAccount(@Param("id") Long id);
 
-    List<SavingListItemResponseDTO> getRecommendSavingAccountList(@Param("period") String period, @Param("rate") Double rate, @Param("user_id") Long userId);
+    List<SavingListItemResponseDTO> getRecommendSavingAccountList(@Param("period") String period,
+                                                                  @Param("rate") double rate,
+                                                                  @Param("userId") Long userId,
+                                                                  RowBounds rowBounds);
 
-    List<SavingListItemResponseDTO> getRecommendDefaultSavingAccountList(@Param("user_id") Long userId);
+    List<SavingListItemResponseDTO> getRecommendDefaultSavingAccountList(@Param("userId") Long userId,
+                                                                         RowBounds rowBounds);
+
 
     List<MySavingProductResponseDTO> getSavingAccountList(@Param("userId") Long userId);
 }

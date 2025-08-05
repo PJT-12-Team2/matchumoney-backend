@@ -12,5 +12,5 @@ public interface SavingAccountService {
 
     List<MySavingProductResponseDTO> retrieveAccounts(BankLoginRequestDTO requestDto);
 
-    List<SavingListItemResponseDTO> getUserRecommendedSavingAccounts(Long id);
+    List<SavingListItemResponseDTO> getUserRecommendedSavingAccounts(Long id, int page, int size);
 }

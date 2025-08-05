@@ -24,8 +24,11 @@ public interface SavingAccountApi {
     @GetMapping("")
     ResponseEntity<List<MySavingProductResponseDTO>> getMySavingAccount();
 
-    @ApiOperation(value = "각 적금 계좌에 대한 추천 적금 리스트", notes = "사용자의 해당 계좌에 대한 타 적금을 추천합니다..")
+    @ApiOperation(value = "추천 적금 리스트 (페이징)", notes = "특정 적금 계좌 기반 추천 적금 리스트를 페이징으로 반환")
     @GetMapping("/{id}/recommend")
-    ResponseEntity<List<SavingListItemResponseDTO>> getRecommendSavingAccountList(@ApiParam(value = "해당 적금 상품 계좌 id") @PathVariable("id") Long id);
-
+    ResponseEntity<List<SavingListItemResponseDTO>> getRecommendSavingAccountList(
+            @ApiParam(value = "적금 계좌 ID") @PathVariable("id") Long id,
+            @ApiParam(value = "페이지 번호", defaultValue = "0") @RequestParam(defaultValue = "0") int page,
+            @ApiParam(value = "페이지 크기", defaultValue = "10") @RequestParam(defaultValue = "10") int size
+    );
 }

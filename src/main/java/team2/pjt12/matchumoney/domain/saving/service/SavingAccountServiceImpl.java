@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.session.RowBounds;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team2.pjt12.matchumoney.domain.saving.codef.CodefAccountRetrievalService;
@@ -166,11 +167,16 @@ public class SavingAccountServiceImpl implements SavingAccountService {
 
     //내 계좌에 대한 추천 리스트
     @Override
-    public List<SavingListItemResponseDTO> getUserRecommendedSavingAccounts(Long id) {
+    public List<SavingListItemResponseDTO> getUserRecommendedSavingAccounts(Long id, int page, int size) {
         Long userId = getCurrentUser().getUserId();
+
+        int offset = page * size;
+        RowBounds rowBounds = new RowBounds(offset, size);
+
         if (id == -1) {
-            return savingAccountMapper.getRecommendDefaultSavingAccountList(userId);
+            return savingAccountMapper.getRecommendDefaultSavingAccountList(userId, rowBounds);
         }
+
         MySavingProductResponseDTO mySavingProduct;
         try {
             mySavingProduct = savingAccountMapper.getSavingAccount(id);
@@ -183,12 +189,12 @@ public class SavingAccountServiceImpl implements SavingAccountService {
             log.warn("해당 ID로 조회된 적금 계좌가 없습니다. id={}", id);
             throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
         }
-        if (mySavingProduct.getUser_id() != userId) {
+
+        if (!mySavingProduct.getUser_id().equals(userId)) {
             throw new CustomException(ErrorCode.USER_NOT_AUTHORIZED);
         }
-        log.info(String.valueOf(mySavingProduct));
-        String period = mySavingProduct.getPeriod();
 
+        String period = mySavingProduct.getPeriod();
         double rate;
         try {
             rate = Double.parseDouble(mySavingProduct.getRate());
@@ -197,6 +203,6 @@ public class SavingAccountServiceImpl implements SavingAccountService {
             throw new CustomException(ErrorCode.DATA_CONVERSION_FAILED);
         }
 
-        return savingAccountMapper.getRecommendSavingAccountList(period, rate, userId);
+        return savingAccountMapper.getRecommendSavingAccountList(period, rate, userId, rowBounds);
     }
 }
