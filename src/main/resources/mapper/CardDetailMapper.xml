@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="team2.pjt12.matchumoney.domain.carddetail.mapper.CardDetailMapper">
+
+    <resultMap id="CardOptionResultMap" type="team2.pjt12.matchumoney.domain.carddetail.dto.CardOptionDTO">
+        <id property="parsedBenefitId" column="parsed_benefit_id"/>
+        <result property="cardId2" column="card_id2"/>
+        <result property="title" column="title"/>
+        <result property="category" column="category"/>
+        <result property="benefitType" column="benefit_type"/>
+        <result property="value" column="value"/>
+        <result property="conditionText" column="condition_text"/>
+        <result property="maxBenefitMonthly" column="max_benefit_monthly"/>
+        <result property="minSpendPerTransaction" column="min_spend_per_transaction"/>
+        <result property="preMonthMoneySpecific" column="pre_month_money_specific"/>
+        <result property="description" column="description"/>
+    </resultMap>
+
+    <resultMap id="CardDetailResultMap" type="team2.pjt12.matchumoney.domain.carddetail.dto.CardDetailResponseDTO">
+        <id property="cardProductId" column="card_product_id"/>
+        <result property="name" column="name"/>
+        <result property="type" column="type"/>
+        <result property="available" column="is_available"/>
+        <result property="issuerId" column="issuer_id"/>
+        <result property="annualFee" column="annual_fee"/>
+        <result property="preMonthMoney" column="pre_month_money"/>
+        <result property="onlineOnly" column="online_only"/>
+        <result property="cardImageUrl" column="card_image_url"/>
+        <result property="requestPcUrl" column="request_pc_url"/>
+        <result property="requestMobileUrl" column="request_mobile_url"/>
+        <result property="annualFeeDetail" column="annual_fee_detail"/>
+        <result property="corpPrContainer" column="corp_pr_container"/>
+        <result property="corpPrDetail" column="corp_pr_detail"/>
+        <result property="corpTips" column="corp_tips"/>
+        <result property="personaId" column="persona_id"/>
+        <result property="issuer" column="issuer"/>
+
+        <collection property="options"
+                    ofType="team2.pjt12.matchumoney.domain.carddetail.dto.CardOptionDTO"
+                    resultMap="CardOptionResultMap"/>
+    </resultMap>
+
+    <select id="findCardDetailById" resultMap="CardDetailResultMap" parameterType="int">
+        SELECT
+            cp.card_product_id, cp.name, cp.type, cp.is_available, cp.issuer_id,
+            cp.annual_fee, cp.pre_month_money, cp.online_only, cp.card_image_url,
+            cp.request_pc_url, cp.request_mobile_url, cp.annual_fee_detail,
+            cp.corp_pr_container, cp.corp_pr_detail, cp.corp_tips,
+            cp.persona_id, cp.issuer,
+
+            cb.parsed_benefit_id, cb.card_id2, cb.title, cb.category, cb.benefit_type,
+            cb.value, cb.condition_text, cb.max_benefit_monthly,
+            cb.min_spend_per_transaction, cb.pre_month_money_specific, cb.description
+
+        FROM card_product cp
+                 LEFT JOIN card_parsed_benefit cb ON cp.card_product_id = cb.card_id2
+        WHERE cp.card_product_id = #{id}
+    </select>
+
+</mapper>
