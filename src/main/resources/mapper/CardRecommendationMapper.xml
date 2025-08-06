@@ -222,25 +222,25 @@
     <!-- 추천 카드 데이터 저장 -->
     <insert id="insertUserCardRecommendation" parameterType="team2.pjt12.matchumoney.domain.cardrecommendation.vo.UserCardRecommendationVO">
         INSERT INTO user_card_recommendations (
-            user_id, base_card_id, recommended_card_id, card_name, card_type, issuer,
+            user_id, base_card_id, card_id, card_name, card_type, issuer,
             estimated_benefit, annual_fee, pre_month_money, card_image_url,
-            request_pc_url, request_mobile_url, recommendation_rank,
-            created_time, last_modified_time
+            request_pc_url, request_mobile_url
         ) VALUES (
-            #{userId}, #{baseCardId}, #{recommendedCardId}, #{cardName}, #{cardType}, #{issuer},
-            #{estimatedBenefit}, #{annualFee}, #{preMonthMoney}, #{cardImageUrl},
-            #{requestPcUrl}, #{requestMobileUrl}, #{recommendationRank},
-            NOW(), NOW()
-        )
+                     #{userId}, #{baseCardId}, #{cardId}, #{cardName}, #{cardType},
+                     #{issuer},
+                     #{estimatedBenefit}, #{annualFee}, #{preMonthMoney},
+                     #{cardImageUrl},
+                     #{requestPcUrl}, #{requestMobileUrl}
+                 )
     </insert>
 
     <!-- 사용자의 저장된 추천 카드 목록 조회 (특정 기준 카드) -->
     <select id="selectUserCardRecommendations" resultType="team2.pjt12.matchumoney.domain.cardrecommendation.vo.UserCardRecommendationVO">
-        SELECT 
+        SELECT
             recommendation_id as recommendationId,
             user_id as userId,
             base_card_id as baseCardId,
-            recommended_card_id as recommendedCardId,
+            card_id as cardId,
             card_name as cardName,
             card_type as cardType,
             issuer,
@@ -250,22 +250,20 @@
             card_image_url as cardImageUrl,
             request_pc_url as requestPcUrl,
             request_mobile_url as requestMobileUrl,
-            recommendation_rank as recommendationRank,
-            created_time as createdTime,
-            last_modified_time as lastModifiedTime
+            recommended_at as recommendedAt
         FROM user_card_recommendations
         WHERE user_id = #{userId}
-        AND base_card_id = #{baseCardId}
-        ORDER BY recommendation_rank ASC, estimated_benefit DESC
+          AND base_card_id = #{baseCardId}
+        ORDER BY estimated_benefit DESC
     </select>
 
     <!-- 사용자의 모든 추천 카드 목록 조회 -->
     <select id="selectAllUserCardRecommendations" resultType="team2.pjt12.matchumoney.domain.cardrecommendation.vo.UserCardRecommendationVO">
-        SELECT 
+        SELECT
             recommendation_id as recommendationId,
             user_id as userId,
             base_card_id as baseCardId,
-            recommended_card_id as recommendedCardId,
+            card_id as cardId,
             card_name as cardName,
             card_type as cardType,
             issuer,
@@ -275,12 +273,38 @@
             card_image_url as cardImageUrl,
             request_pc_url as requestPcUrl,
             request_mobile_url as requestMobileUrl,
-            recommendation_rank as recommendationRank,
-            created_time as createdTime,
-            last_modified_time as lastModifiedTime
+            recommended_at as recommendedAt
         FROM user_card_recommendations
         WHERE user_id = #{userId}
-        ORDER BY created_time DESC, base_card_id ASC, recommendation_rank ASC
+        ORDER BY recommended_at DESC, base_card_id ASC
+    </select>
+
+    <!-- 발급사별로 발급 가능한 카드 목록 조회 -->
+    <select id="selectAvailableCardsByIssuer" resultType="team2.pjt12.matchumoney.domain.cardrecommendation.vo.CardProductVO">
+        SELECT 
+            card_product_id as cardProductId,
+            name,
+            type,
+            is_available as isAvailable,
+            issuer_id as issuerId,
+            annual_fee as annualFee,
+            pre_month_money as preMonthMoney,
+            online_only as onlineOnly,
+            card_image_url as cardImageUrl,
+            request_pc_url as requestPcUrl,
+            request_mobile_url as requestMobileUrl,
+            annual_fee_detail as annualFeeDetail,
+            corp_pr_container as corpPrContainer,
+            corp_pr_detail as corpPrDetail,
+            corp_tips as corpTips,
+            created_time as createdTime,
+            last_modified_time as lastModifiedTime,
+            persona_id as personaId,
+            issuer
+        FROM card_product
+        WHERE issuer = #{issuer}
+        AND is_available = 1
+        ORDER BY pre_month_money ASC, name ASC
     </select>
 
 </mapper>
