@@ -2,13 +2,13 @@ package team2.pjt12.matchumoney.domain.personacard.dto;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
+
+import java.util.List;
 
 @Getter
-@Builder
-@AllArgsConstructor
+@Setter
+@NoArgsConstructor
 @ApiModel(description = "추천 카드 상품 정보 DTO")
 public class PersonaCardDTO {
     @ApiModelProperty(value = "카드 ID", example = "1")
@@ -19,8 +19,6 @@ public class PersonaCardDTO {
 
     @ApiModelProperty(value = "카드 이미지 URL", example = "https://d1c5n4ri2guedi.cloudfront.net/card/348/card_img/20581/348card.png")
     private String cardImageUrl; // 카드 이미지 (card_product의 url card_image_url)
-
-    //-------------------
 
     @ApiModelProperty(value = "카드 종류", example = "신용")
     private String cardType; // 카드 종류 (card_product의 type)
@@ -33,5 +31,7 @@ public class PersonaCardDTO {
 
     @ApiModelProperty(value = "전월 실적", example = "300000")
     private Integer preMonthMoney; // 전월 실적 (card_product의 pre_month_money)
-    // 0이면? 정보 없음
+
+    @ApiModelProperty(value = "혜택 TOP3", example = "[\"주유\", \"쇼핑\", \"영화\"]")
+    private List<String> topBenefits;
 }

@@ -10,4 +10,5 @@ public interface PersonaCardMapper {
     String selectPersonaNameById(Long personaId);
     List<PersonaCardDTO> selectCardsByPersonaId(Long personaId);
     Long findPersonaIdByUserId(Long userId);
+    List<String> selectTop3BenefitsByCardId(Long cardId);
 }

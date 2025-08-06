@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="team2.pjt12.matchumoney.domain.savingdetail.mapper.SavingDetailMapper">
+
+    <!-- deposit_option 매핑 -->
+    <resultMap id="SavingOptionResultMap" type="team2.pjt12.matchumoney.domain.savingdetail.dto.SavingOptionDTO">
+        <id property="savingOptionId" column="saving_option_id" />
+        <result property="intrRateType" column="intr_rate_type" />
+        <result property="intrRateTypeNm" column="intr_rate_type_nm" />
+        <result property="saveTrm" column="save_trm" />
+        <result property="intrRate" column="intr_rate" />
+        <result property="intrRate2" column="intr_rate2" />
+        <result property="finPrdtCd" column="fin_prdt_cd" />
+        <result property="finId" column="fin_id" />
+    </resultMap>
+
+    <!-- saving_product + saving_option list 매핑 -->
+    <resultMap id="SavingDetailResultMap" type="team2.pjt12.matchumoney.domain.savingdetail.dto.SavingDetailResponseDTO">
+        <id property="savingProductId" column="saving_product_id" />
+        <result property="dclsMonth" column="dcls_month" />
+        <result property="korCoNm" column="kor_co_nm" />
+        <result property="finPrdtNm" column="fin_prdt_nm" />
+        <result property="joinWay" column="join_way" />
+        <result property="mtrtInt" column="mtrt_int" />
+        <result property="spclCnd" column="spcl_cnd" />
+        <result property="joinDeny" column="join_deny" />
+        <result property="joinMember" column="join_member" />
+        <result property="etcNote" column="etc_note" />
+        <result property="maxLimit" column="max_limit" />
+        <result property="dclsStrtDay" column="dcls_strt_day" />
+        <result property="dclsEndDay" column="dcls_end_day" />
+        <result property="finCoSubmDay" column="fin_co_subm_day" />
+        <result property="productType" column="product_type" />
+        <result property="finCoNo" column="fin_co_no" />
+        <result property="finPrdtCd" column="fin_prdt_cd" />
+        <result property="finId" column="fin_id" />
+        <result property="personaId" column="persona_id" />
+
+        <!-- 옵션 리스트 매핑 -->
+        <collection property="options" ofType="team2.pjt12.matchumoney.domain.savingdetail.dto.SavingOptionDTO"
+                    resultMap="SavingOptionResultMap" />
+    </resultMap>
+
+    <!-- 단건 조회 + 조인 -->
+    <select id="findSavingProductById" resultMap="SavingDetailResultMap" parameterType="long">
+        SELECT
+            p.saving_product_id, p.dcls_month, p.kor_co_nm, p.fin_prdt_nm,
+            p.join_way, p.mtrt_int, p.spcl_cnd, p.join_deny,
+            p.join_member, p.etc_note, p.max_limit, p.dcls_strt_day,
+            p.dcls_end_day, p.fin_co_subm_day, p.product_type,
+            p.fin_co_no2, p.fin_prdt_cd, p.fin_id, p.persona_id,
+
+            o.saving_option_id, o.intr_rate_type, o.intr_rate_type_nm,
+            o.save_trm, o.intr_rate, o.intr_rate2,
+            o.fin_prdt_cd AS o_saving_product_id,
+            o.fin_prdt_cd AS o_fin_prdt_cd, o.fin_id AS o_fin_id
+
+        FROM saving_product p
+                 LEFT JOIN saving_option o ON p.fin_prdt_cd = o.fin_prdt_cd
+        WHERE p.saving_product_id = #{id}
+    </select>
+
+    <!-- 옵션만 따로 조회 -->
+    <select id="findOptionsByProductId" resultMap="SavingOptionResultMap" parameterType="string">
+        SELECT
+            saving_option_id, intr_rate_type, intr_rate_type_nm,
+            save_trm, intr_rate, intr_rate2,
+            fin_prdt_cd, fin_id
+        FROM saving_option
+        WHERE fin_prdt_cd = #{finPrdtCd}
+    </select>
+
+</mapper>
