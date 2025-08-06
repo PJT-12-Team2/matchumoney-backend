@@ -2,10 +2,7 @@ package team2.pjt12.matchumoney.domain.compare.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import team2.pjt12.matchumoney.domain.compare.dto.CompareDepositResponseDTO;
-import team2.pjt12.matchumoney.domain.compare.dto.CompareSavingResponseDTO;
-import team2.pjt12.matchumoney.domain.compare.dto.RateDTO;
-import team2.pjt12.matchumoney.domain.compare.dto.SearchProductResponseDTO;
+import team2.pjt12.matchumoney.domain.compare.dto.*;
 
 import java.util.List;
 
@@ -19,7 +16,10 @@ public interface CompareProductMapper {
     List<CompareDepositResponseDTO> selectDepositProductsByIds(@Param("ids") List<Long> ids);
 
     List<RateDTO> selectRatesByDepositProductIds(@Param("ids") List<Long> ids);
-//    List<CompareCardResponseDTO> selectCardProductsByIds(@Param("ids") List<Long> ids);
+
+    List<CompareCardResponseDTO> selectCardProductsByIds(@Param("ids") List<Long> ids);
+
+    List<CardOptionDTO> selectCardOptionsByCardIds(@Param("ids") List<Long> ids);
 
     List<SearchProductResponseDTO> selectAllSavingProducts();
 

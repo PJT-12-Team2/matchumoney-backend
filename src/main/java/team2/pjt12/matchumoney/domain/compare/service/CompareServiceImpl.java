@@ -54,16 +54,29 @@ public class CompareServiceImpl implements CompareService {
                     .deposits(products)
                     .build();
 
-        }
-//        else if (type.equalsIgnoreCase("card")) {
-//            List<CompareCardResponseDTO> cards = compareProductMapper.selectCardProductsByIds(ids);
-//            return CompareProductsResponseDTO.builder()
-//                    .cards(cards)
-//                    .build();
-//        }
+        } else if (type.equalsIgnoreCase("card")) {
+            // 1. 카드 정보 조회
+            List<CompareCardResponseDTO> cards = compareProductMapper.selectCardProductsByIds(ids);
 
+            // 2. 카드 혜택(옵션) 조회
+            List<CardOptionDTO> cardOptions = compareProductMapper.selectCardOptionsByCardIds(ids);
+
+            // 3. 카드 ID로 그룹핑
+            Map<Long, List<CardOptionDTO>> optionMap = cardOptions.stream()
+                    .collect(Collectors.groupingBy(CardOptionDTO::getCardId2));
+
+            // 4. 각 카드에 혜택 세팅
+            for (CompareCardResponseDTO card : cards) {
+                List<CardOptionDTO> benefits = optionMap.getOrDefault(card.getId(), new ArrayList<>());
+                card.setBenefits(benefits);  // DTO에 benefits 필드 필요
+            }
+            return CompareProductsResponseDTO.builder()
+                    .cards(cards)
+                    .build();
+        }
         throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
     }
+
 
     @Override
     public List<SearchProductResponseDTO> getProductsAll(String type) {
