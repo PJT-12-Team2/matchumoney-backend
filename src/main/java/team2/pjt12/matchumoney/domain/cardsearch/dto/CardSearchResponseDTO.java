@@ -1,6 +1,9 @@
 package team2.pjt12.matchumoney.domain.cardsearch.dto;
 
 import lombok.*;
+import team2.pjt12.matchumoney.domain.carddetail.dto.CardOptionDTO;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -15,4 +18,6 @@ public class CardSearchResponseDTO {
     private String issuer;       // 카드사
     private String annualFee;   // 연회비
     private Integer preMonthMoney; // 전월 실적
+    private List<CardOptionDTO> options;
+
 }
