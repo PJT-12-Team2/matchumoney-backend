@@ -4,9 +4,13 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 @ApiModel(description = "카드 상품 정보 DTO")
 public class CompareCardResponseDTO {
 
@@ -34,6 +38,8 @@ public class CompareCardResponseDTO {
     @ApiModelProperty(value = "전월 실적 기준 금액", example = "200000")
     private Integer preMonthMoney;
 
-    @ApiModelProperty(value = "혜택 설명", example = "주유소 5% 할인, 영화 3천원 할인 등")
-    private String benefits;
+    @ApiModelProperty(value = "카드 혜택 옵션 리스트",
+            example = "[{\"parsedBenefitId\": 1, \"cardId2\": 10, \"title\": \"쇼핑\", \"category\": \"온라인쇼핑\", " +
+                    "\"benefitType\": \"적립\", \"value\": 5, \"conditionText\": \"온라인\", \"maxBenefitMonthly\": 0, \"minSpendPerTransaction\": 0, \"preMonthMoneySpecific\": null}]")
+    private List<CardOptionDTO> benefits;
 }

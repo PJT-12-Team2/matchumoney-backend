@@ -113,5 +113,45 @@
         FROM card_product cp
         WHERE is_available = true
     </select>
+    <select id="selectCardProductsByIds"
+            resultType="team2.pjt12.matchumoney.domain.compare.dto.CompareCardResponseDTO">
+        SELECT
+        cp.card_product_id AS id,
+        cp.card_image_url AS productImage,
+        cp.name AS finPrdtName,
+        cp.issuer AS korCoName,
+        cp.type AS type,
+        cp.annual_fee AS annualFee,
+        cp.pre_month_money AS preMonthMoney,
+        CASE
+        WHEN uf.favorite_id IS NOT NULL THEN TRUE
+        ELSE FALSE
+        END AS isStarred
+        FROM card_product cp
+        LEFT JOIN user_favorites uf ON cp.card_product_id = uf.card_product_id
+        WHERE cp.is_available = TRUE
+        AND cp.card_product_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+    <select id="selectCardOptionsByCardIds" resultType="team2.pjt12.matchumoney.domain.compare.dto.CardOptionDTO">
+        SELECT
+        parsed_benefit_id AS parsedBenefitId,
+        card_id2,
+        title,
+        category,
+        benefit_type AS benefitType,
+        value,
+        condition_text AS conditionText,
+        max_benefit_monthly AS maxBenefitMonthly,
+        min_spend_per_transaction AS minSpendPerTransaction,
+        pre_month_money_specific AS preMonthMoneySpecific
+        FROM card_parsed_benefit
+        WHERE card_id2 IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
 
 </mapper>
