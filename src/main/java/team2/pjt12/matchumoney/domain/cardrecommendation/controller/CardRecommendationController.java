@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import team2.pjt12.matchumoney.domain.cardrecommendation.dto.CardRecommendationResponseDTO;
+import team2.pjt12.matchumoney.domain.cardrecommendation.dto.KbCardRecommendationResponseDTO;
 import team2.pjt12.matchumoney.domain.cardrecommendation.dto.MyCardBenefitResponseDTO;
 //import team2.pjt12.matchumoney.domain.cardrecommendation.dto.CategoryStatDTO;
 import team2.pjt12.matchumoney.domain.cardrecommendation.service.CardRecommendationService;
@@ -253,6 +254,31 @@ public class CardRecommendationController {
             
         } catch (Exception e) {
             log.error("카테고리 매핑 조회 중 오류 발생: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    @GetMapping("/kb-cards")
+    @ApiOperation(
+            value = "KB국민카드 추천",
+            notes = "KB국민카드에서 발급 가능한 카드 목록을 추천합니다. " +
+                    "is_available이 1인 신청 가능한 KB국민카드만 조회합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "KB국민카드 추천 성공"),
+            @ApiResponse(code = 500, message = "서버 오류")
+    })
+    public ResponseEntity<KbCardRecommendationResponseDTO> getKbCardRecommendations() {
+        try {
+            log.info("KB국민카드 추천 요청");
+            
+            KbCardRecommendationResponseDTO response = cardRecommendationService.recommendKbCards();
+            
+            log.info("KB국민카드 추천 완료: {} 개", response.getTotalCount());
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("KB국민카드 추천 중 오류 발생: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }
