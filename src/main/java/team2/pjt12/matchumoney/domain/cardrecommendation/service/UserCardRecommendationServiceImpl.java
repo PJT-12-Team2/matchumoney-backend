@@ -21,17 +21,19 @@ public class UserCardRecommendationServiceImpl implements UserCardRecommendation
     @Override
     @Transactional
     public void saveRecommendations(Long userId, Integer baseCardId, List<CardBenefitDTO> recommendedCards) {
-        log.info("사용자 {}의 추천 카드 {} 개 저장 시작", userId, recommendedCards.size());
+        log.info("사용자 {}의 기준 카드 {}에 대한 추천 카드 {} 개 저장 시작", userId, baseCardId, recommendedCards.size());
 
         try {
-            // 1. 기존 추천 데이터 삭제 (사용자 전체)
-            userCardRecommendationMapper.deleteRecommendationsByUserId(userId);
-            log.debug("기존 추천 데이터 삭제 완료");
+            // 1. 기존 추천 데이터 삭제 (특정 기준 카드에 대한 것만)
+            userCardRecommendationMapper.deleteRecommendationsByUserIdAndBaseCardId(userId, baseCardId);
+            log.debug("기준 카드 {}에 대한 기존 추천 데이터 삭제 완료", baseCardId);
 
-            // 2. 새로운 추천 데이터 저장
+            // 2. 상위 5개만 선택하여 저장
             List<UserCardRecommendationVO> recommendations = recommendedCards.stream()
+                .limit(5) // 최대 5개만 저장
                 .map(card -> UserCardRecommendationVO.builder()
                     .userId(userId)
+                    .baseCardId(baseCardId) // 기준 카드 ID 추가
                     .cardId(card.getCardId())
                     .cardName(card.getCardName())
                     .cardType(card.getCardType())
@@ -50,20 +52,33 @@ public class UserCardRecommendationServiceImpl implements UserCardRecommendation
                 userCardRecommendationMapper.insertRecommendationsBatch(recommendations);
             }
 
-            log.info("사용자 {}의 추천 카드 저장 완료", userId);
+            log.info("사용자 {}의 기준 카드 {}에 대한 추천 카드 {} 개 저장 완료", userId, baseCardId, recommendations.size());
 
         } catch (Exception e) {
-            log.error("추천 카드 저장 중 오류 발생: 사용자 {}", userId, e);
+            log.error("추천 카드 저장 중 오류 발생: 사용자 {}, 기준 카드 {}", userId, baseCardId, e);
             throw new RuntimeException("추천 카드 저장 중 오류가 발생했습니다.", e);
         }
     }
 
     @Override
     public List<CardBenefitDTO> getSavedRecommendations(Long userId, Integer baseCardId) {
-        // 새 테이블 구조에서는 baseCardId 개념이 없으므로 모든 추천을 조회
-        return getAllSavedRecommendations(userId).stream()
-            .map(this::convertToCardBenefitDTO)
-            .collect(Collectors.toList());
+        log.info("사용자 {}의 기준 카드 {}에 대한 저장된 추천 카드 조회", userId, baseCardId);
+
+        try {
+            List<UserCardRecommendationVO> recommendations = 
+                userCardRecommendationMapper.selectRecommendationsByUserIdAndBaseCardId(userId, baseCardId);
+
+            List<CardBenefitDTO> result = recommendations.stream()
+                .map(this::convertToCardBenefitDTO)
+                .collect(Collectors.toList());
+
+            log.info("사용자 {}의 기준 카드 {}에 대한 저장된 추천 카드 {} 개 조회 완료", userId, baseCardId, result.size());
+            return result;
+
+        } catch (Exception e) {
+            log.error("저장된 추천 카드 조회 중 오류 발생: 사용자 {}, 기준 카드 {}", userId, baseCardId, e);
+            throw new RuntimeException("저장된 추천 카드 조회 중 오류가 발생했습니다.", e);
+        }
     }
 
     @Override
@@ -85,16 +100,44 @@ public class UserCardRecommendationServiceImpl implements UserCardRecommendation
 
     @Override
     @Transactional
-    public void deleteRecommendations(Long userId, Integer cardId) {
-        log.info("사용자 {}의 카드 {} 관련 추천 카드 삭제", userId, cardId);
+    public void deleteRecommendations(Long userId, Integer baseCardId) {
+        log.info("사용자 {}의 기준 카드 {} 관련 추천 카드 삭제", userId, baseCardId);
 
         try {
-            userCardRecommendationMapper.deleteRecommendationsByUserIdAndCardId(userId, cardId);
-            log.info("사용자 {}의 카드 {} 관련 추천 카드 삭제 완료", userId, cardId);
+            userCardRecommendationMapper.deleteRecommendationsByUserIdAndBaseCardId(userId, baseCardId);
+            log.info("사용자 {}의 기준 카드 {} 관련 추천 카드 삭제 완료", userId, baseCardId);
 
         } catch (Exception e) {
-            log.error("추천 카드 삭제 중 오류 발생: 사용자 {}, 카드 {}", userId, cardId, e);
+            log.error("추천 카드 삭제 중 오류 발생: 사용자 {}, 기준 카드 {}", userId, baseCardId, e);
             throw new RuntimeException("추천 카드 삭제 중 오류가 발생했습니다.", e);
+        }
+    }
+
+    /**
+     * 사용자의 특정 기준 카드에 대한 추천 카드 개수를 조회합니다.
+     */
+    public int getRecommendationCount(Long userId, Integer baseCardId) {
+        log.debug("사용자 {}의 기준 카드 {}에 대한 추천 카드 개수 조회", userId, baseCardId);
+        
+        try {
+            return userCardRecommendationMapper.countRecommendationsByUserIdAndBaseCardId(userId, baseCardId);
+        } catch (Exception e) {
+            log.error("추천 카드 개수 조회 중 오류 발생: 사용자 {}, 기준 카드 {}", userId, baseCardId, e);
+            return 0;
+        }
+    }
+
+    /**
+     * 사용자의 모든 추천 카드 개수를 조회합니다.
+     */
+    public int getAllRecommendationCount(Long userId) {
+        log.debug("사용자 {}의 모든 추천 카드 개수 조회", userId);
+        
+        try {
+            return userCardRecommendationMapper.countRecommendationsByUserId(userId);
+        } catch (Exception e) {
+            log.error("모든 추천 카드 개수 조회 중 오류 발생: 사용자 {}", userId, e);
+            return 0;
         }
     }
 

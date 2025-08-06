@@ -2,6 +2,7 @@ package team2.pjt12.matchumoney.domain.cardrecommendation.util;
 
 import team2.pjt12.matchumoney.domain.cardrecommendation.vo.CardParsedBenefitVO;
 import team2.pjt12.matchumoney.domain.cardrecommendation.vo.CardTransactionSummaryVO;
+import team2.pjt12.matchumoney.domain.cardrecommendation.util.CategoryMappingUtil;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -9,6 +10,8 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 public class BenefitCalculationUtil {
     
@@ -101,13 +104,16 @@ public class BenefitCalculationUtil {
             }
         }
         
-        // 월 최대 혜택 한도 적용
-        if (benefit.getMaxBenefitMonthly() != null && benefit.getMaxBenefitMonthly() > 0) {
-            BigDecimal maxBenefit = BigDecimal.valueOf(benefit.getMaxBenefitMonthly());
+        // 개별 혜택의 월 최대 한도 적용
+        // max_benefit_monthly가 null, 0이면 한도 없음, 양수면 해당 값으로 한도 적용
+        Integer maxBenefitMonthly = benefit.getMaxBenefitMonthly();
+        if (maxBenefitMonthly != null && maxBenefitMonthly > 0) {
+            BigDecimal maxBenefit = BigDecimal.valueOf(maxBenefitMonthly);
             if (benefitAmount.compareTo(maxBenefit) > 0) {
                 benefitAmount = maxBenefit;
             }
         }
+        // maxBenefitMonthly가 0이거나 null이면 한도 제한 없음
         
         return benefitAmount.setScale(0, RoundingMode.HALF_UP);
     }
@@ -148,6 +154,7 @@ public class BenefitCalculationUtil {
     
     /**
      * 카드의 모든 혜택을 기반으로 총 혜택 금액을 계산합니다.
+     * 월 최대 혜택 한도를 정확히 적용합니다.
      * @param benefits 카드의 모든 혜택 목록
      * @param transactionSummaries 카테고리별 거래 요약 목록
      * @param previousMonthSpend 전월 총 사용액
@@ -160,38 +167,539 @@ public class BenefitCalculationUtil {
             Long previousMonthSpend,
             Long cardPreMonthMoney) {
         
+        // title이 "유의사항"인 혜택에서 카드 전체 월 한도 찾기
+        Integer cardTotalMonthlyLimit = findCardTotalMonthlyLimit(benefits);
+        
+        return calculateTotalBenefit(benefits, transactionSummaries, previousMonthSpend, cardPreMonthMoney, cardTotalMonthlyLimit);
+    }
+    
+    /**
+     * 카드의 모든 혜택을 기반으로 총 혜택 금액을 계산합니다.
+     * 개별 혜택 한도와 카드 전체 월 한도를 모두 적용합니다.
+     * @param benefits 카드의 모든 혜택 목록
+     * @param transactionSummaries 카테고리별 거래 요약 목록
+     * @param previousMonthSpend 전월 총 사용액
+     * @param cardPreMonthMoney 카드 전체 전월 실적 조건
+     * @param cardTotalMonthlyLimit 카드 전체 월 한도 (null이면 제한 없음)
+     * @return 총 혜택 금액
+     */
+    public static BigDecimal calculateTotalBenefit(
+            List<CardParsedBenefitVO> benefits,
+            List<CardTransactionSummaryVO> transactionSummaries,
+            Long previousMonthSpend,
+            Long cardPreMonthMoney,
+            Integer cardTotalMonthlyLimit) {
+        
         // 카드 전체 전월 실적 조건 확인
         if (cardPreMonthMoney != null && cardPreMonthMoney > 0 && previousMonthSpend < cardPreMonthMoney) {
             // 전월 실적 미달 시에도 최소 혜택은 계산 (실적 조건 없는 혜택들)
-            BigDecimal minBenefit = BigDecimal.ZERO;
-            for (CardParsedBenefitVO benefit : benefits) {
-                if (benefit.getPreMonthMoneySpecific() == null || benefit.getPreMonthMoneySpecific() <= 0) {
-                    for (CardTransactionSummaryVO summary : transactionSummaries) {
-                        BigDecimal benefitAmount = calculateBenefitAmount(benefit, summary, previousMonthSpend);
-                        minBenefit = minBenefit.add(benefitAmount);
-                    }
-                }
-            }
-            return minBenefit.setScale(0, RoundingMode.HALF_UP);
+            return calculateBenefitWithoutPerformanceRequirement(benefits, transactionSummaries, previousMonthSpend, cardTotalMonthlyLimit);
         }
+        
+        return calculateTotalBenefitWithCategoryLimits(benefits, transactionSummaries, previousMonthSpend, cardTotalMonthlyLimit);
+    }
+    
+    /**
+     * 카테고리별 혜택 한도를 고려하여 총 혜택을 계산합니다.
+     * @param benefits 카드의 모든 혜택 목록
+     * @param transactionSummaries 카테고리별 거래 요약 목록
+     * @param previousMonthSpend 전월 총 사용액
+     * @param cardTotalMonthlyLimit 카드 전체 월 한도 (null이면 제한 없음)
+     * @return 총 혜택 금액
+     */
+    private static BigDecimal calculateTotalBenefitWithCategoryLimits(
+            List<CardParsedBenefitVO> benefits,
+            List<CardTransactionSummaryVO> transactionSummaries,
+            Long previousMonthSpend,
+            Integer cardTotalMonthlyLimit) {
         
         BigDecimal totalBenefit = BigDecimal.ZERO;
         
-        // 카테고리별로 최고 혜택만 적용 (중복 혜택 방지)
+        // 모든가맹점 혜택 및 선택형 혜택 확인
+        CardParsedBenefitVO allMerchantsBenefit = findAllMerchantsBenefit(benefits);
+        CardParsedBenefitVO selectiveBenefit = findSelectiveBenefit(benefits);
+        
+        // 각 거래 카테고리별로 최적의 혜택 계산
         for (CardTransactionSummaryVO summary : transactionSummaries) {
-            BigDecimal maxCategoryBenefit = BigDecimal.ZERO;
+            BigDecimal categoryBenefit = calculateBestBenefitForCategory(
+                benefits, summary, previousMonthSpend);
             
-            for (CardParsedBenefitVO benefit : benefits) {
-                BigDecimal benefitAmount = calculateBenefitAmount(benefit, summary, previousMonthSpend);
-                if (benefitAmount.compareTo(maxCategoryBenefit) > 0) {
-                    maxCategoryBenefit = benefitAmount;
+            // 모든가맹점 혜택이 있는 경우 추가 계산
+            if (allMerchantsBenefit != null) {
+                BigDecimal allMerchantsBenefitAmount = calculateAllMerchantsBenefit(
+                    allMerchantsBenefit, summary, previousMonthSpend);
+                
+                // 카테고리별 혜택과 모든가맹점 혜택 중 더 큰 값 선택
+                if (allMerchantsBenefitAmount.compareTo(categoryBenefit) > 0) {
+                    categoryBenefit = allMerchantsBenefitAmount;
                 }
             }
             
-            totalBenefit = totalBenefit.add(maxCategoryBenefit);
+            // 선택형 혜택이 있는 경우 추가 계산
+            if (selectiveBenefit != null) {
+                BigDecimal selectiveBenefitAmount = calculateSelectiveBenefit(
+                    selectiveBenefit, summary, previousMonthSpend);
+                
+                // 기존 혜택과 선택형 혜택 중 더 큰 값 선택
+                if (selectiveBenefitAmount.compareTo(categoryBenefit) > 0) {
+                    categoryBenefit = selectiveBenefitAmount;
+                }
+            }
+            
+            totalBenefit = totalBenefit.add(categoryBenefit);
         }
         
+        // 카드 전체 월 한도 적용
+        if (cardTotalMonthlyLimit != null && cardTotalMonthlyLimit > 0) {
+            BigDecimal cardLimit = BigDecimal.valueOf(cardTotalMonthlyLimit);
+            if (totalBenefit.compareTo(cardLimit) > 0) {
+                totalBenefit = cardLimit;
+            }
+        }
+        // cardTotalMonthlyLimit이 null이거나 0이면 제한 없음
+        
         return totalBenefit.setScale(0, RoundingMode.HALF_UP);
+    }
+    
+    /**
+     * 특정 거래 카테고리에 대한 최적의 혜택을 계산합니다.
+     * 여러 혜택이 해당 카테고리에 적용될 수 있을 때, 월 한도를 고려하여 최고 혜택을 선택합니다.
+     * @param benefits 모든 혜택 목록
+     * @param transactionSummary 거래 요약
+     * @param previousMonthSpend 전월 사용액
+     * @return 해당 카테고리의 최적 혜택 금액
+     */
+    private static BigDecimal calculateBestBenefitForCategory(
+            List<CardParsedBenefitVO> benefits,
+            CardTransactionSummaryVO transactionSummary,
+            Long previousMonthSpend) {
+        
+        BigDecimal maxBenefit = BigDecimal.ZERO;
+        String transactionCategory = transactionSummary.getCategory();
+        
+        // 해당 거래 카테고리에 적용 가능한 모든 혜택 중 최고 혜택 선택 (유의사항 제외)
+        for (CardParsedBenefitVO benefit : benefits) {
+            // 유의사항은 혜택 계산에서 제외
+            if ("유의사항".equals(benefit.getTitle())) {
+                continue;
+            }
+            
+            // 카테고리 매칭 확인
+            if (isCategoryMatched(benefit.getCategory(), transactionCategory)) {
+                BigDecimal benefitAmount = calculateBenefitAmount(benefit, transactionSummary, previousMonthSpend);
+                
+                // 현재까지의 최고 혜택과 비교
+                if (benefitAmount.compareTo(maxBenefit) > 0) {
+                    maxBenefit = benefitAmount;
+                }
+            }
+        }
+        
+        return maxBenefit;
+    }
+    
+    /**
+     * 전월 실적 조건 없는 혜택들만 계산합니다.
+     * @param benefits 모든 혜택 목록
+     * @param transactionSummaries 거래 요약 목록
+     * @param previousMonthSpend 전월 사용액
+     * @param cardTotalMonthlyLimit 카드 전체 월 한도 (null이면 제한 없음)
+     * @return 실적 조건 없는 혜택 합계
+     */
+    private static BigDecimal calculateBenefitWithoutPerformanceRequirement(
+            List<CardParsedBenefitVO> benefits,
+            List<CardTransactionSummaryVO> transactionSummaries,
+            Long previousMonthSpend,
+            Integer cardTotalMonthlyLimit) {
+        
+        BigDecimal totalBenefit = BigDecimal.ZERO;
+        
+        for (CardTransactionSummaryVO summary : transactionSummaries) {
+            BigDecimal categoryBenefit = BigDecimal.ZERO;
+            
+            for (CardParsedBenefitVO benefit : benefits) {
+                // 유의사항은 혜택 계산에서 제외
+                if ("유의사항".equals(benefit.getTitle())) {
+                    continue;
+                }
+                
+                // 개별 혜택의 전월 실적 조건이 없는 경우만 계산
+                if (benefit.getPreMonthMoneySpecific() == null || benefit.getPreMonthMoneySpecific() <= 0) {
+                    if (isCategoryMatched(benefit.getCategory(), summary.getCategory())) {
+                        BigDecimal benefitAmount = calculateBenefitAmount(benefit, summary, previousMonthSpend);
+                        if (benefitAmount.compareTo(categoryBenefit) > 0) {
+                            categoryBenefit = benefitAmount;
+                        }
+                    }
+                }
+            }
+            
+            totalBenefit = totalBenefit.add(categoryBenefit);
+        }
+        
+        // 카드 전체 월 한도 적용
+        if (cardTotalMonthlyLimit != null && cardTotalMonthlyLimit > 0) {
+            BigDecimal cardLimit = BigDecimal.valueOf(cardTotalMonthlyLimit);
+            if (totalBenefit.compareTo(cardLimit) > 0) {
+                totalBenefit = cardLimit;
+            }
+        }
+        // cardTotalMonthlyLimit이 null이거나 0이면 제한 없음
+        
+        return totalBenefit.setScale(0, RoundingMode.HALF_UP);
+    }
+    
+    /**
+     * 카테고리별 혜택 금액을 상세하게 계산합니다.
+     * 각 카테고리별로 최적의 혜택을 선택하고 월 한도를 적용합니다.
+     * @param benefits 모든 혜택 목록
+     * @param transactionSummaries 거래 요약 목록
+     * @param previousMonthSpend 전월 사용액
+     * @param cardPreMonthMoney 카드 전체 전월 실적 조건
+     * @return 카테고리별 혜택 금액 맵
+     */
+    public static Map<String, BigDecimal> calculateCategoryBenefits(
+            List<CardParsedBenefitVO> benefits,
+            List<CardTransactionSummaryVO> transactionSummaries,
+            Long previousMonthSpend,
+            Long cardPreMonthMoney) {
+        
+        // title이 "유의사항"인 혜택에서 카드 전체 월 한도 찾기
+        Integer cardTotalMonthlyLimit = findCardTotalMonthlyLimit(benefits);
+        
+        return calculateCategoryBenefits(benefits, transactionSummaries, previousMonthSpend, cardPreMonthMoney, cardTotalMonthlyLimit);
+    }
+    
+    /**
+     * 카테고리별 혜택 금액을 상세하게 계산합니다.
+     * 각 카테고리별로 최적의 혜택을 선택하고 개별 및 전체 월 한도를 적용합니다.
+     * @param benefits 모든 혜택 목록
+     * @param transactionSummaries 거래 요약 목록
+     * @param previousMonthSpend 전월 사용액
+     * @param cardPreMonthMoney 카드 전체 전월 실적 조건
+     * @param cardTotalMonthlyLimit 카드 전체 월 한도 (null이면 제한 없음)
+     * @return 카테고리별 혜택 금액 맵
+     */
+    public static Map<String, BigDecimal> calculateCategoryBenefits(
+            List<CardParsedBenefitVO> benefits,
+            List<CardTransactionSummaryVO> transactionSummaries,
+            Long previousMonthSpend,
+            Long cardPreMonthMoney,
+            Integer cardTotalMonthlyLimit) {
+        
+        Map<String, BigDecimal> categoryBenefits = new HashMap<>();
+        
+        // 카드 전체 전월 실적 조건 확인
+        boolean meetsCardRequirement = cardPreMonthMoney == null || 
+                                      cardPreMonthMoney <= 0 || 
+                                      previousMonthSpend >= cardPreMonthMoney;
+        
+        BigDecimal totalCalculatedBenefit = BigDecimal.ZERO;
+        
+        // 모든가맹점 혜택 및 선택형 혜택 확인
+        CardParsedBenefitVO allMerchantsBenefit = findAllMerchantsBenefit(benefits);
+        CardParsedBenefitVO selectiveBenefit = findSelectiveBenefit(benefits);
+        
+        // 1단계: 각 카테고리별 최적 혜택 계산 (유의사항 제외)
+        for (CardTransactionSummaryVO summary : transactionSummaries) {
+            BigDecimal categoryBenefit = BigDecimal.ZERO;
+            String transactionCategory = summary.getCategory();
+            
+            // 카테고리 특화 혜택 계산
+            for (CardParsedBenefitVO benefit : benefits) {
+                // 유의사항은 혜택 계산에서 제외 (월 한도 정보로만 사용)
+                if ("유의사항".equals(benefit.getTitle())) {
+                    continue;
+                }
+                
+                if (isCategoryMatched(benefit.getCategory(), transactionCategory)) {
+                    // 개별 혜택의 전월 실적 조건 확인
+                    boolean meetsBenefitRequirement = benefit.getPreMonthMoneySpecific() == null ||
+                                                     benefit.getPreMonthMoneySpecific() <= 0 ||
+                                                     previousMonthSpend >= benefit.getPreMonthMoneySpecific();
+                    
+                    // 카드 전체 조건과 개별 혜택 조건을 모두 만족해야 함
+                    if (meetsCardRequirement && meetsBenefitRequirement) {
+                        BigDecimal benefitAmount = calculateBenefitAmount(benefit, summary, previousMonthSpend);
+                        if (benefitAmount.compareTo(categoryBenefit) > 0) {
+                            categoryBenefit = benefitAmount;
+                        }
+                    }
+                }
+            }
+            
+            // 모든가맹점 혜택과 카테고리 특화 혜택 중 더 큰 값 선택
+            if (allMerchantsBenefit != null && meetsCardRequirement) {
+                BigDecimal allMerchantsBenefitAmount = calculateAllMerchantsBenefit(
+                    allMerchantsBenefit, summary, previousMonthSpend);
+                
+                if (allMerchantsBenefitAmount.compareTo(categoryBenefit) > 0) {
+                    categoryBenefit = allMerchantsBenefitAmount;
+                }
+            }
+            
+            // 선택형 혜택과 기존 혜택 중 더 큰 값 선택
+            if (selectiveBenefit != null && meetsCardRequirement) {
+                BigDecimal selectiveBenefitAmount = calculateSelectiveBenefit(
+                    selectiveBenefit, summary, previousMonthSpend);
+                
+                if (selectiveBenefitAmount.compareTo(categoryBenefit) > 0) {
+                    categoryBenefit = selectiveBenefitAmount;
+                }
+            }
+            
+            if (categoryBenefit.compareTo(BigDecimal.ZERO) > 0) {
+                categoryBenefits.put(transactionCategory, categoryBenefit);
+                totalCalculatedBenefit = totalCalculatedBenefit.add(categoryBenefit);
+            }
+        }
+        
+        // 2단계: 카드 전체 월 한도 적용 (비례 배분)
+        if (cardTotalMonthlyLimit != null && cardTotalMonthlyLimit > 0) {
+            BigDecimal cardLimit = BigDecimal.valueOf(cardTotalMonthlyLimit);
+            
+            if (totalCalculatedBenefit.compareTo(cardLimit) > 0) {
+                // 전체 한도를 초과하는 경우, 각 카테고리별로 비례하여 조정
+                BigDecimal ratio = cardLimit.divide(totalCalculatedBenefit, 10, RoundingMode.HALF_UP);
+                
+                Map<String, BigDecimal> adjustedBenefits = new HashMap<>();
+                for (Map.Entry<String, BigDecimal> entry : categoryBenefits.entrySet()) {
+                    BigDecimal adjustedBenefit = entry.getValue().multiply(ratio).setScale(0, RoundingMode.HALF_UP);
+                    if (adjustedBenefit.compareTo(BigDecimal.ZERO) > 0) {
+                        adjustedBenefits.put(entry.getKey(), adjustedBenefit);
+                    }
+                }
+                categoryBenefits = adjustedBenefits;
+            }
+        }
+        
+        return categoryBenefits;
+    }
+    
+    /**
+     * 특정 혜택의 예상 최대 혜택 금액을 계산합니다.
+     * 월 한도를 고려하여 실제 받을 수 있는 최대 혜택을 계산합니다.
+     * @param benefit 혜택 정보
+     * @param monthlySpendingInCategory 해당 카테고리 월 사용액
+     * @return 예상 최대 혜택 금액
+     */
+    public static BigDecimal calculateMaxPossibleBenefit(
+            CardParsedBenefitVO benefit, 
+            BigDecimal monthlySpendingInCategory) {
+        
+        if (benefit == null || monthlySpendingInCategory == null || 
+            monthlySpendingInCategory.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+        
+        BigDecimal benefitValue = benefit.getValue();
+        if (benefitValue == null || benefitValue.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+        
+        BigDecimal calculatedBenefit = BigDecimal.ZERO;
+        String conditionText = benefit.getConditionText();
+        
+        // 퍼센트 혜택인지 확인
+        boolean isPercentage = isPercentageBenefit(benefitValue, conditionText, benefit.getTitle());
+        
+        if (isPercentage) {
+            // 퍼센트 혜택: 사용액 × 혜택율
+            calculatedBenefit = monthlySpendingInCategory
+                .multiply(benefitValue)
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        } else {
+            // 고정 금액 혜택
+            calculatedBenefit = benefitValue;
+        }
+        
+        // 월 최대 혜택 한도 적용
+        Integer maxBenefitMonthly = benefit.getMaxBenefitMonthly();
+        if (maxBenefitMonthly != null && maxBenefitMonthly > 0) {
+            BigDecimal maxBenefit = BigDecimal.valueOf(maxBenefitMonthly);
+            if (calculatedBenefit.compareTo(maxBenefit) > 0) {
+                calculatedBenefit = maxBenefit;
+            }
+        }
+        
+        return calculatedBenefit.setScale(0, RoundingMode.HALF_UP);
+    }
+    
+    /**
+     * 카드 전체 월 한도를 찾습니다.
+     * title이 "유의사항"인 혜택의 max_benefit_monthly 값을 카드 전체 월 한도로 사용합니다.
+     * @param benefits 카드의 모든 혜택 목록
+     * @return 카드 전체 월 한도 (찾지 못하면 null)
+     */
+    private static Integer findCardTotalMonthlyLimit(List<CardParsedBenefitVO> benefits) {
+        if (benefits == null || benefits.isEmpty()) {
+            return null;
+        }
+        
+        for (CardParsedBenefitVO benefit : benefits) {
+            if ("유의사항".equals(benefit.getTitle()) && 
+                benefit.getMaxBenefitMonthly() != null && 
+                benefit.getMaxBenefitMonthly() > 0) {
+                return benefit.getMaxBenefitMonthly();
+            }
+        }
+        
+        return null; // 유의사항에서 월 한도를 찾지 못한 경우
+    }
+    
+    /**
+     * 모든가맹점 혜택을 찾습니다.
+     * title이 "모든가맹점"이고 category가 "기타"이며 value가 3 미만인 혜택을 찾습니다.
+     * @param benefits 카드의 모든 혜택 목록
+     * @return 모든가맹점 혜택 (찾지 못하면 null)
+     */
+    private static CardParsedBenefitVO findAllMerchantsBenefit(List<CardParsedBenefitVO> benefits) {
+        if (benefits == null || benefits.isEmpty()) {
+            return null;
+        }
+        
+        for (CardParsedBenefitVO benefit : benefits) {
+            if ("모든가맹점".equals(benefit.getTitle()) && 
+                "기타".equals(benefit.getCategory()) &&
+                benefit.getValue() != null &&
+                benefit.getValue().compareTo(BigDecimal.valueOf(3)) < 0) {
+                return benefit;
+            }
+        }
+        
+        return null; // 모든가맹점 혜택을 찾지 못한 경우
+    }
+    
+    /**
+     * 선택형 혜택을 찾습니다.
+     * title이 "선택형"이고 category가 "기타"이며 benefit_type이 "적립" 또는 "할인"이고 value가 3 미만인 혜택을 찾습니다.
+     * @param benefits 카드의 모든 혜택 목록
+     * @return 선택형 혜택 (찾지 못하면 null)
+     */
+    private static CardParsedBenefitVO findSelectiveBenefit(List<CardParsedBenefitVO> benefits) {
+        if (benefits == null || benefits.isEmpty()) {
+            return null;
+        }
+        
+        for (CardParsedBenefitVO benefit : benefits) {
+            if ("선택형".equals(benefit.getTitle()) && 
+                "기타".equals(benefit.getCategory()) &&
+                ("적립".equals(benefit.getBenefitType()) || "할인".equals(benefit.getBenefitType())) &&
+                benefit.getValue() != null &&
+                benefit.getValue().compareTo(BigDecimal.valueOf(3)) < 0) {
+                return benefit;
+            }
+        }
+        
+        return null; // 선택형 혜택을 찾지 못한 경우
+    }
+    
+    /**
+     * 선택형 혜택을 계산합니다.
+     * 모든 거래에 동일한 퍼센테이지를 적용합니다.
+     * @param selectiveBenefit 선택형 혜택 정보
+     * @param transactionSummary 거래 요약
+     * @param previousMonthSpend 전월 총 사용액
+     * @return 선택형 혜택 금액
+     */
+    private static BigDecimal calculateSelectiveBenefit(
+            CardParsedBenefitVO selectiveBenefit,
+            CardTransactionSummaryVO transactionSummary,
+            Long previousMonthSpend) {
+        
+        if (selectiveBenefit == null || transactionSummary == null) {
+            return BigDecimal.ZERO;
+        }
+        
+        // 개별 혜택의 전월 실적 조건 확인
+        Integer requiredPreMonthMoney = selectiveBenefit.getPreMonthMoneySpecific();
+        if (requiredPreMonthMoney != null && previousMonthSpend < requiredPreMonthMoney) {
+            return BigDecimal.ZERO;
+        }
+        
+        // 건당 최소 결제 금액 조건 확인
+        if (selectiveBenefit.getMinSpendPerTransaction() != null) {
+            BigDecimal avgAmount = transactionSummary.getAverageAmount();
+            if (avgAmount == null || avgAmount.compareTo(BigDecimal.valueOf(selectiveBenefit.getMinSpendPerTransaction())) < 0) {
+                return BigDecimal.ZERO;
+            }
+        }
+        
+        BigDecimal benefitValue = selectiveBenefit.getValue();
+        if (benefitValue == null || benefitValue.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+        
+        // 거래 총액에 퍼센테이지 적용
+        BigDecimal transactionAmount = BigDecimal.valueOf(transactionSummary.getTotalAmount());
+        BigDecimal benefitAmount = transactionAmount
+            .multiply(benefitValue)
+            .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        
+        // 개별 혜택의 월 최대 한도 적용
+        Integer maxBenefitMonthly = selectiveBenefit.getMaxBenefitMonthly();
+        if (maxBenefitMonthly != null && maxBenefitMonthly > 0) {
+            BigDecimal maxBenefit = BigDecimal.valueOf(maxBenefitMonthly);
+            if (benefitAmount.compareTo(maxBenefit) > 0) {
+                benefitAmount = maxBenefit;
+            }
+        }
+        
+        return benefitAmount.setScale(0, RoundingMode.HALF_UP);
+    }
+    
+    /**
+     * 모든가맹점 혜택을 계산합니다.
+     * 모든 거래에 동일한 퍼센테이지를 적용합니다.
+     * @param allMerchantsBenefit 모든가맹점 혜택 정보
+     * @param transactionSummary 거래 요약
+     * @param previousMonthSpend 전월 총 사용액
+     * @return 모든가맹점 혜택 금액
+     */
+    private static BigDecimal calculateAllMerchantsBenefit(
+            CardParsedBenefitVO allMerchantsBenefit,
+            CardTransactionSummaryVO transactionSummary,
+            Long previousMonthSpend) {
+        
+        if (allMerchantsBenefit == null || transactionSummary == null) {
+            return BigDecimal.ZERO;
+        }
+        
+        // 개별 혜택의 전월 실적 조건 확인
+        Integer requiredPreMonthMoney = allMerchantsBenefit.getPreMonthMoneySpecific();
+        if (requiredPreMonthMoney != null && previousMonthSpend < requiredPreMonthMoney) {
+            return BigDecimal.ZERO;
+        }
+        
+        // 건당 최소 결제 금액 조건 확인
+        if (allMerchantsBenefit.getMinSpendPerTransaction() != null) {
+            BigDecimal avgAmount = transactionSummary.getAverageAmount();
+            if (avgAmount == null || avgAmount.compareTo(BigDecimal.valueOf(allMerchantsBenefit.getMinSpendPerTransaction())) < 0) {
+                return BigDecimal.ZERO;
+            }
+        }
+        
+        BigDecimal benefitValue = allMerchantsBenefit.getValue();
+        if (benefitValue == null || benefitValue.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+        
+        // 거래 총액에 퍼센테이지 적용
+        BigDecimal transactionAmount = BigDecimal.valueOf(transactionSummary.getTotalAmount());
+        BigDecimal benefitAmount = transactionAmount
+            .multiply(benefitValue)
+            .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        
+        // 개별 혜택의 월 최대 한도 적용
+        Integer maxBenefitMonthly = allMerchantsBenefit.getMaxBenefitMonthly();
+        if (maxBenefitMonthly != null && maxBenefitMonthly > 0) {
+            BigDecimal maxBenefit = BigDecimal.valueOf(maxBenefitMonthly);
+            if (benefitAmount.compareTo(maxBenefit) > 0) {
+                benefitAmount = maxBenefit;
+            }
+        }
+        
+        return benefitAmount.setScale(0, RoundingMode.HALF_UP);
     }
     
     /**
@@ -246,17 +754,21 @@ public class BenefitCalculationUtil {
     
     /**
      * 카테고리가 온라인 관련인지 확인합니다.
+     * 23개 표준 카테고리에 맞게 업데이트
      * @param category 카테고리명
      * @return 온라인 카테고리 여부
      */
     private static boolean isOnlineCategory(String category) {
-        return "온라인쇼핑".equals(category) || "온라인서비스".equals(category);
+        return "쇼핑".equals(category) || // 온라인쇼핑 포함
+               "OTT/영화/문화".equals(category) || // 디지털구독 포함
+               "간편결제".equals(category); // 온라인 결제 서비스
     }
     
     /**
      * 혜택 카테고리와 거래 카테고리가 매칭되는지 확인합니다.
+     * CategoryMappingUtil을 사용하여 23개 표준 카테고리 체계로 매칭
      * @param benefitCategory 혜택 카테고리
-     * @param transactionCategory 거래 카테고리
+     * @param transactionCategory 거래 카테고리 (MerchantCategoryService에서 분류된)
      * @return 매칭 여부
      */
     private static boolean isCategoryMatched(String benefitCategory, String transactionCategory) {
@@ -264,115 +776,20 @@ public class BenefitCalculationUtil {
             return false;
         }
         
-        // 정확한 매칭
-        if (benefitCategory.equals(transactionCategory)) {
-            return true;
-        }
-        
-        // 유사 카테고리 매칭
-        return matchSimilarCategories(benefitCategory, transactionCategory);
+        // CategoryMappingUtil을 사용하여 매칭 확인
+        return CategoryMappingUtil.isCategoryMatch(benefitCategory, transactionCategory);
     }
     
     /**
      * 유사한 카테고리들을 매칭합니다.
+     * @deprecated CategoryMappingUtil을 사용하여 23개 표준 카테고리로 대체됨
      * @param benefitCategory 혜택 카테고리
      * @param transactionCategory 거래 카테고리
      * @return 유사 카테고리 매칭 여부
      */
+    @Deprecated
     private static boolean matchSimilarCategories(String benefitCategory, String transactionCategory) {
-        // 카테고리를 소문자로 변환하여 비교
-        String benefit = benefitCategory.toLowerCase();
-        String transaction = transactionCategory.toLowerCase();
-        
-        // 카페/디저트/커피 관련
-        if ((benefit.contains("카페") || benefit.contains("커피") || benefit.contains("스타벅스") || benefit.contains("카페테리아")) && 
-            (transaction.contains("카페") || transaction.contains("커피") || transaction.contains("디저트") || 
-             transaction.contains("베이커리") || transaction.contains("도넛") || transaction.contains("스타벅스"))) {
-            return true;
-        }
-        
-        // 마트/편의점/생활용품 관련
-        if ((benefit.contains("마트") || benefit.contains("편의점") || benefit.contains("생활") || benefit.contains("슈퍼")) && 
-            (transaction.contains("마트") || transaction.contains("편의점") || transaction.contains("생활") || 
-             transaction.contains("슈퍼") || transaction.contains("gs25") || transaction.contains("cu") || 
-             transaction.contains("세븐일레븐") || transaction.contains("이마트") || transaction.contains("롯데마트"))) {
-            return true;
-        }
-        
-        // 주유/자동차 관련
-        if ((benefit.contains("주유") || benefit.contains("기름") || benefit.contains("자동차") || benefit.contains("차량")) && 
-            (transaction.contains("주유") || transaction.contains("기름") || transaction.contains("주유소") || 
-             transaction.contains("sk에너지") || transaction.contains("gs칼텍스") || transaction.contains("s-oil") || 
-             transaction.contains("현대오일뱅크") || transaction.contains("자동차"))) {
-            return true;
-        }
-        
-        // 대중교통/교통비 관련
-        if ((benefit.contains("교통") || benefit.contains("지하철") || benefit.contains("버스") || benefit.contains("택시")) && 
-            (transaction.contains("교통") || transaction.contains("지하철") || transaction.contains("버스") || 
-             transaction.contains("택시") || transaction.contains("카카오택시") || transaction.contains("우버") || 
-             transaction.contains("전철") || transaction.contains("ktx") || transaction.contains("기차"))) {
-            return true;
-        }
-        
-        // 온라인쇼핑/인터넷쇼핑 관련
-        if ((benefit.contains("온라인") || benefit.contains("인터넷") || benefit.contains("쇼핑몰") || benefit.contains("온라인쇼핑")) && 
-            (transaction.contains("온라인") || transaction.contains("인터넷") || transaction.contains("쇼핑") || 
-             transaction.contains("11번가") || transaction.contains("g마켓") || transaction.contains("옥션") || 
-             transaction.contains("쿠팡") || transaction.contains("위메프") || transaction.contains("티몬"))) {
-            return true;
-        }
-        
-        // 백화점/쇼핑/패션 관련
-        if ((benefit.contains("백화점") || benefit.contains("쇼핑") || benefit.contains("패션") || benefit.contains("의류")) && 
-            (transaction.contains("백화점") || transaction.contains("쇼핑") || transaction.contains("패션") || 
-             transaction.contains("의류") || transaction.contains("신세계") || transaction.contains("롯데백화점") || 
-             transaction.contains("현대백화점") || transaction.contains("갤러리아") || transaction.contains("아울렛"))) {
-            return true;
-        }
-        
-        // 통신비 관련
-        if ((benefit.contains("통신") || benefit.contains("휴대폰") || benefit.contains("인터넷") || benefit.contains("통신비")) && 
-            (transaction.contains("통신") || transaction.contains("휴대폰") || transaction.contains("인터넷") || 
-             transaction.contains("skt") || transaction.contains("kt") || transaction.contains("lg유플러스") || 
-             transaction.contains("olleh") || transaction.contains("티브로드"))) {
-            return true;
-        }
-        
-        // 병원/의료/약국 관련
-        if ((benefit.contains("병원") || benefit.contains("의료") || benefit.contains("약국") || benefit.contains("헬스케어")) && 
-            (transaction.contains("병원") || transaction.contains("의료") || transaction.contains("약국") || 
-             transaction.contains("클리닉") || transaction.contains("치과") || transaction.contains("한의원") || 
-             transaction.contains("약국"))) {
-            return true;
-        }
-        
-        // 외식/음식/레스토랑 관련
-        if ((benefit.contains("외식") || benefit.contains("음식") || benefit.contains("레스토랑") || 
-             benefit.contains("식당") || benefit.contains("맛집") || benefit.contains("요식업")) && 
-            (transaction.contains("외식") || transaction.contains("음식") || transaction.contains("레스토랑") || 
-             transaction.contains("식당") || transaction.contains("치킨") || transaction.contains("피자") || 
-             transaction.contains("햄버거") || transaction.contains("분식") || transaction.contains("한식") || 
-             transaction.contains("중식") || transaction.contains("일식") || transaction.contains("양식"))) {
-            return true;
-        }
-        
-        // 영화/문화/엔터테인먼트 관련
-        if ((benefit.contains("영화") || benefit.contains("문화") || benefit.contains("엔터") || benefit.contains("여가")) && 
-            (transaction.contains("영화") || transaction.contains("문화") || transaction.contains("cgv") || 
-             transaction.contains("롯데시네마") || transaction.contains("메가박스") || transaction.contains("공연") || 
-             transaction.contains("뮤지컬") || transaction.contains("콘서트"))) {
-            return true;
-        }
-        
-        // 항공/여행 관련
-        if ((benefit.contains("항공") || benefit.contains("여행") || benefit.contains("호텔") || benefit.contains("숙박")) && 
-            (transaction.contains("항공") || transaction.contains("여행") || transaction.contains("호텔") || 
-             transaction.contains("숙박") || transaction.contains("에어") || transaction.contains("항공사") || 
-             transaction.contains("모텔") || transaction.contains("펜션") || transaction.contains("리조트"))) {
-            return true;
-        }
-        
-        return false;
+        // 이 메서드는 더 이상 사용되지 않음 - CategoryMappingUtil로 대체
+        return CategoryMappingUtil.isCategoryMatch(benefitCategory, transactionCategory);
     }
 }

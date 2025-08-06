@@ -12,6 +12,7 @@ import java.sql.Timestamp;
 public class UserCardRecommendationVO {
     private Long recommendationId; // 추천 ID (AUTO_INCREMENT)
     private Long userId; // 사용자 ID
+    private Integer baseCardId; // 기준이 되는 사용자 보유 카드 ID
     private Integer cardId; // 추천된 카드 ID (card_product.card_product_id)
     private String cardName; // 카드명
     private String cardType; // 카드 종류 (신용, 체크)

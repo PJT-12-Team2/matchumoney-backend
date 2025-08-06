@@ -7,6 +7,8 @@ import team2.pjt12.matchumoney.domain.cardrecommendation.dto.*;
 import team2.pjt12.matchumoney.domain.cardrecommendation.mapper.CardRecommendationMapper;
 import team2.pjt12.matchumoney.domain.cardrecommendation.service.UserCardRecommendationService;
 import team2.pjt12.matchumoney.domain.cardrecommendation.util.BenefitCalculationUtil;
+import team2.pjt12.matchumoney.domain.cardrecommendation.util.CategoryMappingUtil;
+import team2.pjt12.matchumoney.domain.mydata.service.MerchantCategoryService;
 import team2.pjt12.matchumoney.domain.cardrecommendation.vo.*;
 
 import java.math.BigDecimal;
@@ -24,6 +26,7 @@ public class CardRecommendationServiceImpl implements CardRecommendationService 
 
     private final CardRecommendationMapper cardRecommendationMapper;
     private final UserCardRecommendationService userCardRecommendationService;
+    private final MerchantCategoryService merchantCategoryService;
 
     @Override
     public MyCardBenefitResponseDTO calculateSpecificCardBenefit(Long userId, Integer cardId) {
@@ -160,6 +163,21 @@ public class CardRecommendationServiceImpl implements CardRecommendationService 
 
             // 기준 카드보다 혜택이 더 큰 카드만 추천
             if (cardBenefit.compareTo(baseCardBenefit) > 0) {
+                // 추천 점수 계산
+                Double recommendationScore = calculateRecommendationScore(cardBenefit, baseCardBenefit, 
+                    benefits, transactionSummaries, card);
+                
+                // 카테고리별 혜택 계산
+                Map<String, BigDecimal> categoryBenefits = calculateCategoryBenefits(
+                    benefits, transactionSummaries, totalSpendAmount, card.getPreMonthMoney());
+                
+                // 추천 이유 생성
+                List<String> recommendationReasons = generateRecommendationReasons(
+                    cardBenefit, baseCardBenefit, categoryBenefits);
+                
+                // 주요 혜택 카테고리 추출
+                List<String> mainBenefitCategories = extractMainBenefitCategories(categoryBenefits, 3);
+                
                 betterCards.add(CardBenefitDTO.builder()
                     .cardId(card.getCardProductId())
                     .cardName(card.getName())
@@ -171,13 +189,30 @@ public class CardRecommendationServiceImpl implements CardRecommendationService 
                     .cardImageUrl(card.getCardImageUrl())
                     .requestPcUrl(card.getRequestPcUrl())
                     .requestMobileUrl(card.getRequestMobileUrl())
+                    // 새로운 추천 필드들
+                    .recommendationScore(recommendationScore)
+                    .expectedMonthlyBenefit(cardBenefit.divide(BigDecimal.valueOf(12), 2, java.math.RoundingMode.HALF_UP))
+                    .expectedYearlyBenefit(cardBenefit)
+                    .netBenefit(calculateNetBenefit(cardBenefit, card.getAnnualFee()))
+                    .categoryBenefits(categoryBenefits)
+                    .recommendationReasons(recommendationReasons)
+                    .conditionFulfillmentProbability(calculateConditionFulfillmentProbability(card, totalSpendAmount))
+                    .expectedAchievementRate(calculateAchievementRate(card, totalSpendAmount))
+                    .mainBenefitCategories(mainBenefitCategories)
                     .build());
             }
         }
 
-        // 혜택 순으로 정렬하고 상위 5개만 선택
+        // 추천 점수 순으로 정렬하고 상위 5개만 선택
         List<CardBenefitDTO> topRecommendations = betterCards.stream()
-            .sorted((a, b) -> b.getEstimatedBenefit().compareTo(a.getEstimatedBenefit()))
+            .sorted((a, b) -> {
+                // 추천 점수가 있으면 추천 점수로, 없으면 혜택 금액으로 정렬
+                if (a.getRecommendationScore() != null && b.getRecommendationScore() != null) {
+                    return b.getRecommendationScore().compareTo(a.getRecommendationScore());
+                } else {
+                    return b.getEstimatedBenefit().compareTo(a.getEstimatedBenefit());
+                }
+            })
             .limit(5)
             .collect(Collectors.toList());
 
@@ -264,8 +299,8 @@ public class CardRecommendationServiceImpl implements CardRecommendationService 
 
         try {
             // 저장된 추천 데이터 조회
-            List<UserCardRecommendationVO> savedRecommendations = 
-                userCardRecommendationService.getAllSavedRecommendations(userId);
+            List<CardBenefitDTO> savedRecommendations = 
+                userCardRecommendationService.getSavedRecommendations(userId, cardId);
 
             // 카드별 거래 통계 조회 (최근 30일)
             LocalDate endDate = LocalDate.now();
@@ -276,11 +311,6 @@ public class CardRecommendationServiceImpl implements CardRecommendationService 
             
             Long totalSpendAmount = cardRecommendationMapper.selectTotalSpendByUserAndCard(userId, cardId, startDate, endDate);
 
-            // UserCardRecommendationVO를 CardBenefitDTO로 변환
-            List<CardBenefitDTO> recommendedCards = savedRecommendations.stream()
-                .map(this::convertToCardBenefitDTO)
-                .collect(Collectors.toList());
-
             String message = savedRecommendations.isEmpty() ? 
                 "저장된 추천 데이터가 없습니다. 거래내역을 먼저 동기화해주세요." :
                 String.format("저장된 추천 카드 %d개를 조회했습니다.", savedRecommendations.size());
@@ -290,7 +320,7 @@ public class CardRecommendationServiceImpl implements CardRecommendationService 
                 .categoryStats(transactionSummaries.stream()
                     .map(this::convertToCategoryStatDTO)
                     .collect(Collectors.toList()))
-                .recommendedCards(recommendedCards)
+                .recommendedCards(savedRecommendations)
                 .message(message)
                 .build();
 
@@ -332,6 +362,163 @@ public class CardRecommendationServiceImpl implements CardRecommendationService 
             .cardImageUrl(vo.getCardImageUrl())
             .requestPcUrl(vo.getRequestPcUrl())
             .requestMobileUrl(vo.getRequestMobileUrl())
+            // 기본값 설정
+            .recommendationScore(75.0)
+            .expectedMonthlyBenefit(BigDecimal.valueOf(vo.getEstimatedBenefit()).divide(BigDecimal.valueOf(12), 2, java.math.RoundingMode.HALF_UP))
+            .expectedYearlyBenefit(BigDecimal.valueOf(vo.getEstimatedBenefit()))
+            .netBenefit(calculateNetBenefit(BigDecimal.valueOf(vo.getEstimatedBenefit()), vo.getAnnualFee()))
+            .categoryBenefits(new java.util.HashMap<>())
+            .recommendationReasons(java.util.Arrays.asList("저장된 추천 데이터입니다"))
+            .conditionFulfillmentProbability(0.8)
+            .expectedAchievementRate(0.8)
+            .mainBenefitCategories(new java.util.ArrayList<>())
             .build();
+    }
+    
+    /**
+     * 추천 점수를 계산합니다.
+     */
+    private Double calculateRecommendationScore(BigDecimal cardBenefit, BigDecimal baseBenefit,
+                                               List<CardParsedBenefitVO> benefits, 
+                                               List<CardTransactionSummaryVO> transactionSummaries,
+                                               CardProductVO card) {
+        // 혜택 금액 비율 (0-40점)
+        double benefitScore = Math.min(40, cardBenefit.subtract(baseBenefit)
+            .divide(BigDecimal.valueOf(10000), 2, java.math.RoundingMode.HALF_UP).doubleValue());
+        
+        // 카테고리 매칭 점수 (0-30점)
+        double categoryMatchScore = calculateCategoryMatchScore(benefits, transactionSummaries);
+        
+        // 조건 충족 점수 (0-20점)
+        double conditionScore = calculateConditionFulfillmentProbability(card, 
+            transactionSummaries.stream().mapToLong(CardTransactionSummaryVO::getTotalAmount).sum()) * 20;
+        
+        // 활용도 점수 (0-10점)
+        double utilizationScore = 10.0; // 기본 활용도
+        
+        return Math.max(0, Math.min(100, benefitScore + categoryMatchScore + conditionScore + utilizationScore));
+    }
+    
+    /**
+     * 카테고리 매칭 점수를 계산합니다.
+     */
+    private double calculateCategoryMatchScore(List<CardParsedBenefitVO> benefits, 
+                                              List<CardTransactionSummaryVO> transactionSummaries) {
+        int matchedCategories = 0;
+        int totalTransactionCategories = transactionSummaries.size();
+        
+        for (CardTransactionSummaryVO summary : transactionSummaries) {
+            String transactionCategory = summary.getCategory();
+            
+            for (CardParsedBenefitVO benefit : benefits) {
+                String benefitTransactionCategory = CategoryMappingUtil.mapBenefitToTransactionCategory(benefit.getCategory());
+                if (transactionCategory.equals(benefitTransactionCategory)) {
+                    matchedCategories++;
+                    break;
+                }
+            }
+        }
+        
+        if (totalTransactionCategories == 0) return 0;
+        return (double) matchedCategories / totalTransactionCategories * 30;
+    }
+    
+    /**
+     * 카테고리별 혜택 금액을 계산합니다.
+     * 개선된 BenefitCalculationUtil의 메서드를 사용하여 월 한도를 정확히 적용합니다.
+     */
+    private Map<String, BigDecimal> calculateCategoryBenefits(List<CardParsedBenefitVO> benefits,
+                                                             List<CardTransactionSummaryVO> transactionSummaries,
+                                                             Long totalSpendAmount,
+                                                             Long cardPreMonthMoney) {
+        // BenefitCalculationUtil의 개선된 카테고리별 혜택 계산 메서드 사용
+        return BenefitCalculationUtil.calculateCategoryBenefits(
+            benefits, transactionSummaries, totalSpendAmount, cardPreMonthMoney);
+    }
+    
+    /**
+     * 순 혜택을 계산합니다.
+     */
+    private BigDecimal calculateNetBenefit(BigDecimal yearlyBenefit, String annualFeeStr) {
+        try {
+            if (annualFeeStr == null || annualFeeStr.trim().isEmpty() || "무료".equals(annualFeeStr)) {
+                return yearlyBenefit;
+            }
+            
+            // 연회비에서 숫자만 추출
+            String feeNumeric = annualFeeStr.replaceAll("[^0-9]", "");
+            if (feeNumeric.isEmpty()) {
+                return yearlyBenefit;
+            }
+            
+            BigDecimal annualFee = new BigDecimal(feeNumeric);
+            return yearlyBenefit.subtract(annualFee);
+        } catch (Exception e) {
+            log.warn("연회비 파싱 오류: {}", annualFeeStr, e);
+            return yearlyBenefit;
+        }
+    }
+    
+    /**
+     * 조건 충족 가능성을 계산합니다.
+     */
+    private Double calculateConditionFulfillmentProbability(CardProductVO card, Long userSpending) {
+        if (card.getPreMonthMoney() == null || card.getPreMonthMoney() == 0) {
+            return 1.0; // 전월 실적 조건이 없으면 100%
+        }
+        
+        if (userSpending >= card.getPreMonthMoney()) {
+            return 1.0; // 조건 충족
+        } else {
+            double ratio = (double) userSpending / card.getPreMonthMoney();
+            return Math.max(0.3, ratio); // 최소 30%는 보장
+        }
+    }
+    
+    /**
+     * 달성률을 계산합니다.
+     */
+    private Double calculateAchievementRate(CardProductVO card, Long userSpending) {
+        if (card.getPreMonthMoney() == null || card.getPreMonthMoney() == 0) {
+            return 1.0;
+        }
+        
+        return Math.min(1.0, (double) userSpending / card.getPreMonthMoney());
+    }
+    
+    /**
+     * 추천 이유를 생성합니다.
+     */
+    private List<String> generateRecommendationReasons(BigDecimal cardBenefit, BigDecimal baseBenefit,
+                                                       Map<String, BigDecimal> categoryBenefits) {
+        List<String> reasons = new java.util.ArrayList<>();
+        
+        Long benefitDiff = cardBenefit.subtract(baseBenefit).longValue();
+        reasons.add(String.format("현재 카드보다 연간 %,d원 더 많은 혜택을 받을 수 있습니다", benefitDiff));
+        
+        // 상위 2개 카테고리 언급
+        categoryBenefits.entrySet().stream()
+            .sorted(Map.Entry.<String, BigDecimal>comparingByValue().reversed())
+            .limit(2)
+            .forEach(entry -> {
+                String category = entry.getKey();
+                Long amount = entry.getValue().longValue();
+                if (amount > 0) {
+                    reasons.add(String.format("%s에서 월 %,d원의 혜택을 받을 수 있습니다", category, amount));
+                }
+            });
+        
+        return reasons;
+    }
+    
+    /**
+     * 주요 혜택 카테고리를 추출합니다.
+     */
+    private List<String> extractMainBenefitCategories(Map<String, BigDecimal> categoryBenefits, int limit) {
+        return categoryBenefits.entrySet().stream()
+            .sorted(Map.Entry.<String, BigDecimal>comparingByValue().reversed())
+            .limit(limit)
+            .map(Map.Entry::getKey)
+            .collect(java.util.stream.Collectors.toList());
     }
 }

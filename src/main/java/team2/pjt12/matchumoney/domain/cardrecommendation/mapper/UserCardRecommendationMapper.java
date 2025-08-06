@@ -31,6 +31,14 @@ public interface UserCardRecommendationMapper {
     List<UserCardRecommendationVO> selectRecommendationsByUserId(Long userId);
     
     /**
+     * 사용자의 특정 기준 카드에 대한 추천 카드를 조회합니다.
+     * @param userId 사용자 ID
+     * @param baseCardId 기준 카드 ID
+     * @return 추천 카드 목록 (최대 5개)
+     */
+    List<UserCardRecommendationVO> selectRecommendationsByUserIdAndBaseCardId(@Param("userId") Long userId, @Param("baseCardId") Integer baseCardId);
+    
+    /**
      * 사용자의 모든 추천 카드를 삭제합니다.
      * @param userId 사용자 ID
      * @return 삭제된 행의 수
@@ -38,12 +46,12 @@ public interface UserCardRecommendationMapper {
     int deleteRecommendationsByUserId(Long userId);
     
     /**
-     * 사용자의 특정 카드 관련 추천을 삭제합니다.
+     * 사용자의 특정 기준 카드에 대한 추천 카드를 삭제합니다.
      * @param userId 사용자 ID
-     * @param cardId 카드 ID
+     * @param baseCardId 기준 카드 ID
      * @return 삭제된 행의 수
      */
-    int deleteRecommendationsByUserIdAndCardId(@Param("userId") Long userId, @Param("cardId") Integer cardId);
+    int deleteRecommendationsByUserIdAndBaseCardId(@Param("userId") Long userId, @Param("baseCardId") Integer baseCardId);
     
     /**
      * 사용자의 추천 카드 개수를 조회합니다.
@@ -51,4 +59,12 @@ public interface UserCardRecommendationMapper {
      * @return 추천 카드 개수
      */
     int countRecommendationsByUserId(Long userId);
+    
+    /**
+     * 사용자의 특정 기준 카드에 대한 추천 카드 개수를 조회합니다.
+     * @param userId 사용자 ID
+     * @param baseCardId 기준 카드 ID
+     * @return 추천 카드 개수
+     */
+    int countRecommendationsByUserIdAndBaseCardId(@Param("userId") Long userId, @Param("baseCardId") Integer baseCardId);
 }
