@@ -521,4 +521,55 @@ public class CardRecommendationServiceImpl implements CardRecommendationService 
             .map(Map.Entry::getKey)
             .collect(java.util.stream.Collectors.toList());
     }
+    
+    @Override
+    public KbCardRecommendationResponseDTO recommendKbCards() {
+        log.info("KB국민카드 추천 카드 목록 조회 시작");
+        
+        try {
+            List<CardProductVO> kbCards = cardRecommendationMapper.selectAvailableCardsByIssuer("KB국민카드");
+            
+            List<KbCardRecommendationResponseDTO.KbCardProductDTO> kbCardDTOs = kbCards.stream()
+                .map(this::convertToKbCardDTO)
+                .collect(Collectors.toList());
+            
+            String message = String.format("KB국민카드에서 발급 가능한 카드 %d개를 조회했습니다.", kbCardDTOs.size());
+            
+            log.info("KB국민카드 추천 완료: {} 개", kbCardDTOs.size());
+            
+            return KbCardRecommendationResponseDTO.builder()
+                .kbCards(kbCardDTOs)
+                .totalCount(kbCardDTOs.size())
+                .message(message)
+                .build();
+                
+        } catch (Exception e) {
+            log.error("KB국민카드 추천 중 오류 발생", e);
+            return KbCardRecommendationResponseDTO.builder()
+                .kbCards(Collections.emptyList())
+                .totalCount(0)
+                .message("KB국민카드 추천 조회 중 오류가 발생했습니다.")
+                .build();
+        }
+    }
+    
+    /**
+     * CardProductVO를 KbCardProductDTO로 변환합니다.
+     */
+    private KbCardRecommendationResponseDTO.KbCardProductDTO convertToKbCardDTO(CardProductVO card) {
+        return KbCardRecommendationResponseDTO.KbCardProductDTO.builder()
+            .cardProductId(card.getCardProductId())
+            .name(card.getName())
+            .type(card.getType())
+            .annualFee(card.getAnnualFee())
+            .preMonthMoney(card.getPreMonthMoney())
+            .cardImageUrl(card.getCardImageUrl())
+            .requestPcUrl(card.getRequestPcUrl())
+            .requestMobileUrl(card.getRequestMobileUrl())
+            .annualFeeDetail(card.getAnnualFeeDetail())
+            .corpPrContainer(card.getCorpPrContainer())
+            .corpTips(card.getCorpTips())
+            .issuer(card.getIssuer())
+            .build();
+    }
 }

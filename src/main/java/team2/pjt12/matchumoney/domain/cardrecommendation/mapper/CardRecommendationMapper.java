@@ -145,4 +145,11 @@ public interface CardRecommendationMapper {
     List<UserCardRecommendationVO> selectAllUserCardRecommendations(
         @Param("userId") Long userId
     );
+    
+    /**
+     * 발급사별로 발급 가능한 카드 목록을 조회합니다.
+     * @param issuer 발급사명 (예: KB국민카드)
+     * @return 발급 가능한 카드 목록
+     */
+    List<CardProductVO> selectAvailableCardsByIssuer(@Param("issuer") String issuer);
 }

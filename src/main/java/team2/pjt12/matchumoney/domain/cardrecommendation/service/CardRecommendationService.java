@@ -1,6 +1,7 @@
 package team2.pjt12.matchumoney.domain.cardrecommendation.service;
 
 import team2.pjt12.matchumoney.domain.cardrecommendation.dto.CardRecommendationResponseDTO;
+import team2.pjt12.matchumoney.domain.cardrecommendation.dto.KbCardRecommendationResponseDTO;
 import team2.pjt12.matchumoney.domain.cardrecommendation.dto.MyCardBenefitResponseDTO;
 
 import java.util.List;
@@ -47,4 +48,10 @@ public interface CardRecommendationService {
      * @param cardId 거래내역이 업데이트된 카드 ID
      */
     void generateAndSaveRecommendations(Long userId, Integer cardId);
+    
+    /**
+     * KB국민카드에서 발급 가능한 카드 목록을 추천합니다.
+     * @return KB국민카드 추천 목록
+     */
+    KbCardRecommendationResponseDTO recommendKbCards();
 }
