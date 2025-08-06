@@ -108,6 +108,52 @@
         WHERE user_id = #{userId}
     </select>
 
+    <select id="getFavoriteCards" resultType="team2.pjt12.matchumoney.domain.personacard.dto.PersonaCardDTO">
+        SELECT c.card_product_id AS cardId,
+               c.name AS cardName,
+               c.card_image_url AS cardImageUrl,
+               c.type AS cardType,
+               c.issuer AS issuer,
+               c.annual_fee AS annualFee,
+               c.pre_month_money AS preMonthMoney,
+               c.top_benefits AS topBenefits
+        FROM user_favorites f
+                 JOIN card_product c ON f.card_product_id = c.card_product_id
+        WHERE f.user_id = #{userId}
+          AND f.card_product_id IS NOT NULL
+    </select>
+
+    <select id="getFavoriteSavings" resultType="team2.pjt12.matchumoney.domain.personasaving.dto.PersonaSavingDTO">
+        SELECT s.saving_product_id AS savingId,
+               s.kor_co_nm AS bankName,
+               s.fin_prdt_nm AS savingName,
+               o.intr_rate AS basicRate,
+               o.intr_rate2 AS maxRate,
+               fc.company_image AS companyImage,
+               o.max_limit AS maxLimit
+        FROM user_favorites f
+                 JOIN saving_product s ON f.saving_product_id = s.saving_product_id
+                 JOIN saving_option o ON s.saving_product_id = o.saving_product_id
+                 JOIN financial_companies fc ON s.kor_co_nm = fc.kor_co_nm
+        WHERE f.user_id = #{userId}
+          AND f.saving_product_id IS NOT NULL
+    </select>
+
+    <select id="getFavoriteDeposits" resultType="team2.pjt12.matchumoney.domain.personadeposit.dto.PersonaDepositDTO">
+        SELECT d.deposit_product_id AS depositId,
+               d.kor_co_nm AS bankName,
+               d.fin_prdt_nm AS productName,
+               o.intr_rate AS basicRate,
+               o.intr_rate2 AS maxRate,
+               fc.company_image AS companyImage
+        FROM user_favorites f
+                 JOIN deposit_product d ON f.deposit_product_id = d.deposit_product_id
+                 JOIN deposit_option o ON d.deposit_product_id = o.deposit_product_id
+                 JOIN financial_companies fc ON d.kor_co_nm = fc.kor_co_nm
+        WHERE f.user_id = #{userId}
+          AND f.deposit_product_id IS NOT NULL
+    </select>
+
     <!-- 상품 별 즐겨찾기 조회 -->
     <select id="getSimpleFavoriteDeposits" resultType="team2.pjt12.matchumoney.domain.deposit.dto.res.DepositProductResponseDTO">
         SELECT *

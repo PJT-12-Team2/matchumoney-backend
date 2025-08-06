@@ -5,6 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team2.pjt12.matchumoney.domain.favorite.domain.FavoriteVO;
+import team2.pjt12.matchumoney.domain.favorite.dto.FavoriteProductResponseDTO;
+import team2.pjt12.matchumoney.domain.personacard.dto.PersonaCardDTO;
+import team2.pjt12.matchumoney.domain.personadeposit.dto.PersonaDepositDTO;
+import team2.pjt12.matchumoney.domain.personasaving.dto.PersonaSavingDTO;
 import team2.pjt12.matchumoney.domain.user.domain.UserVO;
 import team2.pjt12.matchumoney.domain.user.mapper.UserMapper;
 import team2.pjt12.matchumoney.global.ProductType;
@@ -22,6 +26,7 @@ public class FavoriteServiceImpl implements FavoriteService {
 
     private final UserMapper userMapper;
 
+    @Override
     @Transactional
     public void addFavorite(Long productId, ProductType productType) {
         Long userId = getCurrentUser().getUserId();
@@ -51,15 +56,23 @@ public class FavoriteServiceImpl implements FavoriteService {
         }
     }
 
+    @Override
     @Transactional
     public void deleteFavorite(Long productId, ProductType productType) {
         Long userId = getCurrentUser().getUserId();
         userMapper.deleteFavorite(userId, productId, productType.name());
     }
 
+    @Override
     @Transactional(readOnly = true)
-    public List<FavoriteVO> getFavorites() {
+    public FavoriteProductResponseDTO getFavorites() {
         Long userId = getCurrentUser().getUserId();
-        return userMapper.getFavorites(userId);
+        List<PersonaCardDTO> cards = userMapper.getFavoriteCards(userId);
+        List<PersonaSavingDTO> savings = userMapper.getFavoriteSavings(userId);
+        List<PersonaDepositDTO> deposits = userMapper.getFavoriteDeposits(userId);
+
+        return new FavoriteProductResponseDTO(
+                cards, savings, deposits
+        );
     }
 }
