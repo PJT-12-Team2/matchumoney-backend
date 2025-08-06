@@ -109,7 +109,7 @@
     </select>
 
     <!-- 상품 별 즐겨찾기 조회 -->
-    <select id="getFavoriteDeposits" resultType="team2.pjt12.matchumoney.domain.deposit.dto.res.DepositProductResponseDTO">
+    <select id="getSimpleFavoriteDeposits" resultType="team2.pjt12.matchumoney.domain.deposit.dto.res.DepositProductResponseDTO">
         SELECT *
         FROM (
                  SELECT
@@ -143,7 +143,7 @@
              ) AS random_deposit
     </select>
 
-    <select id="getFavoriteSavings" resultType="team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO">
+    <select id="getSimpleFavoriteSavings" resultType="team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO">
         SELECT *
         FROM (
                  SELECT
@@ -181,7 +181,7 @@
              ) AS random_saving
     </select>
 
-    <select id="getFavoriteCards" resultType="team2.pjt12.matchumoney.domain.cardsearch.dto.CardSearchResponseDTO">
+    <select id="getSimpleFavoriteCards" resultType="team2.pjt12.matchumoney.domain.cardsearch.dto.CardSearchResponseDTO">
         SELECT *
         FROM (
                  SELECT

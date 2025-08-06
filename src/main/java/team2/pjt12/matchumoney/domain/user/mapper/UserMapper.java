@@ -62,9 +62,9 @@ public interface UserMapper {
 
     List<FavoriteVO> getFavorites(@Param("userId") Long userId);
 
-    List<DepositProductResponseDTO> getFavoriteDeposits(@Param("userId") Long userId);
-    List<SavingListItemResponseDTO> getFavoriteSavings(@Param("userId") Long userId);
-    List<CardSearchResponseDTO> getFavoriteCards(@Param("userId") Long userId);
+    List<DepositProductResponseDTO> getSimpleFavoriteDeposits(@Param("userId") Long userId);
+    List<SavingListItemResponseDTO> getSimpleFavoriteSavings(@Param("userId") Long userId);
+    List<CardSearchResponseDTO> getSimpleFavoriteCards(@Param("userId") Long userId);
 
     void updatePersona(@Param("userId") Long userId, @Param("personaId") String personaId);
 

@@ -105,9 +105,9 @@ public class UserServiceImpl implements UserService {
         UserVO user = userMapper.findByUserId(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        List<DepositProductResponseDTO> favoriteDeposits = userMapper.getFavoriteDeposits(userId);
-        List<SavingListItemResponseDTO> favoriteSavings = userMapper.getFavoriteSavings(userId);
-        List<CardSearchResponseDTO> favoriteCards = userMapper.getFavoriteCards(userId);
+        List<DepositProductResponseDTO> favoriteDeposits = userMapper.getSimpleFavoriteDeposits(userId);
+        List<SavingListItemResponseDTO> favoriteSavings = userMapper.getSimpleFavoriteSavings(userId);
+        List<CardSearchResponseDTO> favoriteCards = userMapper.getSimpleFavoriteCards(userId);
 
         return new MyPageResponseDTO(
                 user.getNickname(),
