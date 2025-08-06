@@ -43,12 +43,21 @@
         WHERE user_id = #{userId}
     </select>
 
-    <!-- 카드 ID로 혜택 상위 3개 조회 -->
-    <select id="selectTop3BenefitsByCardId" resultType="string">
-        SELECT title
+    <select id="selectCardOptionsByCardId"
+            resultType="team2.pjt12.matchumoney.domain.carddetail.dto.CardOptionDTO">
+        SELECT
+            parsed_benefit_id,
+            card_id2,
+            title,
+            category,
+            benefit_type,
+            value,
+            condition_text,
+            max_benefit_monthly,
+            min_spend_per_transaction,
+            pre_month_money_specific,
+            description
         FROM card_parsed_benefit
         WHERE card_id2 = #{cardId}
-        ORDER BY value DESC
-            LIMIT 3
     </select>
 </mapper>
