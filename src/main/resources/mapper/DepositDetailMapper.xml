@@ -74,4 +74,28 @@
         WHERE deposit_product_id = #{productId}
     </select>
 
+    <!-- 좋아요 여부 조회 -->
+    <select id="isLikedByUser" resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1 FROM user_likes
+            WHERE user_id = #{userId}
+              AND deposit_product_id = #{depositProductId}
+        )
+    </select>
+
+    <!-- 좋아요 개수 조회 -->
+    <select id="countLikesByProductId" resultType="int">
+        SELECT COUNT(*) FROM user_likes
+        WHERE deposit_product_id = #{depositProductId}
+    </select>
+
+    <insert id="insertUserLike">
+        INSERT INTO user_likes (user_id, deposit_product_id)
+        VALUES (#{userId}, #{depositProductId})
+    </insert>
+
+    <delete id="deleteUserLike">
+        DELETE FROM user_likes
+        WHERE user_id = #{userId} AND deposit_product_id = #{depositProductId}
+    </delete>
 </mapper>
