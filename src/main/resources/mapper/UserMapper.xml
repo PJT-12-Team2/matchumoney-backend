@@ -178,14 +178,14 @@
                                   ROW_NUMBER() OVER (
                                       PARTITION BY fin_prdt_cd
                                       ORDER BY CASE WHEN save_trm = 12 THEN 1 ELSE 2 END, save_trm DESC
-                                  ) AS rn
+                                      ) AS rn
                               FROM deposit_option
                           ) tmp
                      WHERE rn = 1
                  ) opt ON dp.fin_prdt_cd = opt.fin_prdt_cd
                  WHERE uf.user_id = #{userId}
                  ORDER BY RAND()
-                     LIMIT 2
+                 LIMIT 2
              ) AS random_deposit
     </select>
 
@@ -211,10 +211,10 @@
                                      ROW_NUMBER() OVER (
                                          PARTITION BY fin_prdt_cd
                                          ORDER BY CASE WHEN save_trm = 12 THEN 1
-                                                      WHEN save_trm = 6 THEN 2
-                                                      WHEN save_trm = 1 THEN 3
-                                                      ELSE 4 END
-                                 ) AS rn
+                                                       WHEN save_trm = 6 THEN 2
+                                                       WHEN save_trm = 1 THEN 3
+                                                       ELSE 4 END
+                                         ) AS rn
                               FROM saving_option
                           ) ranked
                      WHERE rn = 1
@@ -223,7 +223,7 @@
                                     ON sp.kor_co_nm LIKE CONCAT('%', fc.kor_co_nm, '%')
                  WHERE uf.user_id = #{userId}
                  ORDER BY RAND()
-                     LIMIT 2
+                 LIMIT 2
              ) AS random_saving
     </select>
 
@@ -242,7 +242,7 @@
                           JOIN card_product c ON uf.card_product_id = c.card_product_id
                  WHERE uf.user_id = #{userId}
                  ORDER BY RAND()
-                     LIMIT 2
+                 LIMIT 2
              ) AS random_card
     </select>
 
@@ -276,4 +276,11 @@
             SELECT persona_id FROM users WHERE user_id = #{userId}
         )
     </select>
+
+    <!-- 경험치(EXP) 업데이트 -->
+    <update id="updateUserExp">
+        UPDATE users
+        SET exp = exp + #{expAmount}
+        WHERE user_id = #{userId}
+    </update>
 </mapper>
