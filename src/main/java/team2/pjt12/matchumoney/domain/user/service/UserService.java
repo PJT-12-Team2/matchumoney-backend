@@ -1,6 +1,7 @@
 package team2.pjt12.matchumoney.domain.user.service;
 
 
+import team2.pjt12.matchumoney.domain.favorite.dto.FavoriteProductResponseDTO;
 import team2.pjt12.matchumoney.domain.user.dto.req.UpdatePasswordRequestDTO;
 import team2.pjt12.matchumoney.domain.user.dto.req.UpdateUserInfoRequestDTO;
 import team2.pjt12.matchumoney.domain.user.dto.res.MyPageResponseDTO;

@@ -7,6 +7,9 @@ import team2.pjt12.matchumoney.domain.deposit.dto.res.DepositProductResponseDTO;
 import team2.pjt12.matchumoney.domain.favorite.domain.FavoriteVO;
 import team2.pjt12.matchumoney.domain.persona.dto.PersonaResponseDTO;
 import team2.pjt12.matchumoney.domain.persona.dto.PersonaSimpleResponseDTO;
+import team2.pjt12.matchumoney.domain.personacard.dto.PersonaCardDTO;
+import team2.pjt12.matchumoney.domain.personadeposit.dto.PersonaDepositDTO;
+import team2.pjt12.matchumoney.domain.personasaving.dto.PersonaSavingDTO;
 import team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO;
 import team2.pjt12.matchumoney.domain.user.domain.Gender;
 import team2.pjt12.matchumoney.domain.user.domain.UserVO;
@@ -62,9 +65,13 @@ public interface UserMapper {
 
     List<FavoriteVO> getFavorites(@Param("userId") Long userId);
 
-    List<DepositProductResponseDTO> getFavoriteDeposits(@Param("userId") Long userId);
-    List<SavingListItemResponseDTO> getFavoriteSavings(@Param("userId") Long userId);
-    List<CardSearchResponseDTO> getFavoriteCards(@Param("userId") Long userId);
+    List<PersonaCardDTO> getFavoriteCards(Long userId);
+    List<PersonaSavingDTO> getFavoriteSavings(Long userId);
+    List<PersonaDepositDTO> getFavoriteDeposits(Long userId);
+
+    List<DepositProductResponseDTO> getSimpleFavoriteDeposits(@Param("userId") Long userId);
+    List<SavingListItemResponseDTO> getSimpleFavoriteSavings(@Param("userId") Long userId);
+    List<CardSearchResponseDTO> getSimpleFavoriteCards(@Param("userId") Long userId);
 
     void updatePersona(@Param("userId") Long userId, @Param("personaId") String personaId);
 

@@ -3,6 +3,7 @@ package team2.pjt12.matchumoney.domain.favorite.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import team2.pjt12.matchumoney.domain.favorite.domain.FavoriteVO;
+import team2.pjt12.matchumoney.domain.favorite.dto.FavoriteProductResponseDTO;
 import team2.pjt12.matchumoney.domain.favorite.service.FavoriteService;
 import team2.pjt12.matchumoney.global.ProductType;
 import team2.pjt12.matchumoney.global.success.SuccessResponse;
@@ -33,7 +34,7 @@ public class FavoriteController {
     }
 
     @GetMapping
-    public List<FavoriteVO> getFavorites() {
+    public FavoriteProductResponseDTO getFavorites() {
         return favoriteService.getFavorites();
     }
 }
