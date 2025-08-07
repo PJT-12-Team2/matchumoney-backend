@@ -31,4 +31,8 @@ public class SavingListItemResponseDTO {
     Boolean isStarred;
     @ApiModelProperty(value = "기존보다 높은 금리 만큼", example = "0.24")
     Double betterThan;
+    @ApiModelProperty(value = "좋아요 개수", example = "5")
+    Long likeCount;
+    @ApiModelProperty(value = "내 좋아요 여부", example = "true")
+    Boolean isLiked;
 }
