@@ -7,6 +7,4 @@ public interface DepositDetailService {
     DepositDetailResponseDTO getDepositDetailById(Long id, Long userId);
 
     LikeStatusResponseDTO isUserLikedDeposit(Long userId, Long depositProductId);
-
-    int getDepositLikeCount(Long depositProductId);
 }

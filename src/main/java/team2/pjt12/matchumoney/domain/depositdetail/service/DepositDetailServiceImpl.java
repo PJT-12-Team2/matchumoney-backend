@@ -37,22 +37,4 @@ public class DepositDetailServiceImpl implements DepositDetailService {
         int likeCount = depositDetailMapper.countLikesByProductId(depositProductId);
         return new LikeStatusResponseDTO(!isLiked, likeCount);
     }
-//    @Override
-//    public boolean isUserLikedDeposit(Long depositProductId, Long userId) {
-//        boolean isLiked = depositDetailMapper.isLikedByUser(userId, depositProductId);
-//        if (isLiked) {
-//            delete호출
-//                    return false;
-//        }
-//        else{
-//            insert호출
-//
-//        }
-//
-//    }
-//
-    @Override
-    public int getDepositLikeCount(Long depositProductId) {
-        return depositDetailMapper.countLikesByProductId(depositProductId);
-    }
 }
