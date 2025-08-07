@@ -27,18 +27,6 @@ public class DepositDetailController {
         return depositDetailService.getDepositDetailById(vo.getUserId(),id);
     }
 
-    @GetMapping("/{id}/likes")
-    public LikeStatusResponseDTO getLikeStatus(@PathVariable Long id, @AuthenticationPrincipal UserDetailsImpl user) {
-        if (user == null) {
-            // 로그인 안한 경우 좋아요 안누른 상태로 반환 + 현재 좋아요 개수
-            int likeCount = depositDetailService.getDepositLikeCount(id);
-            return new LikeStatusResponseDTO(false, likeCount);
-        }
-
-        long userId = user.getUser().getUserId();
-        return depositDetailService.isUserLikedDeposit(userId, id);
-    }
-
     @PostMapping("/{id}/likes")
     public LikeStatusResponseDTO likeDeposit(@PathVariable Long id, @AuthenticationPrincipal UserDetailsImpl user) {
         long userId = user.getUser().getUserId();

@@ -64,7 +64,7 @@
     </select>
 
     <!-- 옵션만 따로 조회 -->
-    <select id="findOptionsByProductId" resultMap="SavingOptionResultMap" parameterType="string">
+    <select id="findOptionsByProductId" resultMap="SavingOptionResultMap" parameterType="String">
         SELECT
             saving_option_id, intr_rate_type, intr_rate_type_nm,
             save_trm, intr_rate, intr_rate2,
@@ -73,4 +73,29 @@
         WHERE fin_prdt_cd = #{finPrdtCd}
     </select>
 
+
+    <!-- 좋아요 여부 조회 -->
+    <select id="isLikedByUser" resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1 FROM user_likes
+            WHERE user_id = #{userId}
+              AND saving_product_id = #{savingProductId}
+        )
+    </select>
+
+    <!-- 좋아요 개수 조회 -->
+    <select id="countLikesByProductId" resultType="int">
+        SELECT COUNT(*) FROM user_likes
+        WHERE saving_product_id = #{savingProductId}
+    </select>
+
+    <insert id="insertUserLike">
+        INSERT INTO user_likes (user_id, saving_product_id)
+        VALUES (#{userId}, #{savingProductId})
+    </insert>
+
+    <delete id="deleteUserLike">
+        DELETE FROM user_likes
+        WHERE user_id = #{userId} AND saving_product_id = #{savingProductId}
+    </delete>
 </mapper>

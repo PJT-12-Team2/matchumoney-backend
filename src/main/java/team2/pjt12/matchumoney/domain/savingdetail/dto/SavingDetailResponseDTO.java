@@ -26,7 +26,9 @@ public class SavingDetailResponseDTO {
     private String finPrdtCd;
     private Long finId;
     private Long personaId;
-
+    private Long userId;
+    private boolean liked;
+    private int likeCount;
     // 1:N 관계
     private List<SavingOptionDTO> options;
 }
