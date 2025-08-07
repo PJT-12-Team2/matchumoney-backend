@@ -5,12 +5,14 @@ import org.springframework.stereotype.Service;
 import team2.pjt12.matchumoney.domain.carddetail.dto.CardDetailResponseDTO;
 import team2.pjt12.matchumoney.domain.carddetail.mapper.CardDetailMapper;
 import team2.pjt12.matchumoney.domain.depositdetail.dto.LikeStatusResponseDTO;
+import team2.pjt12.matchumoney.domain.user.mapper.UserMapper;
 
 @Service
 @RequiredArgsConstructor
 public class CardDetailServiceImpl implements CardDetailService {
 
     private final CardDetailMapper cardDetailMapper;
+    private final UserMapper userMapper;
 
     @Override
     public CardDetailResponseDTO getCardDetailById(Long userId, int id) {
@@ -19,8 +21,10 @@ public class CardDetailServiceImpl implements CardDetailService {
         if (userId != null) {
             boolean isLiked = cardDetailMapper.isLikedByUser(userId, id);
             int likeCount = cardDetailMapper.countLikesByProductId(id);
+            boolean isStarred = userMapper.isCardFavoriteExists(userId, Long.valueOf(id));
             product.setLiked(isLiked);
             product.setLikeCount(likeCount);
+            product.setStarred(isStarred);
         }
         return product;
     }
