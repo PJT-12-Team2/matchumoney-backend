@@ -28,7 +28,8 @@ public enum ErrorCode {
 
     // 즐겨찾기 관련 예외
     FAVORITE_ALREADY_EXISTS(409, "F409", "이미 존재하는 즐겨찾기입니다."),
-
+    // 좋아요 관련 예외
+    LIKE_ALREADY_EXISTS(409,"F409", "이미 존재하는 좋아요입니다."),
     // 상품 관련 예외
     INVALID_PRODUCT_TYPE(400, "P400", "유효하지 않은 상품 유형입니다."),
 
