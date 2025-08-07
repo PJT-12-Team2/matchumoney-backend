@@ -20,9 +20,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Api(tags = "Persona Deposit Recommendations",
         description = "페르소나 기반 예금상품 추천 API")
-public class PersonaDepositController {
+public class PersonadepositController {
     private final JwtService jwtService;
-    private final PersonaDepositService personadepositService;
+    private final PersonaDepositService personaDepositService;
 
     @ApiOperation(
             value = "페르소나 예금 추천 조회",
@@ -30,7 +30,7 @@ public class PersonaDepositController {
     )
     @GetMapping("/by-persona/{personaId}")
     public ResponseEntity<SuccessResponse<PersonaDepositResponseDTO>> getPersonaDepositRecommendations(@ApiParam(value = "페르소나 ID", example = "1") @PathVariable Long personaId) {
-        PersonaDepositResponseDTO response = personadepositService.getRecommendedDeposit(personaId);
+        PersonaDepositResponseDTO response = personaDepositService.getRecommendedDeposit(personaId);
         return ResponseEntity.ok(new SuccessResponse<>(response));
     }
 
@@ -39,7 +39,7 @@ public class PersonaDepositController {
         Long userId = jwtService.getUserIdFromToken(request)
                 .orElseThrow(() -> new RuntimeException("userId 추출 실패"));
 
-        Long personaId = personadepositService.getPersonaIdByUserId(userId);
+        Long personaId = personaDepositService.getPersonaIdByUserId(userId);
 
         Map<String, Object> response = new HashMap<>();
         response.put("personaId", personaId);
@@ -50,8 +50,8 @@ public class PersonaDepositController {
         Long userId = jwtService.getUserIdFromToken(request)
                 .orElseThrow(() -> new RuntimeException("userId 추출 실패"));
 
-        Long personaId = personadepositService.getPersonaIdByUserId(userId);
-        PersonaDepositResponseDTO response = personadepositService.getRecommendedDeposit(personaId);
+        Long personaId = personaDepositService.getPersonaIdByUserId(userId);
+        PersonaDepositResponseDTO response = personaDepositService.getRecommendedDeposit(personaId);
 
         return ResponseEntity.ok(new SuccessResponse<>(response));
     }

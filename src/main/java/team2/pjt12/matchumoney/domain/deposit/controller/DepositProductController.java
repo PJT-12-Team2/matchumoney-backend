@@ -3,10 +3,13 @@ package team2.pjt12.matchumoney.domain.deposit.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import team2.pjt12.matchumoney.domain.deposit.dto.req.BalanceRequestDTO;
 import team2.pjt12.matchumoney.domain.deposit.dto.res.DepositProductResponseDTO;
 import team2.pjt12.matchumoney.domain.deposit.service.DepositProductService;
+import team2.pjt12.matchumoney.global.security.UserDetailsImpl;
+
 import java.util.List;
 
 @Slf4j
@@ -59,4 +62,12 @@ public class DepositProductController {
             return ResponseEntity.internalServerError().build();
         }
     }
+    @GetMapping("/deposit-products")
+    public List<DepositProductResponseDTO> getAllDepositProducts(
+            @AuthenticationPrincipal UserDetailsImpl user
+    ) {
+        Long userId = user.getUser().getUserId();
+        return depositProductService.getAllDepositProductsWithFavorites(userId);
+    }
+
 }

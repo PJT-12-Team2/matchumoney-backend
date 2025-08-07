@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import team2.pjt12.matchumoney.domain.deposit.dto.req.BalanceRequestDTO;
 import team2.pjt12.matchumoney.domain.deposit.dto.res.DepositProductResponseDTO;
 import team2.pjt12.matchumoney.domain.deposit.mapper.DepositProductMapper;
+import team2.pjt12.matchumoney.domain.user.mapper.UserMapper;
 
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 public class DepositProductServiceImpl implements DepositProductService {
 
     private final DepositProductMapper depositProductMapper;
+    private final UserMapper userMapper;
 
     private static final Pattern AMOUNT_PATTERN = Pattern.compile("([0-9]+)([십백천만억]?)만원");
     private static final Map<String, Integer> UNIT_MULTIPLIERS = Map.of(
@@ -32,6 +34,7 @@ public class DepositProductServiceImpl implements DepositProductService {
 
     private static final long[] UNITS = {100_000_000L, 10_000L, 1_000L, 100L};
     private static final String[] UNIT_NAMES = {"억", "만", "천", "백"};
+
 
     @Override
     @Transactional(readOnly = true)
@@ -278,4 +281,20 @@ public class DepositProductServiceImpl implements DepositProductService {
         }
         return 0;
     }
+    @Transactional(readOnly = true)
+    public List<DepositProductResponseDTO> getAllDepositProductsWithFavorites(Long userId) {
+        List<DepositProductResponseDTO> products = depositProductMapper.findAllDepositProducts();
+
+        for (DepositProductResponseDTO product : products) {
+            // 사용자별 즐겨찾기 여부 확인
+            boolean isFavorite = userMapper.isDepositFavoriteExists(userId, product.getDepositProductId());
+            product.setFavorite(isFavorite);
+
+            // 기존 로직도 유지 (최소 금액 추출)
+            setMinAmountForDisplay(product);
+        }
+
+        return products;
+    }
+
 }

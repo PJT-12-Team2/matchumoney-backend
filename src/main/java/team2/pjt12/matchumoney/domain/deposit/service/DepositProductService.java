@@ -25,4 +25,6 @@ public interface DepositProductService {
      * @return 가입 가능한 상품 리스트
      */
     List<DepositProductResponseDTO> getProductsByBalance(BalanceRequestDTO request);
+
+    List<DepositProductResponseDTO> getAllDepositProductsWithFavorites(Long userId);
 }
