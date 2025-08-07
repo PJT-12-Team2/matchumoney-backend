@@ -22,6 +22,9 @@ public class CardDetailResponseDTO {
     private String corpTips;
     private long personaId;
     private String issuer;
+    private Long userId;
+    private boolean liked;
+    private int likeCount;
 
     private List<CardOptionDTO> options;
 }

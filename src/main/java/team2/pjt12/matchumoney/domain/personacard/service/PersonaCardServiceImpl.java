@@ -4,6 +4,7 @@ package team2.pjt12.matchumoney.domain.personacard.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import team2.pjt12.matchumoney.domain.carddetail.dto.CardOptionDTO;
 import team2.pjt12.matchumoney.domain.personacard.dto.PersonaCardDTO;
 import team2.pjt12.matchumoney.domain.personacard.dto.PersonaCardResponseDTO;
 import team2.pjt12.matchumoney.domain.personacard.mapper.PersonaCardMapper;
@@ -37,18 +38,16 @@ public class PersonaCardServiceImpl implements PersonaCardService {
         List<PersonaCardDTO> allCards = personaCardMapper.selectCardsByPersonaId(personaId);
         log.info("🎯 조회된 카드 수: {}", allCards.size());
         Collections.shuffle(allCards);
+
         List<PersonaCardDTO> recommendedCards = allCards.stream()
                 .limit(RECOMMENDATION_LIMIT)
                 .toList();
 
         log.info("🎯 실제 추천 카드 수: {}", recommendedCards.size());
 
-        // 혜택 top3
         for (PersonaCardDTO card : recommendedCards) {
-            log.info("⭐️ CardId: {}", card.getCardId());
-            List<String> topBenefits = personaCardMapper.selectTop3BenefitsByCardId(card.getCardId());
-            log.info("⭐️ CardId {}'s benefit': {}", card.getCardId(), topBenefits);
-            card.setTopBenefits(topBenefits);
+            List<CardOptionDTO> options = personaCardMapper.selectCardOptionsByCardId(card.getCardId());
+            card.setOptions(options);
         }
 
         return recommendedCards;

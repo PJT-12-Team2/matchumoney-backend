@@ -7,8 +7,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team2.pjt12.matchumoney.domain.cardsearch.dto.CardSearchResponseDTO;
 import team2.pjt12.matchumoney.domain.deposit.dto.res.DepositProductResponseDTO;
+import team2.pjt12.matchumoney.domain.favorite.dto.FavoriteProductResponseDTO;
 import team2.pjt12.matchumoney.domain.persona.dto.PersonaResponseDTO;
 import team2.pjt12.matchumoney.domain.persona.dto.PersonaSimpleResponseDTO;
+import team2.pjt12.matchumoney.domain.personacard.dto.PersonaCardDTO;
+import team2.pjt12.matchumoney.domain.personadeposit.dto.PersonaDepositDTO;
+import team2.pjt12.matchumoney.domain.personasaving.dto.PersonaSavingDTO;
 import team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO;
 import team2.pjt12.matchumoney.domain.user.domain.UserVO;
 import team2.pjt12.matchumoney.domain.user.dto.req.UpdatePasswordRequestDTO;
@@ -105,9 +109,9 @@ public class UserServiceImpl implements UserService {
         UserVO user = userMapper.findByUserId(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        List<DepositProductResponseDTO> favoriteDeposits = userMapper.getFavoriteDeposits(userId);
-        List<SavingListItemResponseDTO> favoriteSavings = userMapper.getFavoriteSavings(userId);
-        List<CardSearchResponseDTO> favoriteCards = userMapper.getFavoriteCards(userId);
+        List<DepositProductResponseDTO> favoriteDeposits = userMapper.getSimpleFavoriteDeposits(userId);
+        List<SavingListItemResponseDTO> favoriteSavings = userMapper.getSimpleFavoriteSavings(userId);
+        List<CardSearchResponseDTO> favoriteCards = userMapper.getSimpleFavoriteCards(userId);
 
         return new MyPageResponseDTO(
                 user.getNickname(),

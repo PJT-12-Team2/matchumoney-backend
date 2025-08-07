@@ -1,9 +1,15 @@
 package team2.pjt12.matchumoney.domain.depositdetail.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Data
 public class DepositDetailResponseDTO {
 
@@ -26,6 +32,9 @@ public class DepositDetailResponseDTO {
     private String finPrdtCd;
     private Long finId;
     private Long personaId;
+    private Long userId;
+    private boolean liked;
+    private int likeCount;
 
     // 1:N 관계
     private List<DepositOptionDTO> options;

@@ -3,6 +3,7 @@ package team2.pjt12.matchumoney.domain.personacard.dto;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.*;
+import team2.pjt12.matchumoney.domain.carddetail.dto.CardOptionDTO;
 
 import java.util.List;
 
@@ -32,6 +33,6 @@ public class PersonaCardDTO {
     @ApiModelProperty(value = "전월 실적", example = "300000")
     private Integer preMonthMoney; // 전월 실적 (card_product의 pre_month_money)
 
-    @ApiModelProperty(value = "혜택 TOP3", example = "[\"주유\", \"쇼핑\", \"영화\"]")
-    private List<String> topBenefits;
+    @ApiModelProperty(value = "카드 혜택 옵션 목록")
+    private List<CardOptionDTO> options;
 }

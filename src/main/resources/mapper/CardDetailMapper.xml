@@ -60,4 +60,28 @@
         WHERE cp.card_product_id = #{id}
     </select>
 
+    <!-- 좋아요 여부 조회 -->
+    <select id="isLikedByUser" resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1 FROM user_likes
+            WHERE user_id = #{userId}
+              AND card_id2 = #{cardProductId}
+        )
+    </select>
+
+    <!-- 좋아요 개수 조회 -->
+    <select id="countLikesByProductId" resultType="int">
+        SELECT COUNT(*) FROM user_likes
+        WHERE card_id2 = #{cardProductId}
+    </select>
+
+    <insert id="insertUserLike">
+        INSERT INTO user_likes (user_id, card_id2)
+        VALUES (#{userId}, #{cardProductId})
+    </insert>
+
+    <delete id="deleteUserLike">
+        DELETE FROM user_likes
+        WHERE user_id = #{userId} AND card_id2 = #{cardProductId}
+    </delete>
 </mapper>
