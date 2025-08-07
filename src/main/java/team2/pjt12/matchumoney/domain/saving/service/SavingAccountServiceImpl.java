@@ -202,7 +202,6 @@ public class SavingAccountServiceImpl implements SavingAccountService {
             log.error("적금 금리 파싱 실패: {}", mySavingProduct.getRate());
             throw new CustomException(ErrorCode.DATA_CONVERSION_FAILED);
         }
-
         return savingAccountMapper.getRecommendSavingAccountList(period, rate, userId, rowBounds);
     }
 }

@@ -61,18 +61,19 @@
 
     <select id="getRecommendSavingAccountList"
             resultType="team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO">
-        SELECT sp.saving_product_id AS id,
-               sp.kor_co_nm         AS company,
-               sp.fin_prdt_nm       AS title,
-               so.intr_rate         AS base_rate,
-               so.intr_rate2        AS max_rate,
-               so.save_trm          AS period,
-               sp.max_limit         AS amount,
-               fc.company_image     AS company_image,
+        SELECT sp.saving_product_id                           AS id,
+               sp.kor_co_nm                                   AS company,
+               sp.fin_prdt_nm                                 AS title,
+               so.intr_rate                                   AS base_rate,
+               so.intr_rate2                                  AS max_rate,
+               so.save_trm                                    AS period,
+               sp.max_limit                                   AS amount,
+               fc.company_image                               AS company_image,
+               CAST(so.intr_rate2 AS DECIMAL(5, 4)) - #{rate} AS betterThan,
                CASE
                    WHEN uf.favorite_id IS NOT NULL THEN TRUE
                    ELSE FALSE
-                   END              AS is_starred
+                   END                                        AS is_starred
         FROM saving_product sp
                  JOIN saving_option so
                       ON sp.fin_prdt_cd = so.fin_prdt_cd
