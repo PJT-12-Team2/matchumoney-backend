@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="team2.pjt12.matchumoney.domain.quiz.mapper.QuizProblemMapper">
+    
+    <resultMap id="QuizProblemResultMap" type="team2.pjt12.matchumoney.domain.quiz.domain.QuizProblemVO">
+        <id property="problemId" column="problem_id"/>
+        <result property="quizText" column="quiz_text"/>
+        <result property="quizAnswer" column="quiz_answer"/>
+        <result property="explanation" column="explanation"/>
+        <result property="createdTime" column="created_time"/>
+        <result property="lastModifiedTime" column="last_modified_time"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="QuizProblemResultMap">
+        SELECT problem_id, quiz_text, quiz_answer, explanation, created_time, last_modified_time
+        FROM quiz_problem
+        ORDER BY problem_id
+    </select>
+
+    <select id="findById" parameterType="Long" resultMap="QuizProblemResultMap">
+        SELECT problem_id, quiz_text, quiz_answer, explanation, created_time, last_modified_time
+        FROM quiz_problem
+        WHERE problem_id = #{problemId}
+    </select>
+
+    <insert id="save" parameterType="team2.pjt12.matchumoney.domain.quiz.domain.QuizProblemVO" useGeneratedKeys="true" keyProperty="problemId">
+        INSERT INTO quiz_problem (quiz_text, quiz_answer, explanation)
+        VALUES (#{quizText}, #{quizAnswer}, #{explanation})
+    </insert>
+
+    <update id="update" parameterType="team2.pjt12.matchumoney.domain.quiz.domain.QuizProblemVO">
+        UPDATE quiz_problem
+        SET quiz_text = #{quizText},
+            quiz_answer = #{quizAnswer},
+            explanation = #{explanation},
+            last_modified_time = NOW()
+        WHERE problem_id = #{problemId}
+    </update>
+
+    <delete id="deleteById" parameterType="Long">
+        DELETE FROM quiz_problem
+        WHERE problem_id = #{problemId}
+    </delete>
+
+    <select id="findRandomProblem" resultMap="QuizProblemResultMap">
+        SELECT problem_id, quiz_text, quiz_answer, explanation, created_time, last_modified_time
+        FROM quiz_problem
+        ORDER BY RAND()
+        LIMIT 1
+    </select>
+
+    <select id="findUnsolvedProblemsByUserId" parameterType="Long" resultMap="QuizProblemResultMap">
+        SELECT p.problem_id, p.quiz_text, p.quiz_answer, p.explanation, p.created_time, p.last_modified_time
+        FROM quiz_problem p
+        WHERE p.problem_id NOT IN (
+            SELECT DISTINCT ql.problem_id 
+            FROM quiz_log ql 
+            WHERE ql.user_id = #{userId}
+        )
+        ORDER BY p.problem_id
+    </select>
+
+    <select id="findRandomUnsolvedProblem" parameterType="Long" resultMap="QuizProblemResultMap">
+        SELECT p.problem_id, p.quiz_text, p.quiz_answer, p.explanation, p.created_time, p.last_modified_time
+        FROM quiz_problem p
+        WHERE p.problem_id NOT IN (
+            SELECT DISTINCT ql.problem_id 
+            FROM quiz_log ql 
+            WHERE ql.user_id = #{userId}
+        )
+        ORDER BY RAND()
+        LIMIT 1
+    </select>
+
+    <select id="getTotalCount" resultType="int">
+        SELECT COUNT(*)
+        FROM quiz_problem
+    </select>
+
+    <select id="getUnsolvedCountByUserId" parameterType="Long" resultType="int">
+        SELECT COUNT(*)
+        FROM quiz_problem p
+        WHERE p.problem_id NOT IN (
+            SELECT DISTINCT ql.problem_id 
+            FROM quiz_log ql 
+            WHERE ql.user_id = #{userId}
+        )
+    </select>
+
+</mapper>

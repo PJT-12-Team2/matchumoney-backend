@@ -76,4 +76,7 @@ public interface UserMapper {
     void updatePersona(@Param("userId") Long userId, @Param("personaId") String personaId);
 
     Optional<PersonaSimpleResponseDTO> getPersonaByUserId(@Param("userId") Long userId);
+    
+    // 경험치(EXP) 업데이트
+    void updateUserExp(@Param("userId") Long userId, @Param("expAmount") int expAmount);
 }
