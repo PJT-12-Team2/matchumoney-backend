@@ -35,4 +35,13 @@ public class PersonaCardDTO {
 
     @ApiModelProperty(value = "카드 혜택 옵션 목록")
     private List<CardOptionDTO> options;
+
+    @ApiModelProperty(value = "즐겨찾기 여부", example = "true")
+    private Boolean isStarred;
+
+    @ApiModelProperty(value = "좋아요 여부", example = "true")
+    private Boolean isLiked; // 좋아요 여부
+
+    @ApiModelProperty(value = "좋아요 수", example = "100")
+    private Integer likeCount; // 좋아요 수
 }
