@@ -28,4 +28,13 @@ public class PersonaDepositDTO {
 
     @ApiModelProperty(value = "금융사 로고 이미지 URL", example = "https://img.kbstar.com/logo.png")
     private String companyImage; // company_image (financial_companies)
+
+    @ApiModelProperty(value = "즐겨찾기 여부", example = "true")
+    private Boolean isStarred;
+
+    @ApiModelProperty(value = "좋아요 여부", example = "true")
+    private Boolean isLiked; // 좋아요 여부
+
+    @ApiModelProperty(value = "좋아요 수", example = "100")
+    private Integer likeCount; // 좋아요 수
 }
