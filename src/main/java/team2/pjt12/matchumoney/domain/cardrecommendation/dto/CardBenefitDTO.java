@@ -1,5 +1,6 @@
 package team2.pjt12.matchumoney.domain.cardrecommendation.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import java.math.BigDecimal;
 import java.util.List;
@@ -32,4 +33,12 @@ public class CardBenefitDTO {
     private Double conditionFulfillmentProbability; // 조건 충족 가능성 (0.0~1.0)
     private Double expectedAchievementRate; // 사용자의 예상 달성률 (0.0~1.0)
     private java.util.List<String> mainBenefitCategories; // 주요 혜택 카테고리
+    
+    // 좋아요/즐겨찾기 상태 필드
+    @JsonProperty("is_liked")
+    private Boolean liked; // 좋아요 상태
+    @JsonProperty("like_count")
+    private Integer likeCount; // 좋아요 개수
+    @JsonProperty("is_starred")
+    private Boolean starred; // 즐겨찾기 상태
 }

@@ -10,6 +10,8 @@ import team2.pjt12.matchumoney.domain.cardrecommendation.util.BenefitCalculation
 import team2.pjt12.matchumoney.domain.cardrecommendation.util.CategoryMappingUtil;
 import team2.pjt12.matchumoney.domain.mydata.service.MerchantCategoryService;
 import team2.pjt12.matchumoney.domain.cardrecommendation.vo.*;
+import team2.pjt12.matchumoney.domain.carddetail.mapper.CardDetailMapper;
+import team2.pjt12.matchumoney.domain.user.mapper.UserMapper;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -27,6 +29,8 @@ public class CardRecommendationServiceImpl implements CardRecommendationService 
     private final CardRecommendationMapper cardRecommendationMapper;
     private final UserCardRecommendationService userCardRecommendationService;
     private final MerchantCategoryService merchantCategoryService;
+    private final CardDetailMapper cardDetailMapper;
+    private final UserMapper userMapper;
 
     @Override
     public MyCardBenefitResponseDTO calculateSpecificCardBenefit(Long userId, Integer cardId) {
@@ -240,6 +244,9 @@ public class CardRecommendationServiceImpl implements CardRecommendationService 
 
         log.info("사용자 {}의 카드 {} 기준 추천 완료. 총 {}개 더 나은 카드 발견", userId, cardId, topRecommendations.size());
 
+        // 각 추천 카드에 좋아요/즐겨찾기 상태 설정
+        topRecommendations.forEach(cardDto -> setLikeAndFavoriteStatus(userId, cardDto));
+        
         return CardRecommendationResponseDTO.builder()
             .totalSpendAmount(totalSpendAmount)
             .categoryStats(transactionSummaries.stream()
@@ -571,5 +578,35 @@ public class CardRecommendationServiceImpl implements CardRecommendationService 
             .corpTips(card.getCorpTips())
             .issuer(card.getIssuer())
             .build();
+    }
+    
+    /**
+     * 카드 DTO에 좋아요와 즐겨찾기 상태를 설정합니다.
+     */
+    private void setLikeAndFavoriteStatus(Long userId, CardBenefitDTO cardDto) {
+        if (userId != null && cardDto.getCardId() != null) {
+            try {
+                // 좋아요 상태 조회
+                boolean isLiked = cardDetailMapper.isLikedByUser(userId, cardDto.getCardId());
+                int likeCount = cardDetailMapper.countLikesByProductId(cardDto.getCardId());
+                cardDto.setLiked(isLiked);
+                cardDto.setLikeCount(likeCount);
+                
+                // 즐겨찾기 상태 조회
+                boolean isStarred = userMapper.isCardFavoriteExists(userId, Long.valueOf(cardDto.getCardId()));
+                cardDto.setStarred(isStarred);
+            } catch (Exception e) {
+                log.warn("카드 {} 좋아요/즐겨찾기 상태 조회 실패: {}", cardDto.getCardId(), e.getMessage());
+                // 기본값 설정
+                cardDto.setLiked(false);
+                cardDto.setLikeCount(0);
+                cardDto.setStarred(false);
+            }
+        } else {
+            // 기본값 설정
+            cardDto.setLiked(false);
+            cardDto.setLikeCount(0);
+            cardDto.setStarred(false);
+        }
     }
 }

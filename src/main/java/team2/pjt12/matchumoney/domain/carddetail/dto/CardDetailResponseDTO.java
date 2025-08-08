@@ -25,6 +25,7 @@ public class CardDetailResponseDTO {
     private Long userId;
     private boolean liked;
     private int likeCount;
+    private boolean starred; // 즐겨찾기 상태
 
     private List<CardOptionDTO> options;
 }
