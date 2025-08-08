@@ -13,4 +13,5 @@ public class SavingSearchResponseDTO {
     private String benefit;
     private String personaType;
     private List<SavingOptionDTO> savingOptions;  // ✅ 금리 옵션 리스트 추가
+    private Boolean isStarred;
 }
