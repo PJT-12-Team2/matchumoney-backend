@@ -15,8 +15,13 @@
         cp.issuer,
         cp.annual_fee AS annualFee,
         cp.pre_month_money AS preMonthMoney,
-        cp.card_image_url AS imageUrl
+        cp.card_image_url AS imageUrl,
+        CASE
+        WHEN uf.favorite_id IS NOT NULL THEN TRUE
+        ELSE FALSE
+        END AS isStarred
         FROM card_product cp
+        LEFT JOIN user_favorites uf ON cp.card_product_id = uf.card_product_id
         <if test="selectedBenefits != null and selectedBenefits.size() > 0">
             LEFT JOIN card_search_benefit csb ON cp.card_product_id = csb.card_id2
         </if>
