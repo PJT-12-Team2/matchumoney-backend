@@ -31,4 +31,7 @@ public class PersonaSavingDTO {
 
     @ApiModelProperty(value = "매월 적금 가능 금액", example = "1000000")
     private Long maxLimit;
+
+    @ApiModelProperty(value = "즐겨찾기 여부", example = "true")
+    private Boolean isStarred;
 }

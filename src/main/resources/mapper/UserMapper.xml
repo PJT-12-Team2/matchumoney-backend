@@ -116,6 +116,7 @@
         <result property="issuer" column="issuer"/>
         <result property="annualFee" column="annual_fee"/>
         <result property="preMonthMoney" column="pre_month_money"/>
+        <result property="isStarred" column="isStarred"/>
 
         <collection property="options"
                     ofType="team2.pjt12.matchumoney.domain.carddetail.dto.CardOptionDTO">
@@ -153,11 +154,18 @@
             cb.max_benefit_monthly,
             cb.min_spend_per_transaction,
             cb.pre_month_money_specific,
-            cb.description
+            cb.description,
+
+            CASE
+                WHEN uf.user_id IS NOT NULL THEN TRUE
+                ELSE FALSE
+                END AS isStarred
 
         FROM user_favorites uf
-                 JOIN card_product cp ON uf.card_product_id = cp.card_product_id
-                 LEFT JOIN card_parsed_benefit cb ON cp.card_product_id = cb.card_id2
+                 JOIN card_product cp
+                      ON uf.card_product_id = cp.card_product_id
+                 LEFT JOIN card_parsed_benefit cb
+                           ON cp.card_product_id = cb.card_id2
         WHERE uf.user_id = #{userId}
           AND uf.card_product_id IS NOT NULL
     </select>
@@ -169,12 +177,16 @@
             s.fin_prdt_nm AS savingName,
             MAX(o.intr_rate) AS basicRate,
             MAX(o.intr_rate2) AS maxRate,
-            s.max_limit AS maxLimit
+            s.max_limit AS maxLimit,
+            CASE
+                WHEN f.user_id IS NOT NULL THEN TRUE
+                ELSE FALSE
+                END AS isStarred
         FROM user_favorites f
-        JOIN saving_product s ON f.saving_product_id = s.saving_product_id
-        JOIN saving_option o ON s.fin_prdt_cd = o.fin_prdt_cd
+                JOIN saving_product s ON f.saving_product_id = s.saving_product_id
+                JOIN saving_option o ON s.fin_prdt_cd = o.fin_prdt_cd
         WHERE f.user_id = #{userId}
-        AND f.saving_product_id IS NOT NULL
+                AND f.saving_product_id IS NOT NULL
         GROUP BY s.saving_product_id
     </select>
 
@@ -183,12 +195,16 @@
                d.kor_co_nm AS bankName,
                d.fin_prdt_nm AS productName,
                MAX(o.intr_rate) AS basicRate,
-               MAX(o.intr_rate2) AS maxRate
+               MAX(o.intr_rate2) AS maxRate,
+               CASE
+                   WHEN f.user_id IS NOT NULL THEN TRUE
+                   ELSE FALSE
+                   END AS isStarred
         FROM user_favorites f
                  JOIN deposit_product d ON f.deposit_product_id = d.deposit_product_id
                  JOIN deposit_option o ON d.fin_prdt_cd = o.fin_prdt_cd
         WHERE f.user_id = #{userId}
-          AND f.deposit_product_id IS NOT NULL
+                AND f.deposit_product_id IS NOT NULL
         GROUP BY d.deposit_product_id
     </select>
 
