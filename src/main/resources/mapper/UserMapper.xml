@@ -108,50 +108,88 @@
         WHERE user_id = #{userId}
     </select>
 
-    <select id="getFavoriteCards" resultType="team2.pjt12.matchumoney.domain.personacard.dto.PersonaCardDTO">
-        SELECT c.card_product_id AS cardId,
-               c.name AS cardName,
-               c.card_image_url AS cardImageUrl,
-               c.type AS cardType,
-               c.issuer AS issuer,
-               c.annual_fee AS annualFee,
-               c.pre_month_money AS preMonthMoney,
-               c.top_benefits AS topBenefits
-        FROM user_favorites f
-                 JOIN card_product c ON f.card_product_id = c.card_product_id
-        WHERE f.user_id = #{userId}
-          AND f.card_product_id IS NOT NULL
+    <resultMap id="PersonaCardWithOptionsMap" type="team2.pjt12.matchumoney.domain.personacard.dto.PersonaCardDTO">
+        <id property="cardId" column="card_product_id"/>
+        <result property="cardName" column="name"/>
+        <result property="cardImageUrl" column="card_image_url"/>
+        <result property="cardType" column="type"/>
+        <result property="issuer" column="issuer"/>
+        <result property="annualFee" column="annual_fee"/>
+        <result property="preMonthMoney" column="pre_month_money"/>
+
+        <collection property="options"
+                    ofType="team2.pjt12.matchumoney.domain.carddetail.dto.CardOptionDTO">
+            <result property="parsedBenefitId" column="parsed_benefit_id"/>
+            <result property="cardId2" column="card_id2"/>
+            <result property="title" column="title"/>
+            <result property="category" column="category"/>
+            <result property="benefitType" column="benefit_type"/>
+            <result property="value" column="value"/>
+            <result property="conditionText" column="condition_text"/>
+            <result property="maxBenefitMonthly" column="max_benefit_monthly"/>
+            <result property="minSpendPerTransaction" column="min_spend_per_transaction"/>
+            <result property="preMonthMoneySpecific" column="pre_month_money_specific"/>
+            <result property="description" column="description"/>
+        </collection>
+    </resultMap>
+
+    <select id="getFavoriteCards" resultMap="PersonaCardWithOptionsMap">
+        SELECT
+            cp.card_product_id,
+            cp.name,
+            cp.card_image_url,
+            cp.type,
+            cp.issuer,
+            cp.annual_fee,
+            cp.pre_month_money,
+
+            cb.parsed_benefit_id,
+            cb.card_id2,
+            cb.title,
+            cb.category,
+            cb.benefit_type,
+            cb.value,
+            cb.condition_text,
+            cb.max_benefit_monthly,
+            cb.min_spend_per_transaction,
+            cb.pre_month_money_specific,
+            cb.description
+
+        FROM user_favorites uf
+                 JOIN card_product cp ON uf.card_product_id = cp.card_product_id
+                 LEFT JOIN card_parsed_benefit cb ON cp.card_product_id = cb.card_id2
+        WHERE uf.user_id = #{userId}
+          AND uf.card_product_id IS NOT NULL
     </select>
 
     <select id="getFavoriteSavings" resultType="team2.pjt12.matchumoney.domain.personasaving.dto.PersonaSavingDTO">
-        SELECT s.saving_product_id AS savingId,
-               s.kor_co_nm AS bankName,
-               s.fin_prdt_nm AS savingName,
-               o.intr_rate AS basicRate,
-               o.intr_rate2 AS maxRate,
-               fc.company_image AS companyImage,
-               o.max_limit AS maxLimit
+        SELECT
+            s.saving_product_id AS savingId,
+            s.kor_co_nm AS bankName,
+            s.fin_prdt_nm AS savingName,
+            MAX(o.intr_rate) AS basicRate,
+            MAX(o.intr_rate2) AS maxRate,
+            s.max_limit AS maxLimit
         FROM user_favorites f
-                 JOIN saving_product s ON f.saving_product_id = s.saving_product_id
-                 JOIN saving_option o ON s.saving_product_id = o.saving_product_id
-                 JOIN financial_companies fc ON s.kor_co_nm = fc.kor_co_nm
+        JOIN saving_product s ON f.saving_product_id = s.saving_product_id
+        JOIN saving_option o ON s.fin_prdt_cd = o.fin_prdt_cd
         WHERE f.user_id = #{userId}
-          AND f.saving_product_id IS NOT NULL
+        AND f.saving_product_id IS NOT NULL
+        GROUP BY s.saving_product_id
     </select>
 
     <select id="getFavoriteDeposits" resultType="team2.pjt12.matchumoney.domain.personadeposit.dto.PersonaDepositDTO">
         SELECT d.deposit_product_id AS depositId,
                d.kor_co_nm AS bankName,
                d.fin_prdt_nm AS productName,
-               o.intr_rate AS basicRate,
-               o.intr_rate2 AS maxRate,
-               fc.company_image AS companyImage
+               MAX(o.intr_rate) AS basicRate,
+               MAX(o.intr_rate2) AS maxRate
         FROM user_favorites f
                  JOIN deposit_product d ON f.deposit_product_id = d.deposit_product_id
-                 JOIN deposit_option o ON d.deposit_product_id = o.deposit_product_id
-                 JOIN financial_companies fc ON d.kor_co_nm = fc.kor_co_nm
+                 JOIN deposit_option o ON d.fin_prdt_cd = o.fin_prdt_cd
         WHERE f.user_id = #{userId}
           AND f.deposit_product_id IS NOT NULL
+        GROUP BY d.deposit_product_id
     </select>
 
     <!-- 상품 별 즐겨찾기 조회 -->
@@ -258,13 +296,6 @@
         SET persona_id = #{personaId}
         WHERE user_id = #{userId}
     </update>
-
-    <select id="getMyPage">
-        SELECT
-            user_id          AS userId,
-            nickname         AS nickname,
-            email            AS email,
-    </select>
 
     <select id="getPersonaByUserId" resultType="team2.pjt12.matchumoney.domain.persona.dto.PersonaSimpleResponseDTO">
         SELECT
