@@ -69,7 +69,8 @@ public class SecurityConfig {
                                         "/api/deposit-products/**",
                                         "/api/saving-products/**",
                                         "/api/card-products/**",
-                                        "/api/like/**"
+                                        "/api/like/**",
+                                        "/api/favorite/**"
                                 ).permitAll()  // 허용 URL 설정
                                 .requestMatchers("/user/update").authenticated()
                                 .anyRequest().authenticated()  // 그 외 모든 요청은 인증 필요

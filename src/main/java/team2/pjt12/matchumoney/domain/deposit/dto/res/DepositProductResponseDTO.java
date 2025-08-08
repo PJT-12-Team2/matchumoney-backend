@@ -20,6 +20,8 @@ public class DepositProductResponseDTO {
     private BigDecimal maxIntrRate;     // 최대 기본금리 (intr_rate)
     private BigDecimal maxIntrRate2;    // 최대 우대금리 (intr_rate2)
     private String minAmount;           // 최소 금액 (ServiceImpl에서 etcNote로부터 추출)
-    private Long depositProductId;  // 예금 상품 아이디
-    private boolean isFavorite; // 즐겨찾기 여부
+    private Long depositProductId;      // 예금 상품 아이디
+    private boolean isFavorite;         // 즐겨찾기 여부
+    private boolean liked;              // 좋아요 여부
+    private Integer likeCount;          // 좋아요 개수
 }

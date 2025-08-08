@@ -8,6 +8,9 @@ import team2.pjt12.matchumoney.domain.deposit.dto.req.BalanceRequestDTO;
 import team2.pjt12.matchumoney.domain.deposit.dto.res.DepositProductResponseDTO;
 import team2.pjt12.matchumoney.domain.deposit.mapper.DepositProductMapper;
 import team2.pjt12.matchumoney.domain.user.mapper.UserMapper;
+import team2.pjt12.matchumoney.global.util.SecurityUtils;
+
+import static team2.pjt12.matchumoney.global.util.SecurityUtils.getCurrentUserId;
 
 import java.util.List;
 import java.util.Map;
@@ -35,19 +38,20 @@ public class DepositProductServiceImpl implements DepositProductService {
     private static final long[] UNITS = {100_000_000L, 10_000L, 1_000L, 100L};
     private static final String[] UNIT_NAMES = {"억", "만", "천", "백"};
 
-
     @Override
     @Transactional(readOnly = true)
     public List<DepositProductResponseDTO> getAllDepositProducts() {
-        List<DepositProductResponseDTO> products = depositProductMapper.findAllDepositProducts();
+        Long userId = SecurityUtils.getCurrentUserId();
+        List<DepositProductResponseDTO> products = depositProductMapper.findAllDepositProducts(userId);
         products.forEach(this::setMinAmountForDisplay);
         return products;
     }
 
+
     @Override
     @Transactional(readOnly = true)
     public List<DepositProductResponseDTO> getDepositProductsByBank(String bankName) {
-        log.info("은행별 예금 상품 조회 요청 - 은행명: {}", bankName);
+//        log.info("은행별 예금 상품 조회 요청 - 은행명: {}", bankName);
 
         if (bankName == null || bankName.trim().isEmpty()) {
             log.warn("은행명이 비어있음");
@@ -57,19 +61,19 @@ public class DepositProductServiceImpl implements DepositProductService {
         List<DepositProductResponseDTO> products = depositProductMapper.findDepositProductsByBankName(bankName.trim());
         products.forEach(this::setMinAmountForDisplay);
 
-        log.info("{}의 예금 상품 수: {}", bankName, products.size());
+//        log.info("{}의 예금 상품 수: {}", bankName, products.size());
         return products;
     }
 
     @Override
     public List<DepositProductResponseDTO> getProductsByBalance(BalanceRequestDTO request) {
-        log.info("잔액 기반 상품 추천 시작: userId={}, balance={}", request.getUserId(), request.getBalance());
+//        log.info("잔액 기반 상품 추천 시작: userId={}, balance={}", request.getUserId(), request.getBalance());
 
         try {
             validateRequest(request);
-
-            List<DepositProductResponseDTO> allProducts = depositProductMapper.findAllDepositProducts();
-            log.info("전체 상품 수: {}", allProducts.size());
+            Long userId = SecurityUtils.getCurrentUserId();
+            List<DepositProductResponseDTO> allProducts = depositProductMapper.findAllDepositProducts(userId);
+//            log.info("전체 상품 수: {}", allProducts.size());
 
             List<DepositProductResponseDTO> filteredProducts = allProducts.stream()
                     .filter(product -> isProductAvailableForBalance(product, request.getBalance()))
@@ -77,8 +81,8 @@ public class DepositProductServiceImpl implements DepositProductService {
 
             filteredProducts.forEach(this::setMinAmountForDisplay);
 
-            log.info("필터링 결과: 사용자 잔액 {}원으로 가입 가능한 상품 {}개 (전체: {}개)",
-                    request.getBalance(), filteredProducts.size(), allProducts.size());
+//            log.info("필터링 결과: 사용자 잔액 {}원으로 가입 가능한 상품 {}개 (전체: {}개)",
+//                    request.getBalance(), filteredProducts.size(), allProducts.size());
 
             return filteredProducts;
 
@@ -101,13 +105,13 @@ public class DepositProductServiceImpl implements DepositProductService {
 
             // 최소 금액 정보가 없으면 가입 가능으로 처리
             if (minAmount == -1L) {
-                log.debug("상품 '{}' - 최소 금액 정보 없음, 가입 가능으로 처리", product.getProductName());
+//                log.debug("상품 '{}' - 최소 금액 정보 없음, 가입 가능으로 처리", product.getProductName());
                 return true;
             }
 
             boolean available = userBalance >= minAmount;
-            log.debug("상품 '{}' - 사용자 잔액: {}원, 최소 금액: {}원, 가입 가능: {}",
-                    product.getProductName(), userBalance, minAmount, available);
+//            log.debug("상품 '{}' - 사용자 잔액: {}원, 최소 금액: {}원, 가입 가능: {}",
+//                    product.getProductName(), userBalance, minAmount, available);
 
             return available;
         } catch (Exception e) {
@@ -281,20 +285,15 @@ public class DepositProductServiceImpl implements DepositProductService {
         }
         return 0;
     }
-    @Transactional(readOnly = true)
-    public List<DepositProductResponseDTO> getAllDepositProductsWithFavorites(Long userId) {
-        List<DepositProductResponseDTO> products = depositProductMapper.findAllDepositProducts();
+//    @Override
+//    @Transactional(readOnly = true)
+//    public List<DepositProductResponseDTO> getAllDepositProductsWithFavorites(Long userId) {
+//        List<DepositProductResponseDTO> products = depositProductMapper.findAllDepositProductsWithFavorites(userId);
+//
+//        products.forEach(this::setMinAmountForDisplay);
+//
+//        return products;
+//    }
 
-        for (DepositProductResponseDTO product : products) {
-            // 사용자별 즐겨찾기 여부 확인
-            boolean isFavorite = userMapper.isDepositFavoriteExists(userId, product.getDepositProductId());
-            product.setFavorite(isFavorite);
-
-            // 기존 로직도 유지 (최소 금액 추출)
-            setMinAmountForDisplay(product);
-        }
-
-        return products;
-    }
 
 }

@@ -26,5 +26,6 @@ public interface DepositProductService {
      */
     List<DepositProductResponseDTO> getProductsByBalance(BalanceRequestDTO request);
 
-    List<DepositProductResponseDTO> getAllDepositProductsWithFavorites(Long userId);
+//    List<DepositProductResponseDTO> getAllDepositProductsWithFavorites(Long userId);
+
 }
