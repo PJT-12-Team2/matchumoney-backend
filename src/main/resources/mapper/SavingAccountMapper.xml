@@ -61,48 +61,52 @@
 
     <select id="getRecommendSavingAccountList"
             resultType="team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO">
-        SELECT sp.saving_product_id AS id,
-               sp.kor_co_nm         AS company,
-               sp.fin_prdt_nm       AS title,
-               so.intr_rate         AS base_rate,
-               so.intr_rate2        AS max_rate,
-               so.save_trm          AS period,
-               sp.max_limit         AS amount,
-               fc.company_image     AS company_image,
-               CASE
-                   WHEN uf.favorite_id IS NOT NULL THEN TRUE
-                   ELSE FALSE
-                   END              AS is_starred
+        SELECT sp.saving_product_id                                          AS id,
+               sp.kor_co_nm                                                  AS company,
+               sp.fin_prdt_nm                                                AS title,
+               so.intr_rate                                                  AS base_rate,
+               so.intr_rate2                                                 AS max_rate,
+               so.save_trm                                                   AS period,
+               sp.max_limit                                                  AS amount,
+               fc.company_image                                              AS company_image,
+               CAST(so.intr_rate2 AS DECIMAL(5, 4)) - #{rate}                AS betterThan,
+               CASE WHEN uf.favorite_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_starred,
+               CASE WHEN ul.like_id IS NOT NULL THEN TRUE ELSE FALSE END     AS isLiked,
+               (SELECT COUNT(*)
+                FROM user_likes
+                WHERE saving_product_id = sp.saving_product_id)              AS likeCount
         FROM saving_product sp
                  JOIN saving_option so
-                      ON sp.fin_prdt_cd = so.fin_prdt_cd
-                          AND sp.fin_id = so.fin_id
-                 LEFT OUTER JOIN financial_companies fc
-                                 ON INSTR(sp.kor_co_nm, fc.kor_co_nm) > 0
-                                     OR INSTR(fc.kor_co_nm, sp.kor_co_nm) > 0
-                 LEFT OUTER JOIN user_favorites uf
-                                 ON uf.saving_product_id =
-                                    sp.saving_product_id
-                                     AND uf.user_id = #{userId}
+                      ON sp.fin_prdt_cd = so.fin_prdt_cd AND sp.fin_id = so.fin_id
+                 LEFT JOIN financial_companies fc
+                           ON INSTR(sp.kor_co_nm, fc.kor_co_nm) > 0 OR INSTR(fc.kor_co_nm, sp.kor_co_nm) > 0
+                 LEFT JOIN user_favorites uf
+                           ON uf.saving_product_id = sp.saving_product_id AND uf.user_id = #{userId}
+                 LEFT JOIN user_likes ul
+                           ON ul.saving_product_id = sp.saving_product_id AND ul.user_id = #{userId}
         WHERE so.save_trm = #{period}
           AND CAST(so.intr_rate AS DECIMAL(5, 4)) > #{rate}
-        ORDER BY CAST(so.intr_rate AS DECIMAL(5, 4)) DESC
+        ORDER BY so.intr_rate DESC
     </select>
 
     <select id="getRecommendDefaultSavingAccountList"
             resultType="team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO">
-        SELECT sp.saving_product_id as id,
-               sp.kor_co_nm         as company,
-               sp.fin_prdt_nm       AS title,
-               so.intr_rate         as base_rate,
-               so.intr_rate2        as max_rate,
-               so.save_trm          as period,
-               sp.max_limit         as amount,
-               fc.company_image     as company_image,
+        SELECT sp.saving_product_id                                      as id,
+               sp.kor_co_nm                                              as company,
+               sp.fin_prdt_nm                                            AS title,
+               so.intr_rate                                              as base_rate,
+               so.intr_rate2                                             as max_rate,
+               so.save_trm                                               as period,
+               sp.max_limit                                              as amount,
+               fc.company_image                                          as company_image,
                CASE
                    WHEN uf.favorite_id IS NOT NULL THEN TRUE
                    ELSE FALSE
-                   END              AS is_starred
+                   END                                                   AS is_starred,
+               CASE WHEN ul.like_id IS NOT NULL THEN TRUE ELSE FALSE END AS isLiked,
+               (SELECT COUNT(*)
+                FROM user_likes
+                WHERE saving_product_id = sp.saving_product_id)          AS likeCount
         FROM saving_product sp
                  JOIN
              saving_option so
@@ -112,6 +116,8 @@
                  LEFT OUTER JOIN user_favorites uf
                                  ON uf.saving_product_id = sp.saving_product_id
                                      AND uf.user_id = #{userId}
+                 LEFT JOIN user_likes ul
+                           ON ul.saving_product_id = sp.saving_product_id AND ul.user_id = #{userId}
         WHERE so.save_trm = 12
           AND so.fin_id = 11
         ORDER BY CAST(so.intr_rate AS DECIMAL(5, 4)) DESC

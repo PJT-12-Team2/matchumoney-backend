@@ -19,5 +19,5 @@ public class CardSearchResponseDTO {
     private String annualFee;   // 연회비
     private Integer preMonthMoney; // 전월 실적
     private List<CardOptionDTO> options;
-
+    private Boolean isStarred;
 }

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="team2.pjt12.matchumoney.domain.quiz.mapper.QuizLogMapper">
+
+    <resultMap id="QuizLogResultMap" type="team2.pjt12.matchumoney.domain.quiz.domain.QuizLogVO">
+        <id property="logId" column="log_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="problemId" column="problem_id"/>
+        <result property="userAnswer" column="user_answer"/>
+        <result property="isCorrect" column="is_correct"/>
+        <result property="solvedTime" column="solved_time"/>
+        <result property="solvedDate" column="solved_date"/>
+    </resultMap>
+
+    <insert id="save" parameterType="team2.pjt12.matchumoney.domain.quiz.domain.QuizLogVO" useGeneratedKeys="true" keyProperty="logId">
+        INSERT INTO quiz_log (user_id, problem_id, user_answer, is_correct, solved_date)
+        VALUES (#{userId}, #{problemId}, #{userAnswer}, #{isCorrect}, #{solvedDate})
+    </insert>
+
+    <select id="findByUserId" parameterType="Long" resultMap="QuizLogResultMap">
+        SELECT log_id, user_id, problem_id, user_answer, is_correct, solved_time, solved_date
+        FROM quiz_log
+        WHERE user_id = #{userId}
+        ORDER BY solved_time DESC
+    </select>
+
+    <select id="findByUserIdAndProblemIdAndDate" resultMap="QuizLogResultMap">
+        SELECT log_id, user_id, problem_id, user_answer, is_correct, solved_time, solved_date
+        FROM quiz_log
+        WHERE user_id = #{userId}
+          AND problem_id = #{problemId}
+          AND solved_date = #{solvedDate}
+    </select>
+
+    <select id="existsByUserIdAndDate" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM quiz_log
+        WHERE user_id = #{userId}
+          AND solved_date = #{solvedDate}
+    </select>
+
+    <select id="existsByUserIdAndProblemId" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM quiz_log
+        WHERE user_id = #{userId}
+          AND problem_id = #{problemId}
+    </select>
+
+    <select id="getCorrectCountByUserId" parameterType="Long" resultType="int">
+        SELECT COUNT(*)
+        FROM quiz_log
+        WHERE user_id = #{userId}
+          AND is_correct = 1
+    </select>
+
+    <select id="getWrongCountByUserId" parameterType="Long" resultType="int">
+        SELECT COUNT(*)
+        FROM quiz_log
+        WHERE user_id = #{userId}
+          AND is_correct = 0
+    </select>
+
+    <select id="getCurrentStreakByUserId" parameterType="Long" resultType="int">
+        <![CDATA[
+        SELECT COUNT(*) AS current_streak
+        FROM (
+                 SELECT
+                     is_correct,
+                     SUM(CASE WHEN is_correct = 0 THEN 1 ELSE 0 END)
+                         OVER (ORDER BY solved_date DESC) AS wrongs
+                 FROM quiz_log
+                 WHERE user_id = #{userId}
+                 ORDER BY solved_date DESC
+             ) t
+        WHERE wrongs = 0
+        ]]>
+    </select>
+
+    <select id="findRecentLogsByUserId" resultMap="QuizLogResultMap">
+        SELECT log_id, user_id, problem_id, user_answer, is_correct, solved_time, solved_date
+        FROM quiz_log
+        WHERE user_id = #{userId}
+        ORDER BY solved_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <delete id="deleteById" parameterType="Long">
+        DELETE FROM quiz_log
+        WHERE log_id = #{logId}
+    </delete>
+
+</mapper>

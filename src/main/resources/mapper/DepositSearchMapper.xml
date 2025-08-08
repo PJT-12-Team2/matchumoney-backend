@@ -13,8 +13,13 @@
         sp.fin_prdt_cd AS finPrdtCd,
         sp.fin_prdt_nm AS finPrdtNm,
         sp.max_limit AS maxLimit,
-        sp.spcl_cnd AS benefit
+        sp.spcl_cnd AS benefit,
+        CASE
+        WHEN uf.favorite_id IS NOT NULL THEN TRUE
+        ELSE FALSE
+        END AS isStarred
         FROM deposit_product sp
+        LEFT JOIN user_favorites uf ON sp.deposit_product_id = uf.deposit_product_id
         WHERE 1 = 1
         <if test="korCoNm != null and korCoNm != ''">
             AND sp.kor_co_nm LIKE CONCAT('%', #{korCoNm}, '%')
