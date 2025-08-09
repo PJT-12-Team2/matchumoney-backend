@@ -84,9 +84,9 @@
         )
     </select>
 
-<<<<<<< Updated upstream
 
-=======
+
+
     <!-- 좋아요 개수 조회 -->
     <select id="countLikesByProductId" resultType="int">
         SELECT COUNT(*) FROM user_likes
@@ -102,5 +102,5 @@
         DELETE FROM user_likes
         WHERE user_id = #{userId} AND card_id2 = #{cardProductId}
     </delete>
->>>>>>> Stashed changes
+
 </mapper>
