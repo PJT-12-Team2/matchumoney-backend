@@ -14,7 +14,7 @@ public class DepositDetailServiceImpl implements DepositDetailService {
 
     @Override
     public DepositDetailResponseDTO getDepositDetailById(Long userId,Long id) {
-        DepositDetailResponseDTO product = depositDetailMapper.findDepositProductById(id);
+        DepositDetailResponseDTO product = depositDetailMapper.findDepositProductById(id,userId);
         product.setOptions(depositDetailMapper.findOptionsByProductId(id));
         product.setUserId(userId);
         if (userId != null) {

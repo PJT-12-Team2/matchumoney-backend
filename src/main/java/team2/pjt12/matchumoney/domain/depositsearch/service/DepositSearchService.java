@@ -7,5 +7,5 @@ import team2.pjt12.matchumoney.domain.depositsearch.dto.DepositSearchResponseDTO
 import java.util.List;
 
 public interface DepositSearchService {
-    List<DepositSearchResponseDTO> searchDepositProducts(DepositSearchRequestDTO request);
+    List<DepositSearchResponseDTO> searchDepositProducts(Long userId, DepositSearchRequestDTO request);
 }

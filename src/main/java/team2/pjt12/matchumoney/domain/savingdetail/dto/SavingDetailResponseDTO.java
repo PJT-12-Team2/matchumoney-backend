@@ -29,6 +29,7 @@ public class SavingDetailResponseDTO {
     private Long userId;
     private boolean liked;
     private int likeCount;
+    private Boolean isStarred;
     // 1:N 관계
     private List<SavingOptionDTO> options;
 }

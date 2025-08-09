@@ -9,7 +9,12 @@ import java.util.List;
 
 @Mapper
 public interface DepositSearchMapper {
-    List<DepositSearchResponseDTO> findAllDepositProducts(DepositSearchRequestDTO request);
 
-    List<DepositOptionDTO> findOptionsByProductId(String finPrdtCd);
+    List<DepositSearchResponseDTO> findAllDepositProducts(
+            @Param("userId") Long userId,
+            @Param("korCoNm") String korCoNm,
+            @Param("maxLimit") Integer maxLimit
+    );
+
+    List<DepositOptionDTO> findOptionsByProductId(@Param("finPrdtCd") String finPrdtCd);
 }

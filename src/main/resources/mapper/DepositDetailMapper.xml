@@ -40,27 +40,44 @@
         <result property="finId" column="fin_id" />
         <result property="personaId" column="persona_id" />
         <result property="requestUrl" column="request_url"/>
-
+        <result property="isStarred" column="isStarred"/>
         <!-- 옵션 리스트 매핑 -->
         <collection property="options" ofType="team2.pjt12.matchumoney.domain.depositdetail.dto.DepositOptionDTO"
                     resultMap="DepositOptionResultMap" />
     </resultMap>
 
     <!-- 단건 조회 + 조인 -->
-    <select id="findDepositProductById" resultMap="DepositDetailResultMap" parameterType="long">
+    <select id="findDepositProductById" resultMap="DepositDetailResultMap" parameterType="map">
         SELECT
-            p.deposit_product_id, p.dcls_month, p.kor_co_nm, p.fin_prdt_nm,
-            p.join_way, p.mtrt_int, p.spcl_cnd, p.join_deny,
-            p.join_member, p.etc_note, p.max_limit, p.dcls_strt_day,
-            p.dcls_end_day, p.fin_co_subm_day, p.product_type,
-            p.fin_co_no, p.fin_prdt_cd, p.fin_id, p.persona_id, p.request_url,
-            o.deposit_option_id, o.intr_rate_type, o.intr_rate_type_nm,
-            o.save_trm, o.intr_rate, o.intr_rate2,
-            o.deposit_product_id AS o_deposit_product_id,
-            o.fin_prdt_cd AS o_fin_prdt_cd, o.fin_id AS o_fin_id
+        p.deposit_product_id, p.dcls_month, p.kor_co_nm, p.fin_prdt_nm,
+        p.join_way, p.mtrt_int, p.spcl_cnd, p.join_deny,
+        p.join_member, p.etc_note, p.max_limit, p.dcls_strt_day,
+        p.dcls_end_day, p.fin_co_subm_day, p.product_type,
+        p.fin_co_no, p.fin_prdt_cd, p.fin_id, p.persona_id, p.request_url,
+
+        -- 옵션 컬럼
+        o.deposit_option_id, o.intr_rate_type, o.intr_rate_type_nm,
+        o.save_trm, o.intr_rate, o.intr_rate2,
+        o.deposit_product_id AS o_deposit_product_id,
+        o.fin_prdt_cd AS o_fin_prdt_cd, o.fin_id AS o_fin_id,
+
+        -- ✅ 즐겨찾기 여부 (별칭을 isStarred로)
+        CASE WHEN uf.favorite_id IS NOT NULL THEN TRUE ELSE FALSE END AS isStarred
 
         FROM deposit_product p
-                 LEFT JOIN deposit_option o ON p.deposit_product_id = o.deposit_product_id
+        LEFT JOIN deposit_option o
+        ON p.deposit_product_id = o.deposit_product_id
+
+        -- ✅ 즐겨찾기 JOIN (userId가 null이면 항상 false)
+        LEFT JOIN user_favorites uf
+        ON p.deposit_product_id = uf.deposit_product_id
+        <if test="userId != null">
+            AND uf.user_id = #{userId}
+        </if>
+        <if test="userId == null">
+            AND 1 = 0
+        </if>
+
         WHERE p.deposit_product_id = #{id}
     </select>
 

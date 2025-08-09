@@ -17,14 +17,15 @@ public class DepositSearchServiceImpl implements DepositSearchService {
     private final DepositSearchMapper depositSearchMapper;
 
     @Override
-    public List<DepositSearchResponseDTO> searchDepositProducts(DepositSearchRequestDTO request) {
-        List<DepositSearchResponseDTO> products = depositSearchMapper.findAllDepositProducts(request);
+    public List<DepositSearchResponseDTO> searchDepositProducts(Long userId, DepositSearchRequestDTO request) {
+        // 🔑 userId, korCoNm, maxLimit를 개별 파라미터로 전달
+        List<DepositSearchResponseDTO> products =
+                depositSearchMapper.findAllDepositProducts(userId, request.getKorCoNm(), request.getMaxLimit());
 
         for (DepositSearchResponseDTO product : products) {
             List<DepositOptionDTO> options = depositSearchMapper.findOptionsByProductId(product.getFinPrdtCd());
             product.setDepositOptions(options);
         }
-
         return products;
     }
 }
