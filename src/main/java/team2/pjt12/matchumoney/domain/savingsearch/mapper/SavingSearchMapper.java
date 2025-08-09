@@ -10,7 +10,10 @@ import java.util.List;
 
 @Mapper
 public interface SavingSearchMapper {
-    List<SavingSearchResponseDTO> findAllSavingProducts(SavingSearchRequestDTO request);
+    List<SavingSearchResponseDTO> findAllSavingProducts(
+            @Param("request") SavingSearchRequestDTO request,
+            @Param("userId") Long userId
+    );
 
     List<SavingOptionDTO> findOptionsByProductId(String finPrdtCd);
 }
