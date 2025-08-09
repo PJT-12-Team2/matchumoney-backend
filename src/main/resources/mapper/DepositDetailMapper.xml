@@ -39,6 +39,7 @@
         <result property="finPrdtCd" column="fin_prdt_cd" />
         <result property="finId" column="fin_id" />
         <result property="personaId" column="persona_id" />
+        <result property="requestUrl" column="request_url"/>
 
         <!-- 옵션 리스트 매핑 -->
         <collection property="options" ofType="team2.pjt12.matchumoney.domain.depositdetail.dto.DepositOptionDTO"
@@ -52,8 +53,7 @@
             p.join_way, p.mtrt_int, p.spcl_cnd, p.join_deny,
             p.join_member, p.etc_note, p.max_limit, p.dcls_strt_day,
             p.dcls_end_day, p.fin_co_subm_day, p.product_type,
-            p.fin_co_no, p.fin_prdt_cd, p.fin_id, p.persona_id,
-
+            p.fin_co_no, p.fin_prdt_cd, p.fin_id, p.persona_id, p.request_url,
             o.deposit_option_id, o.intr_rate_type, o.intr_rate_type_nm,
             o.save_trm, o.intr_rate, o.intr_rate2,
             o.deposit_product_id AS o_deposit_product_id,
