@@ -30,26 +30,19 @@ public class AmountExtractorUtil {
             return -1L; // 🔧 정보가 없으면 -1 반환
         }
 
-        log.debug("=== 최소금액 추출 시작 ===");
-        log.debug("원본 etcNote: '{}'", etcNote);
-
         // 정규식으로 금액 추출
         Pattern pattern = Pattern.compile("([0-9,]+(?:만|천|백)?)[\\s]*원");
         Matcher matcher = pattern.matcher(etcNote);
 
         if (matcher.find()) {
             String amountStr = matcher.group(1);
-            log.debug("추출된 금액 문자열: '{}'", amountStr);
 
             Long convertedAmount = convertKoreanNumberToLong(amountStr);
 
             if (convertedAmount > 0) {
-                log.debug("변환된 금액: {}원", convertedAmount);
                 return convertedAmount;
             }
         }
-
-        log.debug("금액 패턴을 찾을 수 없음: '{}'", etcNote);
         return -1L; // 🔧 추출 실패 시 -1 반환
     }
 
@@ -59,8 +52,6 @@ public class AmountExtractorUtil {
      */
     private static Long convertKoreanNumberToLong(String amount) {
         try {
-            log.debug("숫자 변환 시작: '{}'", amount);
-
             // 쉼표 제거
             amount = amount.replace(",", "");
 
@@ -72,7 +63,7 @@ public class AmountExtractorUtil {
                 if (parts.length > 0 && !parts[0].isEmpty()) {
                     long manValue = Long.parseLong(parts[0]);
                     result = manValue * 10000;
-                    log.debug("만 단위 변환: {} -> {}", parts[0], result);
+
                 }
 
                 // 만 뒤에 추가 숫자 처리 (예: "1만5천")
@@ -82,19 +73,16 @@ public class AmountExtractorUtil {
                         String cheonStr = remainder.replace("천", "");
                         if (!cheonStr.isEmpty()) {
                             result += Long.parseLong(cheonStr) * 1000;
-                            log.debug("천 단위 추가: {} -> 총 {}", cheonStr, result);
                         }
                     } else if (remainder.contains("백")) {
                         String baekStr = remainder.replace("백", "");
                         if (!baekStr.isEmpty()) {
                             result += Long.parseLong(baekStr) * 100;
-                            log.debug("백 단위 추가: {} -> 총 {}", baekStr, result);
                         }
                     } else {
                         // 만 뒤에 순수 숫자가 있는 경우
                         if (!remainder.isEmpty()) {
                             result += Long.parseLong(remainder);
-                            log.debug("단위 추가: {} -> 총 {}", remainder, result);
                         }
                     }
                 }
@@ -103,26 +91,21 @@ public class AmountExtractorUtil {
                 String cheonStr = amount.replace("천", "");
                 if (!cheonStr.isEmpty()) {
                     result = Long.parseLong(cheonStr) * 1000;
-                    log.debug("천 단위 변환: {} -> {}", cheonStr, result);
                 }
             } else if (amount.contains("백")) {
                 // "백" 단위만 있는 경우
                 String baekStr = amount.replace("백", "");
                 if (!baekStr.isEmpty()) {
                     result = Long.parseLong(baekStr) * 100;
-                    log.debug("백 단위 변환: {} -> {}", baekStr, result);
                 }
             } else {
                 // 순수 숫자인 경우
                 result = Long.parseLong(amount);
-                log.debug("순수 숫자 변환: {} -> {}", amount, result);
             }
 
-            log.debug("최종 변환 결과: {}원", result);
             return result;
 
         } catch (NumberFormatException e) {
-            log.warn("한국어 숫자 변환 실패: '{}', 오류: {}", amount, e.getMessage());
             return 0L;
         }
     }

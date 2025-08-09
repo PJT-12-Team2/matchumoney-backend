@@ -10,6 +10,10 @@
         <result property="maxSaveTrm" column="max_save_trm"/>
         <result property="maxIntrRate" column="max_intr_rate"/>
         <result property="maxIntrRate2" column="max_intr_rate2"/>
+        <result property="depositProductId" column="deposit_product_id"/>
+        <result property="likeCount" column="like_count"/>
+        <result property="favorite" column="is_favorite"/>
+        <result property="liked" column="is_liked"/>
     </resultMap>
 
     <!--  개월 수가 여러인 경우 12개월이 나오게  -->
@@ -19,13 +23,16 @@
                 fin_prdt_cd,
                 max_save_trm,
                 max_intr_rate,
-                max_intr_rate2
+                max_intr_rate2,
+                deposit_product_id
             FROM (
                      SELECT
                          fin_prdt_cd,
                          save_trm AS max_save_trm,
                          intr_rate AS max_intr_rate,
                          intr_rate2 AS max_intr_rate2,
+                         deposit_product_id,
+
                          ROW_NUMBER() OVER (
                              PARTITION BY fin_prdt_cd
                              ORDER BY
@@ -42,22 +49,44 @@
         )
     </sql>
 
-    <!--  모든 예금 상품 출력  -->
-    <select id="findAllDepositProducts" resultMap="DepositProductResponseMap">
+    <!-- 예금 상품 - 즐찾 여부, 좋아요 여부, 좋아요 개수 가져오기  -->
+    <select id="findAllDepositProducts" parameterType="long" resultMap="DepositProductResponseMap">
         SELECT
-        dp.kor_co_nm AS bank_name,
-        dp.fin_prdt_nm AS product_name,
-        dp.etc_note AS etc_note,
+        dp.kor_co_nm        AS bank_name,
+        dp.fin_prdt_nm      AS product_name,
+        dp.etc_note         AS etc_note,
         opt.max_save_trm,
         opt.max_intr_rate,
-        opt.max_intr_rate2
+        opt.max_intr_rate2,
+        opt.deposit_product_id,
+        COALESCE(like_stats.like_count, 0) AS like_count,
+        CASE WHEN fav.deposit_product_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_favorite,
+        CASE WHEN ul.deposit_product_id  IS NOT NULL THEN TRUE ELSE FALSE END AS is_liked
         FROM deposit_product dp
         LEFT JOIN <include refid="optionBySaveTerm12OrMax"/> opt
         ON dp.fin_prdt_cd = opt.fin_prdt_cd
+        /* 전체 좋아요 수 */
+        LEFT JOIN (
+        SELECT
+        deposit_product_id,
+        COUNT(*) AS like_count
+        FROM user_likes
+        WHERE deposit_product_id IS NOT NULL
+        GROUP BY deposit_product_id
+        ) like_stats
+        ON opt.deposit_product_id = like_stats.deposit_product_id
+        /* 로그인 사용자의 즐겨찾기 여부 */
+        LEFT JOIN user_favorites fav
+        ON opt.deposit_product_id = fav.deposit_product_id
+        AND fav.user_id = #{userId}
+        /* ✅ 로그인 사용자의 좋아요 여부 */
+        LEFT JOIN user_likes ul
+        ON opt.deposit_product_id = ul.deposit_product_id
+        AND ul.user_id = #{userId}
         ORDER BY opt.max_intr_rate DESC
     </select>
 
-    <!-- 은행별 예금 상품 조회 -->
+    <!-- 은행별 예금 상품 조회 (비로그인 사용자용) -->
     <select id="findDepositProductsByBankName" parameterType="string" resultMap="DepositProductResponseMap">
         SELECT
         dp.kor_co_nm as bank_name,
@@ -65,10 +94,21 @@
         dp.etc_note as etc_note,
         opt.max_save_trm,
         opt.max_intr_rate,
-        opt.max_intr_rate2
+        opt.max_intr_rate2,
+        opt.deposit_product_id,
+        COALESCE(like_stats.like_count, 0) AS like_count,
+        false AS is_favorite
         FROM deposit_product dp
         LEFT JOIN <include refid="optionBySaveTerm12OrMax"/> opt
         ON dp.fin_prdt_cd = opt.fin_prdt_cd
+        LEFT JOIN (
+        SELECT
+        deposit_product_id,
+        COUNT(*) AS like_count
+        FROM user_likes
+        WHERE deposit_product_id IS NOT NULL
+        GROUP BY deposit_product_id
+        ) like_stats ON opt.deposit_product_id = like_stats.deposit_product_id
         WHERE dp.kor_co_nm = #{bankName}
         ORDER BY opt.max_intr_rate DESC
     </select>

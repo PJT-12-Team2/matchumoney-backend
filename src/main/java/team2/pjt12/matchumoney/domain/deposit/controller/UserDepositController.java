@@ -20,13 +20,13 @@ public class UserDepositController {
 
     @GetMapping("/accounts/{userId}")
     public ResponseEntity<List<UserDepositResponseDTO>> getUserDeposits(@PathVariable String userId) {
-        log.info("계좌 조회 API 호출: userId={}", userId);
+//        log.info("계좌 조회 API 호출: userId={}", userId);
 
         try {
             List<UserDepositResponseDTO> deposits = userDepositService.getAccountsByUserId(userId);
             return ResponseEntity.ok(deposits);
         }catch (Exception e) {
-            log.error("계좌 조회 API 오류: userId={}", userId, e);
+//            log.error("계좌 조회 API 오류: userId={}", userId, e);
             return ResponseEntity.internalServerError().build();
         }
     }

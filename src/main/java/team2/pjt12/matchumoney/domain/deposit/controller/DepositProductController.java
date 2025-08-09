@@ -3,10 +3,13 @@ package team2.pjt12.matchumoney.domain.deposit.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import team2.pjt12.matchumoney.domain.deposit.dto.req.BalanceRequestDTO;
 import team2.pjt12.matchumoney.domain.deposit.dto.res.DepositProductResponseDTO;
 import team2.pjt12.matchumoney.domain.deposit.service.DepositProductService;
+import team2.pjt12.matchumoney.global.security.UserDetailsImpl;
+
 import java.util.List;
 
 @Slf4j
@@ -40,15 +43,15 @@ public class DepositProductController {
 
     @PostMapping("/recommendations/byBalance")
     public ResponseEntity<List<DepositProductResponseDTO>> getProductsByBalance(@RequestBody BalanceRequestDTO request) {
-        log.info("잔액 기반 상품 추천 API 호출: userId={}, balance={}, accountNumber={}",
-                request.getUserId(), request.getBalance(), request.getAccountNumber());
+//        log.info("잔액 기반 상품 추천 API 호출: userId={}, balance={}, accountNumber={}",
+//                request.getUserId(), request.getBalance(), request.getAccountNumber());
 
         try {
             // 🔍 요청 데이터 상세 로깅
-            log.debug("요청 DTO 전체: {}", request);
+//            log.debug("요청 DTO 전체: {}", request);
 
             List<DepositProductResponseDTO> products = depositProductService.getProductsByBalance(request);
-            log.info("추천 상품 {}개 조회 완료", products.size());
+//            log.info("추천 상품 {}개 조회 완료", products.size());
             return ResponseEntity.ok(products);
         } catch (IllegalArgumentException e) {
             log.error("잘못된 요청 파라미터: {}", e.getMessage());
@@ -59,4 +62,5 @@ public class DepositProductController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
 }
