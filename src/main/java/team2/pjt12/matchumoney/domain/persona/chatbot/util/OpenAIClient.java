@@ -20,7 +20,7 @@ public class OpenAIClient {
     @Value("${openai.api.key}") // 🔥 application.properties에서 불러옴
     private String apiKey;
 
-    public String callChatGPT(String userMessage) {
+    public String callChatGPT(String userPrompt, String systemPrompt) {
         try {
             HttpClient client = HttpClient.newHttpClient();
             ObjectMapper mapper = new ObjectMapper();
@@ -29,10 +29,19 @@ public class OpenAIClient {
             requestJson.put("model", "gpt-3.5-turbo");
 
             ArrayNode messages = mapper.createArrayNode();
+
+            // 🔹 system 메시지 추가
+            ObjectNode systemMsg = mapper.createObjectNode();
+            systemMsg.put("role", "system");
+            systemMsg.put("content", systemPrompt);
+            messages.add(systemMsg);
+
+            // 🔹 user 메시지 추가
             ObjectNode userMsg = mapper.createObjectNode();
             userMsg.put("role", "user");
-            userMsg.put("content", userMessage);
+            userMsg.put("content", userPrompt);
             messages.add(userMsg);
+
             requestJson.set("messages", messages);
 
             HttpRequest request = HttpRequest.newBuilder()

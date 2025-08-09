@@ -9,6 +9,8 @@ import team2.pjt12.matchumoney.domain.savingsearch.mapper.SavingSearchMapper;
 
 import java.util.List;
 
+import static team2.pjt12.matchumoney.global.util.SecurityUtils.getCurrentUser;
+
 @Service
 @RequiredArgsConstructor
 public class SavingSearchServiceImpl implements SavingSearchService {
@@ -17,7 +19,8 @@ public class SavingSearchServiceImpl implements SavingSearchService {
 
     @Override
     public List<SavingSearchResponseDTO> searchSavingProducts(SavingSearchRequestDTO request) {
-        List<SavingSearchResponseDTO> products = savingSearchMapper.findAllSavingProducts(request);
+        Long userId = getCurrentUser().getUserId();
+        List<SavingSearchResponseDTO> products = savingSearchMapper.findAllSavingProducts(request, userId);
 
         for (SavingSearchResponseDTO product : products) {
             List<SavingOptionDTO> options = savingSearchMapper.findOptionsByProductId(product.getFinPrdtCd());

@@ -18,12 +18,13 @@
         sp.etc_note AS etcNote,
         sp.max_limit AS maxLimit,
         fc.company_image AS companyImage,
-        CASE
-        WHEN uf.favorite_id IS NOT NULL THEN TRUE
-        ELSE FALSE
-        END AS isStarred
+        EXISTS (
+        SELECT 1
+        FROM user_favorites uf
+        WHERE uf.saving_product_id = sp.saving_product_id
+        AND uf.user_id = #{userId}
+        ) AS isStarred
         FROM saving_product sp
-        LEFT JOIN user_favorites uf ON sp.saving_product_id = uf.saving_product_id
         LEFT JOIN financial_companies fc ON sp.kor_co_nm = fc.kor_co_nm
         WHERE sp.saving_product_id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">
@@ -32,7 +33,7 @@
     </select>
     <select id="selectRatesBySavingProductIds" resultType="team2.pjt12.matchumoney.domain.compare.dto.RateDTO">
         SELECT
-        sp. saving_product_id AS id,
+        sp.saving_product_id AS id,
         save_trm AS period,
         intr_rate AS baseRate,
         intr_rate2 AS maxRate,
@@ -47,7 +48,8 @@
         </foreach>
     </select>
     <select id="selectDepositProductsByIds"
-            resultType="team2.pjt12.matchumoney.domain.compare.dto.CompareDepositResponseDTO">SELECT
+            resultType="team2.pjt12.matchumoney.domain.compare.dto.CompareDepositResponseDTO">
+        SELECT
         dp.deposit_product_id AS id,
         dp.kor_co_nm AS korCoName,
         dp.fin_prdt_nm AS finPrdtName,
@@ -58,12 +60,13 @@
         dp.etc_note AS etcNote,
         dp.max_limit AS maxLimit,
         fc.company_image AS companyImage,
-        CASE
-        WHEN uf.favorite_id IS NOT NULL THEN TRUE
-        ELSE FALSE
-        END AS isStarred
+        EXISTS (
+        SELECT 1
+        FROM user_favorites uf
+        WHERE uf.deposit_product_id = dp.deposit_product_id
+        AND uf.user_id = #{userId}
+        ) AS isStarred
         FROM deposit_product dp
-        LEFT JOIN user_favorites uf ON dp.deposit_product_id = uf.deposit_product_id
         LEFT JOIN financial_companies fc ON dp.kor_co_nm = fc.kor_co_nm
         WHERE dp.deposit_product_id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">
@@ -73,7 +76,7 @@
     <select id="selectRatesByDepositProductIds"
             resultType="team2.pjt12.matchumoney.domain.compare.dto.RateDTO">
         SELECT
-        dp. deposit_product_id AS id,
+        dp.deposit_product_id AS id,
         save_trm AS period,
         intr_rate AS baseRate,
         intr_rate2 AS maxRate,
@@ -123,12 +126,13 @@
         cp.type AS type,
         cp.annual_fee AS annualFee,
         cp.pre_month_money AS preMonthMoney,
-        CASE
-        WHEN uf.favorite_id IS NOT NULL THEN TRUE
-        ELSE FALSE
-        END AS isStarred
+        EXISTS (
+        SELECT 1
+        FROM user_favorites uf
+        WHERE uf.card_product_id = cp.card_product_id
+        AND uf.user_id = #{userId}
+        ) AS isStarred
         FROM card_product cp
-        LEFT JOIN user_favorites uf ON cp.card_product_id = uf.card_product_id
         WHERE cp.is_available = TRUE
         AND cp.card_product_id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">

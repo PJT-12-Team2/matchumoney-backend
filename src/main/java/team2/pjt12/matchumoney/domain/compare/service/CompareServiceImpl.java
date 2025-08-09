@@ -12,16 +12,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static team2.pjt12.matchumoney.global.util.SecurityUtils.getCurrentUser;
+
 @Service
 @RequiredArgsConstructor
 public class CompareServiceImpl implements CompareService {
 
     private final CompareProductMapper compareProductMapper;
 
+
     @Override
     public CompareProductsResponseDTO getProducts(String type, List<Long> ids) {
+        Long userId = getCurrentUser().getUserId();
+        
         if (type.equalsIgnoreCase("saving")) {
-            List<CompareSavingResponseDTO> products = compareProductMapper.selectSavingProductsByIds(ids);
+            List<CompareSavingResponseDTO> products = compareProductMapper.selectSavingProductsByIds(ids, userId);
             List<RateDTO> rates = compareProductMapper.selectRatesBySavingProductIds(ids);
 
             // 상품 ID → RateDTO 리스트로 매핑
@@ -38,7 +43,7 @@ public class CompareServiceImpl implements CompareService {
                     .build();
 
         } else if (type.equalsIgnoreCase("deposit")) {
-            List<CompareDepositResponseDTO> products = compareProductMapper.selectDepositProductsByIds(ids);
+            List<CompareDepositResponseDTO> products = compareProductMapper.selectDepositProductsByIds(ids, userId);
             List<RateDTO> rates = compareProductMapper.selectRatesByDepositProductIds(ids);
 
             // 상품 ID → RateDTO 리스트로 매핑
@@ -56,7 +61,7 @@ public class CompareServiceImpl implements CompareService {
 
         } else if (type.equalsIgnoreCase("card")) {
             // 1. 카드 정보 조회
-            List<CompareCardResponseDTO> cards = compareProductMapper.selectCardProductsByIds(ids);
+            List<CompareCardResponseDTO> cards = compareProductMapper.selectCardProductsByIds(ids, userId);
 
             // 2. 카드 혜택(옵션) 조회
             List<CardOptionDTO> cardOptions = compareProductMapper.selectCardOptionsByCardIds(ids);

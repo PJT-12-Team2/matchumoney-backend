@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class DepositSearchRequestDTO {
+    private Long userId;
     private String korCoNm;
     private Integer maxLimit;
 }
