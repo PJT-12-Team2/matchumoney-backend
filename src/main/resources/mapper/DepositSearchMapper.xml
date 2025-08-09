@@ -7,21 +7,48 @@
 
     <select id="findAllDepositProducts"
             resultType="team2.pjt12.matchumoney.domain.depositsearch.dto.DepositSearchResponseDTO">
-        SELECT
-        sp.deposit_product_id AS depositProductId,
-        sp.kor_co_nm AS korCoNm,
-        sp.fin_prdt_cd AS finPrdtCd,
-        sp.fin_prdt_nm AS finPrdtNm,
-        sp.max_limit AS maxLimit,
-        sp.spcl_cnd AS benefit,
-        CASE
-        WHEN uf.favorite_id IS NOT NULL THEN TRUE
-        ELSE FALSE
-        END AS isStarred
+        <trim prefix="SELECT" suffixOverrides=",">
+            sp.deposit_product_id AS depositProductId,
+            sp.kor_co_nm          AS korCoNm,
+            sp.fin_prdt_cd        AS finPrdtCd,
+            sp.fin_prdt_nm        AS finPrdtNm,
+            sp.max_limit          AS maxLimit,
+            sp.spcl_cnd           AS benefit,
+            CASE WHEN uf.favorite_id IS NOT NULL THEN TRUE ELSE FALSE END AS isStarred,
+            COALESCE(lc.like_count, 0) AS likeCount,
+            <if test="userId != null">
+                CASE WHEN EXISTS (
+                SELECT 1
+                FROM user_likes ul
+                WHERE ul.deposit_product_id = sp.deposit_product_id
+                AND ul.user_id = #{userId}
+                ) THEN TRUE ELSE FALSE END AS isLiked,
+            </if>
+            <if test="userId == null">
+                FALSE AS isLiked,
+            </if>
+        </trim>
         FROM deposit_product sp
+
+        /* 즐겨찾기 */
         LEFT JOIN user_favorites uf
-        ON sp.deposit_product_id = uf.deposit_product_id
-        AND uf.user_id = #{userId}
+        ON uf.deposit_product_id = sp.deposit_product_id
+        <if test="userId != null">
+            AND uf.user_id = #{userId}
+        </if>
+        <if test="userId == null">
+            AND 1 = 0
+        </if>
+
+        /* 좋아요 개수 집계 (예금만) */
+        LEFT JOIN (
+        SELECT deposit_product_id, COUNT(DISTINCT user_id) AS like_count
+        FROM user_likes
+        WHERE deposit_product_id IS NOT NULL
+        GROUP BY deposit_product_id
+        ) lc
+        ON lc.deposit_product_id = sp.deposit_product_id
+
         WHERE 1 = 1
         <if test="korCoNm != null and korCoNm != ''">
             AND sp.kor_co_nm LIKE CONCAT('%', #{korCoNm}, '%')
@@ -30,6 +57,8 @@
             AND CAST(REPLACE(sp.max_limit, ',', '') AS UNSIGNED) &lt;= #{maxLimit}
         </if>
     </select>
+
+
 
     <select id="findOptionsByProductId"
             resultType="team2.pjt12.matchumoney.domain.depositsearch.dto.DepositOptionDTO">

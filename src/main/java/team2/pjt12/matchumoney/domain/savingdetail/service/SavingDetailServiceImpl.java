@@ -14,7 +14,7 @@ public class SavingDetailServiceImpl implements SavingDetailService {
 
     @Override
     public SavingDetailResponseDTO getSavingDetailById(Long userId, Long id) {
-        SavingDetailResponseDTO product = savingDetailMapper.findSavingProductById(id);
+        SavingDetailResponseDTO product = savingDetailMapper.findSavingProductById(id, userId);
         product.setOptions(savingDetailMapper.findOptionsByProductId(product.getFinPrdtCd()));
         product.setUserId(userId);
         if (userId != null) {

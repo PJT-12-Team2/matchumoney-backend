@@ -36,6 +36,7 @@ public class DepositDetailResponseDTO {
     private boolean liked;
     private int likeCount;
     private String requestUrl;
+    private Boolean isStarred;
 
     // 1:N 관계
     private List<DepositOptionDTO> options;

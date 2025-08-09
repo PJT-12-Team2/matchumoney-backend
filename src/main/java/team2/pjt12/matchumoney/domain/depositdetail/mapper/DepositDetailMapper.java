@@ -9,7 +9,8 @@ import java.util.List;
 
 @Mapper
 public interface DepositDetailMapper {
-    DepositDetailResponseDTO findDepositProductById(@Param("id") Long id);
+    DepositDetailResponseDTO findDepositProductById(@Param("id") long id,
+                                                    @Param("userId") Long userId);
     List<DepositOptionDTO> findOptionsByProductId(@Param("productId") Long productId);
 
     // 좋아요 상태 확인 기능

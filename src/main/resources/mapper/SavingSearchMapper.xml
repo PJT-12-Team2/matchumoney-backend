@@ -7,34 +7,67 @@
 
     <select id="findAllSavingProducts"
             resultType="team2.pjt12.matchumoney.domain.savingsearch.dto.SavingSearchResponseDTO">
-        SELECT
-        sp.saving_product_id AS savingProductId,
-        sp.kor_co_nm AS korCoNm,
-        sp.fin_prdt_cd AS finPrdtCd,
-        sp.fin_prdt_nm AS finPrdtNm,
-        sp.max_limit AS maxLimit,
-        sp.spcl_cnd AS benefit,
-        EXISTS (
-        SELECT 1
-        FROM user_favorites uf
-        WHERE uf.saving_product_id = sp.saving_product_id
-        AND uf.user_id = #{userId}
-        ) AS isStarred
+        <trim prefix="SELECT" suffixOverrides=",">
+            sp.saving_product_id AS savingProductId,
+            sp.kor_co_nm         AS korCoNm,
+            sp.fin_prdt_cd       AS finPrdtCd,
+            sp.fin_prdt_nm       AS finPrdtNm,
+            sp.max_limit         AS maxLimit,
+            sp.spcl_cnd          AS benefit,
+
+            /* 즐겨찾기 여부 */
+            CASE
+            WHEN EXISTS (
+            SELECT 1
+            FROM user_favorites uf
+            WHERE uf.saving_product_id = sp.saving_product_id
+            AND uf.user_id = #{userId}
+            ) THEN TRUE ELSE FALSE
+            END AS isStarred,
+
+            /* 좋아요 개수 */
+            COALESCE(lc.like_count, 0) AS likeCount,
+
+            /* 내가 좋아요 했는지 */
+            <if test="userId != null">
+                CASE
+                WHEN EXISTS (
+                SELECT 1
+                FROM user_likes ul
+                WHERE ul.saving_product_id = sp.saving_product_id
+                AND ul.user_id = #{userId}
+                ) THEN TRUE ELSE FALSE
+                END AS isLiked,
+            </if>
+            <if test="userId == null">
+                FALSE AS isLiked,
+            </if>
+        </trim>
         FROM saving_product sp
+
+        /* 좋아요 개수 집계 (적금만) */
+        LEFT JOIN (
+        SELECT saving_product_id, COUNT(DISTINCT user_id) AS like_count
+        FROM user_likes
+        WHERE saving_product_id IS NOT NULL
+        GROUP BY saving_product_id
+        ) lc
+        ON lc.saving_product_id = sp.saving_product_id
+
         WHERE 1 = 1
-        <if test="request.korCoNm != null and request.korCoNm != ''">
-            AND sp.kor_co_nm LIKE CONCAT('%', #{request.korCoNm}, '%')
+        <if test="korCoNm != null and korCoNm != ''">
+            AND sp.kor_co_nm LIKE CONCAT('%', #{korCoNm}, '%')
         </if>
-        <if test="request.maxLimit != null">
-            AND CAST(REPLACE(sp.max_limit, ',', '') AS UNSIGNED) &lt;= #{request.maxLimit}
+        <if test="maxLimit != null">
+            AND CAST(REPLACE(sp.max_limit, ',', '') AS UNSIGNED) &lt;= #{maxLimit}
         </if>
     </select>
-
     <select id="findOptionsByProductId"
             resultType="team2.pjt12.matchumoney.domain.savingsearch.dto.SavingOptionDTO">
-        SELECT save_trm   AS saveTrm,
-               intr_rate  AS intrRate,
-               intr_rate2 AS intrRate2
+        SELECT
+            save_trm   AS saveTrm,
+            intr_rate  AS intrRate,
+            intr_rate2 AS intrRate2
         FROM saving_option
         WHERE fin_prdt_cd = #{finPrdtCd}
         ORDER BY CAST(save_trm AS UNSIGNED)

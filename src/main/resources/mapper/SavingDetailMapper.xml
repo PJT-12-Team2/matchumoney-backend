@@ -15,6 +15,7 @@
         <result property="intrRate2" column="intr_rate2" />
         <result property="finPrdtCd" column="fin_prdt_cd" />
         <result property="finId" column="fin_id" />
+
     </resultMap>
 
     <!-- saving_product + saving_option list 매핑 -->
@@ -38,6 +39,7 @@
         <result property="finPrdtCd" column="fin_prdt_cd" />
         <result property="finId" column="fin_id" />
         <result property="personaId" column="persona_id" />
+        <result property="isStarred" column="isStarred"/>
 
         <!-- 옵션 리스트 매핑 -->
         <collection property="options" ofType="team2.pjt12.matchumoney.domain.savingdetail.dto.SavingOptionDTO"
@@ -56,10 +58,21 @@
             o.saving_option_id, o.intr_rate_type, o.intr_rate_type_nm,
             o.save_trm, o.intr_rate, o.intr_rate2,
             o.fin_prdt_cd AS o_saving_product_id,
-            o.fin_prdt_cd AS o_fin_prdt_cd, o.fin_id AS o_fin_id
+            o.fin_prdt_cd AS o_fin_prdt_cd, o.fin_id AS o_fin_id,
+
+            CASE WHEN uf.favorite_id IS NOT NULL THEN TRUE ELSE FALSE END AS isStarred
+
 
         FROM saving_product p
                  LEFT JOIN saving_option o ON p.fin_prdt_cd = o.fin_prdt_cd
+        LEFT JOIN user_favorites uf
+        ON p.saving_product_id = uf.saving_product_id
+        <if test="userId != null">
+            AND uf.user_id = #{userId}
+        </if>
+        <if test="userId == null">
+            AND 1 = 0
+        </if>
         WHERE p.saving_product_id = #{id}
     </select>
 

@@ -9,7 +9,7 @@ import java.util.List;
 
 @Mapper
 public interface SavingDetailMapper {
-    SavingDetailResponseDTO findSavingProductById(@Param("id") Long id);
+    SavingDetailResponseDTO findSavingProductById(@Param("id") Long id, @Param("userId") Long userId);
     List<SavingOptionDTO> findOptionsByProductId(@Param("finPrdtCd") String finPrdtCd);
 
     // 좋아요 상태 확인 기능
