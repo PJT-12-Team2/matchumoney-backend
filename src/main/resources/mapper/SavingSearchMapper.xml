@@ -14,27 +14,27 @@
         sp.fin_prdt_nm AS finPrdtNm,
         sp.max_limit AS maxLimit,
         sp.spcl_cnd AS benefit,
-        CASE
-        WHEN uf.favorite_id IS NOT NULL THEN TRUE
-        ELSE FALSE
-        END AS isStarred
+        EXISTS (
+        SELECT 1
+        FROM user_favorites uf
+        WHERE uf.saving_product_id = sp.saving_product_id
+        AND uf.user_id = #{userId}
+        ) AS isStarred
         FROM saving_product sp
-        LEFT JOIN user_favorites uf ON sp.saving_product_id = uf.saving_product_id
         WHERE 1 = 1
-        <if test="korCoNm != null and korCoNm != ''">
-            AND sp.kor_co_nm LIKE CONCAT('%', #{korCoNm}, '%')
+        <if test="request.korCoNm != null and request.korCoNm != ''">
+            AND sp.kor_co_nm LIKE CONCAT('%', #{request.korCoNm}, '%')
         </if>
-        <if test="maxLimit != null">
-            AND CAST(REPLACE(sp.max_limit, ',', '') AS UNSIGNED) &lt;= #{maxLimit}
+        <if test="request.maxLimit != null">
+            AND CAST(REPLACE(sp.max_limit, ',', '') AS UNSIGNED) &lt;= #{request.maxLimit}
         </if>
     </select>
 
     <select id="findOptionsByProductId"
             resultType="team2.pjt12.matchumoney.domain.savingsearch.dto.SavingOptionDTO">
-        SELECT
-            save_trm AS saveTrm,
-            intr_rate AS intrRate,
-            intr_rate2 AS intrRate2
+        SELECT save_trm   AS saveTrm,
+               intr_rate  AS intrRate,
+               intr_rate2 AS intrRate2
         FROM saving_option
         WHERE fin_prdt_cd = #{finPrdtCd}
         ORDER BY CAST(save_trm AS UNSIGNED)
