@@ -6,11 +6,11 @@ import team2.pjt12.matchumoney.domain.carddetail.dto.CardOptionDTO;
 import team2.pjt12.matchumoney.domain.cardsearch.dto.CardSearchRequestDTO;
 import team2.pjt12.matchumoney.domain.cardsearch.dto.CardSearchResponseDTO;
 import team2.pjt12.matchumoney.domain.cardsearch.mapper.CardSearchMapper;
-import team2.pjt12.matchumoney.domain.personacard.dto.PersonaCardDTO;
 import team2.pjt12.matchumoney.domain.personacard.mapper.PersonaCardMapper;
 
-import java.util.Collections;
 import java.util.List;
+
+import static team2.pjt12.matchumoney.global.util.SecurityUtils.getCurrentUser;
 
 @Service
 @RequiredArgsConstructor
@@ -20,12 +20,13 @@ public class CardSearchServiceImpl implements CardSearchService {
 
     @Override
     public List<CardSearchResponseDTO> searchCards(CardSearchRequestDTO request) {
-        List<CardSearchResponseDTO> cards = cardSearchMapper.selectCardsByFilter(request);
+        Long userId = getCurrentUser().getUserId();
+        List<CardSearchResponseDTO> cards = cardSearchMapper.selectCardsByFilter(request, userId);
         for (CardSearchResponseDTO card : cards) {
             List<CardOptionDTO> options = personaCardMapper.selectCardOptionsByCardId(card.getId());
             card.setOptions(options);
         }
-         return cards;
+        return cards;
     }
 
 //    private List<PersonaCardDTO> getRandomizedCards(Long personaId) {

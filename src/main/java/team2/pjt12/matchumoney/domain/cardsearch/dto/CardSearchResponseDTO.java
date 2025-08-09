@@ -20,4 +20,6 @@ public class CardSearchResponseDTO {
     private Integer preMonthMoney; // 전월 실적
     private List<CardOptionDTO> options;
     private Boolean isStarred;
+    private Long likeCount;
+    private Boolean isLiked;
 }
