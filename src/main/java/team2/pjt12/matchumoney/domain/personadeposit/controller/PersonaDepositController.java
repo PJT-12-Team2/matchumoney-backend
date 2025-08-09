@@ -54,5 +54,6 @@ public class PersonaDepositController {
         PersonaDepositResponseDTO response = personadepositService.getRecommendedDeposit(personaId);
 
         return ResponseEntity.ok(new SuccessResponse<>(response));
+
     }
 }
