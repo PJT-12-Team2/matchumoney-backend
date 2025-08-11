@@ -26,7 +26,7 @@ public class OpenAIClient {
             ObjectMapper mapper = new ObjectMapper();
 
             ObjectNode requestJson = mapper.createObjectNode();
-            requestJson.put("model", "gpt-3.5-turbo");
+            requestJson.put("model", "gpt-4.1-mini");
 
             ArrayNode messages = mapper.createArrayNode();
 

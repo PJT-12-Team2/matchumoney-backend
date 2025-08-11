@@ -5,16 +5,65 @@
 
 <mapper namespace="team2.pjt12.matchumoney.domain.user.mapper.UserMapper">
 
-    <select id="findBySocialIdAndSocialProvider" resultType="team2.pjt12.matchumoney.domain.user.domain.UserVO">
-        SELECT *
+    <resultMap id="UserVOMap" type="team2.pjt12.matchumoney.domain.user.domain.UserVO">
+        <id     property="userId"           column="user_id"/>
+        <result property="socialProvider"   column="social_provider"/>
+        <result property="socialId"         column="social_id"/>
+        <result property="email"            column="email"/>
+        <result property="password"         column="password"/>
+        <result property="nickname"         column="nickname"/>
+        <result property="profileImageUrl"  column="profile_image_url"/>
+        <result property="createdTime"      column="created_time"/>
+        <result property="lastModifiedTime" column="last_modified_time"/>
+        <result property="isSocialLogin"    column="is_social_login"/>
+        <result property="personaId"        column="persona_id"/>
+        <result property="favoriteId"       column="favorite_id"/>
+        <result property="exp"              column="exp"/>
+        <result property="gender"           column="gender"
+                javaType="team2.pjt12.matchumoney.domain.user.domain.Gender"/>
+        <result property="birthDate"        column="birth_date"/>
+    </resultMap>
+
+    <select id="findBySocialIdAndSocialProvider" resultMap="UserVOMap">
+        SELECT
+            user_id,
+            social_provider,
+            social_id,
+            email,
+            password,
+            nickname,
+            profile_image_url,
+            created_time,
+            last_modified_time,
+            is_social_login,
+            persona_id,
+            favorite_id,
+            exp,
+            gender,
+            birth_date
         FROM users
         WHERE social_id = #{socialId}
           AND social_provider = #{socialProvider}
     </select>
 
 
-    <select id="findByEmail" resultType="team2.pjt12.matchumoney.domain.user.domain.UserVO">
-        SELECT *
+    <select id="findByEmail" parameterType="string" resultMap="UserVOMap">
+        SELECT
+            user_id,
+            social_provider,
+            social_id,
+            email,
+            password,
+            nickname,
+            profile_image_url,
+            created_time,
+            last_modified_time,
+            is_social_login,
+            persona_id,
+            favorite_id,
+            exp,
+            gender,
+            birth_date
         FROM users
         WHERE email = #{email}
     </select>
@@ -26,8 +75,23 @@
         WHERE email = #{email}
     </select>
 
-    <select id="findByUserId" resultType="team2.pjt12.matchumoney.domain.user.domain.UserVO">
-        SELECT *
+    <select id="findByUserId" parameterType="long" resultMap="UserVOMap">
+        SELECT
+            user_id,
+            social_provider,
+            social_id,
+            email,
+            password,
+            nickname,
+            profile_image_url,
+            created_time,
+            last_modified_time,
+            is_social_login,
+            persona_id,
+            favorite_id,
+            exp,
+            gender,
+            birth_date
         FROM users
         WHERE user_id = #{userId}
     </select>
@@ -282,7 +346,7 @@
                  ) opt ON dp.fin_prdt_cd = opt.fin_prdt_cd
                  WHERE uf.user_id = #{userId}
                  ORDER BY RAND()
-                 LIMIT 2
+                 LIMIT 3
              ) AS random_deposit
     </select>
 
@@ -320,7 +384,7 @@
                                     ON sp.kor_co_nm LIKE CONCAT('%', fc.kor_co_nm, '%')
                  WHERE uf.user_id = #{userId}
                  ORDER BY RAND()
-                 LIMIT 2
+                 LIMIT 3
              ) AS random_saving
     </select>
 
@@ -339,7 +403,7 @@
                           JOIN card_product c ON uf.card_product_id = c.card_product_id
                  WHERE uf.user_id = #{userId}
                  ORDER BY RAND()
-                 LIMIT 2
+                 LIMIT 3
              ) AS random_card
     </select>
 

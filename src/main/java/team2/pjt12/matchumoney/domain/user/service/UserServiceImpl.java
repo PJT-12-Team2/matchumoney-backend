@@ -112,6 +112,16 @@ public class UserServiceImpl implements UserService {
                 user.getNickname(),
                 persona,
                 user.getExp(),
+                user.getEmail(),
+                user.getProfileImageUrl(),
+                user.getIsSocialLogin(),                 // Boolean
+                user.getFavoriteId(),                    // 스키마에 없으면 null 또는 DTO/VO에서 제거
+                user.getGender() != null ? user.getGender().name() : null,  // String ("MALE"/"FEMALE")
+                user.getBirthDate(),                     // LocalDate
+                user.getCreatedTime(),                   // LocalDateTime
+                user.getLastModifiedTime(),              // LocalDateTime
+
+                // 기존 즐겨찾기 리스트들
                 favoriteDeposits,
                 favoriteSavings,
                 favoriteCards
