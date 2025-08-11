@@ -22,12 +22,36 @@ public class UserVO {
     private LocalDateTime lastModifiedTime;
     private Boolean isSocialLogin;
     private Long personaId;
+    private Long favoriteId;
     private Long productId;
     private Integer exp;
     private Gender gender;
     private LocalDate birthDate;
 
     @Builder
+    public UserVO(Long userId, String socialProvider, String socialId, String email,
+                  String password, String nickname, String profileImageUrl,
+                  LocalDateTime createdTime, LocalDateTime lastModifiedTime,
+                  Boolean socialLogin, Long personaId, Long favoriteId, Long productId,
+                  Integer exp, Gender gender, LocalDate birthDate) {
+        this.userId = userId;
+        this.socialProvider = socialProvider;
+        this.socialId = socialId;
+        this.email = email;
+        this.password = password;
+        this.nickname = nickname;
+        this.profileImageUrl = profileImageUrl;
+        this.createdTime = createdTime;
+        this.lastModifiedTime = lastModifiedTime;
+        this.isSocialLogin = socialLogin;
+        this.personaId = personaId;
+        this.favoriteId = favoriteId;
+        this.productId = productId;
+        this.exp = exp;
+        this.gender = gender;
+        this.birthDate = birthDate;
+    }
+
     public UserVO(String socialProvider, String socialId, String email,
                   String password, String nickname, String profileImageUrl, boolean socialLogin) {
         this.socialProvider = socialProvider;
