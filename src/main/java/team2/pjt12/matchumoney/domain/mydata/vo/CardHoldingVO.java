@@ -3,6 +3,7 @@ package team2.pjt12.matchumoney.domain.mydata.vo;
 import lombok.*;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @Getter
 @Setter
@@ -27,4 +28,7 @@ public class CardHoldingVO {
     private Timestamp lastModifiedTime;
     private Long userId;
     private String connectedId; // 마이데이터 발급 ID
+    
+    // 통합 조회 시 거래내역을 담기 위한 임시 필드 (DB 저장 안됨)
+    private List<CardTransactionVO> transactions;
 }
