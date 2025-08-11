@@ -156,67 +156,36 @@ public class KbCardServiceImpl implements KbCardService {
     public List<CardTransactionVO> syncAndSaveCardTransactions(
             Long userId, Long holdingId, String cardNo, String cardPw2, String birthDate, LocalDate startDate, LocalDate endDate
     ) throws Exception {
+        
+        log.info("🔄 개별 카드 업데이트 요청을 전체 카드 업데이트로 변경 - 사용자: {}, holdingId: {}", userId, holdingId);
+        
         // connectedId 가져오기 (이미 DB에 저장된 cardInfo를 통해)
-        CardHoldingVO cardInfo = kbCardMapper.selectKbCardByUserId(userId)
-                .stream()
-                .filter(card -> card.getHoldingId() != null && card.getHoldingId().equals(holdingId))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("해당 holdingId를 가진 카드를 찾을 수 없습니다."));
-
-        String connectedId = cardInfo.getConnectedId();
+        List<CardHoldingVO> userCards = kbCardMapper.selectKbCardByUserId(userId);
+        if (userCards.isEmpty()) {
+            throw new RuntimeException("사용자의 카드 정보가 없습니다. 먼저 카드를 등록해주세요.");
+        }
+        
+        String connectedId = userCards.get(0).getConnectedId();
         if (connectedId == null || connectedId.isEmpty()) {
             throw new RuntimeException("connectedId가 유효하지 않습니다. 카드 연동이 필요합니다.");
         }
 
-        // CodeF API를 통해 거래 내역 조회
-        List<CardTransactionVO> transactions = kbCardApiUtil.fetchKbCardTransactions(
-                connectedId, cardNo, cardPw2, birthDate, startDate, endDate, userId,
-                cardInfo.getFinId(), // CardHoldingVO의 finId를 CardTransactionVO의 finId로 사용
-                cardInfo.getCardId(), // CardHoldingVO의 cardId (카드고릴라 idx)를 CardTransactionVO의 cardId2로 사용
-                cardInfo.getCardName(), // CardHoldingVO의 cardName을 CardTransactionVO의 cardName으로 사용
-                holdingId // CardHoldingVO의 holdingId를 CardTransactionVO의 holdingId로 사용
-        );
-
-        // 기존 거래 내역 삭제 및 새 거래 내역 저장
-        log.debug("기존 거래 내역 삭제 시작 - holdingId: {}", holdingId);
-        kbCardTransactionMapper.deleteKbCardTransactionsByHoldingId(holdingId);
+        log.info("🔄 connectedId 기반 전체 거래내역 업데이트 시작 - 기간: {} ~ {}", startDate, endDate);
         
-        log.debug("새로운 거래 내역 저장 시작 - 총 {}건", transactions.size());
-        for (int i = 0; i < transactions.size(); i++) {
-            CardTransactionVO transaction = transactions.get(i);
-            
-            // 가맹점명을 기반으로 소비 분야 자동 분류
-            String originalMerchantName = transaction.getResMemberStoreName();
-            String category = merchantCategoryService.categorizeByMerchantName(originalMerchantName);
-            transaction.setResMemberStoreType(category);
-            
-            log.debug("거래 내역 분류 [{}/{}]: '{}' -> '{}'", 
-                    i + 1, transactions.size(), originalMerchantName, category);
-            
-            try {
-                kbCardTransactionMapper.insertKbCardTransaction(transaction);
-            } catch (Exception e) {
-                log.error("거래 내역 저장 실패 - 가맹점: '{}', 에러: {}", originalMerchantName, e.getMessage());
-                throw new RuntimeException("거래 내역 저장 중 오류가 발생했습니다: " + e.getMessage(), e);
-            }
-        }
+        // connectedId로 모든 카드의 거래내역을 업데이트 (카드번호 불필요)
+        List<CardTransactionVO> allTransactions = syncTransactionsByConnectedIdWithDateRange(userId, connectedId, startDate, endDate);
         
-        log.info("거래 내역 저장 완료 - 총 {}건 저장됨", transactions.size());
+        // 요청된 holdingId에 해당하는 거래내역만 필터링해서 반환
+        List<CardTransactionVO> filteredTransactions = allTransactions.stream()
+                .filter(transaction -> {
+                    // holdingId가 일치하는 거래내역만 반환
+                    return transaction.getHoldingId() != null && transaction.getHoldingId().equals(holdingId);
+                })
+                .collect(java.util.stream.Collectors.toList());
+                
+        log.info("✅ 전체 {}건 중 요청 카드 거래내역 {}건 반환", allTransactions.size(), filteredTransactions.size());
         
-        // 거래내역 업데이트 후 추천 카드 재계산 트리거 (비동기)
-        try {
-            if (cardInfo.getCardId() != null) { // 카드고릴라 매칭이 된 카드만
-                log.info("사용자 {}의 카드 {} 추천 재계산 트리거", userId, cardInfo.getCardId());
-                cardRecommendationRefreshService.refreshRecommendationsForUserCard(userId, cardInfo.getCardId());
-            } else {
-                log.debug("카드고릴라 매칭이 되지 않은 카드로 추천 재계산을 건너뜁니다. 카드명: {}", cardInfo.getCardName());
-            }
-        } catch (Exception e) {
-            log.warn("추천 재계산 트리거 중 오류 발생하였으나 거래내역 저장은 성공: 사용자 {}, 카드 {}", 
-                userId, cardInfo.getCardId(), e);
-        }
-        
-        return transactions;
+        return filteredTransactions;
     }
 
     @Override
@@ -238,6 +207,110 @@ public class KbCardServiceImpl implements KbCardService {
         // 최근 30일 거래내역 조회
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusDays(30);
+        
+        log.info("connectedId를 이용한 거래내역 동기화 시작 - 사용자: {}, 기간: {} ~ {}", userId, startDate, endDate);
+        
+        // connectedId로 모든 카드의 거래내역 조회
+        List<CardTransactionVO> allTransactions = kbCardApiUtil.fetchKbCardTransactionsByConnectedId(
+                connectedId, startDate, endDate, userId);
+        
+        if (allTransactions.isEmpty()) {
+            log.info("조회된 거래내역이 없습니다.");
+            return allTransactions;
+        }
+        
+        // 사용자의 기존 카드 정보 조회 (카드번호 매칭용)
+        List<CardHoldingVO> userCards = kbCardMapper.selectKbCardByUserId(userId);
+        Map<String, CardHoldingVO> cardMap = userCards.stream()
+                .collect(java.util.stream.Collectors.toMap(CardHoldingVO::getResCardNo, card -> card));
+        
+        List<CardTransactionVO> savedTransactions = new ArrayList<>();
+        int duplicateCount = 0;
+        
+        for (CardTransactionVO transaction : allTransactions) {
+            // 중복 체크
+            boolean exists = kbCardTransactionMapper.existsTransaction(
+                    userId, 
+                    transaction.getResCardNo(),
+                    transaction.getResUsedDate(),
+                    transaction.getResUsedTime(),
+                    transaction.getResApprovalNo()
+            );
+            
+            if (exists) {
+                duplicateCount++;
+                log.debug("중복 거래내역 건너뜀: {} - {} {}", 
+                        transaction.getResMemberStoreName(), 
+                        transaction.getResUsedDate(), 
+                        transaction.getResUsedTime());
+                continue;
+            }
+            
+            // 카드번호로 기존 카드 정보와 매칭
+            CardHoldingVO matchedCard = cardMap.get(transaction.getResCardNo());
+            if (matchedCard != null) {
+                transaction.setFinId(matchedCard.getFinId());
+                transaction.setHoldingId(matchedCard.getHoldingId()); // holdingId 설정 추가
+                transaction.setCardId2(matchedCard.getCardId());
+                transaction.setCardName(matchedCard.getCardName());
+            } else {
+                log.warn("매칭되지 않은 카드번호: {} - 거래내역 저장하지만 카드 정보 누락", transaction.getResCardNo());
+                // finId, holdingId, cardId2를 null로 설정하고 저장
+                transaction.setFinId(null);
+                transaction.setHoldingId(null);
+                transaction.setCardId2(null);
+            }
+            
+            // 가맹점명 기반 카테고리 자동 분류
+            String category = merchantCategoryService.categorizeByMerchantName(transaction.getResMemberStoreName());
+            transaction.setResMemberStoreType(category);
+            
+            try {
+                kbCardTransactionMapper.insertKbCardTransaction(transaction);
+                savedTransactions.add(transaction);
+                
+                log.debug("거래내역 저장 완료: {} - {} {} ({})", 
+                        transaction.getResMemberStoreName(),
+                        transaction.getResUsedDate(),
+                        transaction.getResUsedTime(),
+                        category);
+            } catch (Exception e) {
+                log.error("거래내역 저장 실패: {} - {}", transaction.getResMemberStoreName(), e.getMessage());
+            }
+        }
+        
+        log.info("거래내역 동기화 완료 - 총 조회: {}건, 중복: {}건, 저장: {}건", 
+                allTransactions.size(), duplicateCount, savedTransactions.size());
+        
+        // 추천 재계산 트리거 (저장된 거래내역이 있는 카드들에 대해)
+        Set<Integer> affectedCardIds = savedTransactions.stream()
+                .filter(t -> t.getCardId2() != null)
+                .map(CardTransactionVO::getCardId2)
+                .collect(java.util.stream.Collectors.toSet());
+        
+        for (Integer cardId : affectedCardIds) {
+            try {
+                log.info("카드 {}에 대한 추천 재계산 트리거", cardId);
+                cardRecommendationRefreshService.refreshRecommendationsForUserCard(userId, cardId);
+            } catch (Exception e) {
+                log.warn("추천 재계산 트리거 중 오류 발생: 사용자 {}, 카드 {} - {}", userId, cardId, e.getMessage());
+            }
+        }
+        
+        return savedTransactions;
+    }
+
+    /**
+     * connectedId를 이용하여 특정 날짜 범위의 거래내역을 동기화하는 메서드
+     * @param userId 사용자 ID
+     * @param connectedId 연결 ID  
+     * @param startDate 조회 시작일
+     * @param endDate 조회 종료일
+     * @return 동기화된 거래내역 목록
+     * @throws Exception API 호출 실패시
+     */
+    public List<CardTransactionVO> syncTransactionsByConnectedIdWithDateRange(
+            Long userId, String connectedId, LocalDate startDate, LocalDate endDate) throws Exception {
         
         log.info("connectedId를 이용한 거래내역 동기화 시작 - 사용자: {}, 기간: {} ~ {}", userId, startDate, endDate);
         
