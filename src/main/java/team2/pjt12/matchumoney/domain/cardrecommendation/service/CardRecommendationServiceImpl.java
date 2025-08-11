@@ -34,18 +34,21 @@ public class CardRecommendationServiceImpl implements CardRecommendationService 
 
     @Override
     public MyCardBenefitResponseDTO calculateSpecificCardBenefit(Long userId, Integer cardId) {
-        log.info("사용자 {}의 특정 카드 {} 혜택 계산 시작", userId, cardId);
+        log.info("🔍 사용자 {}의 특정 카드 {} 혜택 계산 시작", userId, cardId);
 
         // 분석 기간 설정 (최근 30일)
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusDays(ANALYSIS_PERIOD_DAYS);
 
-        // 특정 카드의 카테고리별 거래 통계 조회
+        // 특정 카드의 카테고리별 거래 통계 조회 (holding_id 기준)
+        log.info("🔍 거래내역 통계 조회 - userId: {}, cardId: {}, 기간: {} ~ {}", 
+            userId, cardId, startDate, endDate);
         List<CardTransactionSummaryVO> transactionSummaries = 
             cardRecommendationMapper.selectTransactionSummaryByUserAndCard(userId, cardId, startDate, endDate);
 
+        log.info("📊 거래내역 통계 조회 완료 - 카테고리 수: {}", transactionSummaries.size());
         if (transactionSummaries.isEmpty()) {
-            log.warn("사용자 {}의 카드 {}에 대한 최근 {}일 거래 내역이 없습니다.", userId, cardId, ANALYSIS_PERIOD_DAYS);
+            log.warn("⚠️ 사용자 {}의 카드 {}에 대한 최근 {}일 거래 내역이 없습니다.", userId, cardId, ANALYSIS_PERIOD_DAYS);
             return MyCardBenefitResponseDTO.builder()
                 .totalSpendAmount(0L)
                 .categoryStats(Collections.emptyList())
@@ -286,11 +289,18 @@ public class CardRecommendationServiceImpl implements CardRecommendationService 
 
         for (CardProductVO card : ownedCards) {
             try {
+                log.info("🔍 카드 혜택 계산 시작 - 카드: '{}', cardProductId: {}", 
+                    card.getName(), card.getCardProductId());
                 MyCardBenefitResponseDTO cardBenefit = calculateSpecificCardBenefit(userId, card.getCardProductId());
                 myCardsBenefits.add(cardBenefit);
+                long totalBenefit = cardBenefit.getOwnedCardBenefits().stream()
+                    .mapToLong(benefit -> benefit.getEstimatedBenefit() != null ? benefit.getEstimatedBenefit() : 0L)
+                    .sum();
+                log.info("✅ 카드 혜택 계산 완료 - 카드: '{}', 총혜택: {}원, 카테고리: {}개", 
+                    card.getName(), totalBenefit, cardBenefit.getCategoryStats().size());
             } catch (Exception e) {
-                log.warn("사용자 {}의 카드 {} 혜택 계산 중 오류 발생, 건너뜁니다: {}", 
-                    userId, card.getCardProductId(), e.getMessage());
+                log.warn("⚠️ 사용자 {}의 카드 {} ('{}') 혜택 계산 중 오류 발생, 건너뜁니다: {}", 
+                    userId, card.getCardProductId(), card.getName(), e.getMessage());
             }
         }
 
@@ -542,8 +552,8 @@ public class CardRecommendationServiceImpl implements CardRecommendationService 
             
             String message = String.format("KB국민카드에서 발급 가능한 카드 %d개를 조회했습니다.", kbCardDTOs.size());
             
-            log.info("KB국민카드 추천 완료: {} 개", kbCardDTOs.size());
-            
+             log.info("KB국민카드 추천 완료: {} 개", kbCardDTOs.size());
+
             return KbCardRecommendationResponseDTO.builder()
                 .kbCards(kbCardDTOs)
                 .totalCount(kbCardDTOs.size())
