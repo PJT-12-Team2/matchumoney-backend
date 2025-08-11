@@ -25,7 +25,8 @@
         AND uf.user_id = #{userId}
         ) AS isStarred
         FROM saving_product sp
-        LEFT JOIN financial_companies fc ON sp.kor_co_nm = fc.kor_co_nm
+        LEFT JOIN financial_companies fc
+        ON INSTR(sp.kor_co_nm, fc.kor_co_nm) > 0 OR INSTR(fc.kor_co_nm, sp.kor_co_nm) > 0
         WHERE sp.saving_product_id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">
             #{id}
@@ -67,7 +68,8 @@
         AND uf.user_id = #{userId}
         ) AS isStarred
         FROM deposit_product dp
-        LEFT JOIN financial_companies fc ON dp.kor_co_nm = fc.kor_co_nm
+        LEFT JOIN financial_companies fc
+        ON INSTR(dp.kor_co_nm, fc.kor_co_nm) > 0 OR INSTR(fc.kor_co_nm, dp.kor_co_nm) > 0
         WHERE dp.deposit_product_id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">
             #{id}
@@ -96,7 +98,8 @@
                sp.fin_prdt_nm       AS finPrdtName,
                fc.company_image     AS image
         FROM saving_product sp
-                 LEFT JOIN financial_companies fc ON sp.kor_co_nm = fc.kor_co_nm
+                 LEFT JOIN financial_companies fc
+                           ON INSTR(sp.kor_co_nm, fc.kor_co_nm) > 0 OR INSTR(fc.kor_co_nm, sp.kor_co_nm) > 0
     </select>
     <select id="selectAllDepositProducts"
             resultType="team2.pjt12.matchumoney.domain.compare.dto.SearchProductResponseDTO">
@@ -105,7 +108,8 @@
                dp.fin_prdt_nm        AS finPrdtName,
                fc.company_image      AS image
         FROM deposit_product dp
-                 LEFT JOIN financial_companies fc ON dp.kor_co_nm = fc.kor_co_nm
+                 LEFT JOIN financial_companies fc
+                           ON INSTR(dp.kor_co_nm, fc.kor_co_nm) > 0 OR INSTR(fc.kor_co_nm, dp.kor_co_nm) > 0
     </select>
     <select id="selectAllCardProducts"
             resultType="team2.pjt12.matchumoney.domain.compare.dto.SearchProductResponseDTO">
