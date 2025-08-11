@@ -12,6 +12,7 @@ import java.sql.Timestamp;
 public class CardTransactionVO {
     private Long transactionId;
     private Long finId;
+    private Long holdingId; // mydata_card_holdings의 holding_id
     private Integer cardId2; // mydata_card_holdings의 card_id (카드고릴라 idx)
     private Long userId;
     private String cardName; // 카드고릴라 기준 카드 이름 (CardInfoVO에서 가져옴)
