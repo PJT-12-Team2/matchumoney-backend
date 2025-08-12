@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="team2.pjt12.matchumoney.domain.education.mapper.WebtoonMapper">
+    <resultMap id="InformationBoardResultMap" type="team2.pjt12.matchumoney.domain.education.domain.WebtoonVO">
+        <id property="id" column="id" />
+        <result property="title" column="title" />
+        <result property="fileDownUrl" column="fileDownUrl" />
+        <result property="typeCode" column="typeCode" />
+    </resultMap>
+
+    <!-- 웹툰 메인 이미지 조회 (typeCode=3) -->
+    <select id="findWebtoonMain" resultMap="InformationBoardResultMap">
+        SELECT
+            id,
+            title,
+            fileDownUrl,
+            typeCode
+        FROM information_board
+        WHERE typeCode = 3
+          AND fileDownUrl LIKE '%fileSn=1%'
+        ORDER BY id DESC
+    </select>
+
+    <!-- 웹툰 상위 4개만 추출  -->
+    <select id="findWebtoonMainTop4" resultMap="InformationBoardResultMap">
+        SELECT
+            id,
+            title,
+            fileDownUrl,
+            typeCode
+        FROM information_board
+        WHERE typeCode = 3
+          AND fileDownUrl LIKE '%fileSn=1%'
+        ORDER BY id DESC
+        LIMIT 4
+    </select>
+
+</mapper>
