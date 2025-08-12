@@ -5,7 +5,7 @@
     <!-- 거래 내역 삽입 (카테고리 포함) -->
     <insert id="insertKbCardTransaction" parameterType="team2.pjt12.matchumoney.domain.mydata.vo.CardTransactionVO">
         INSERT INTO mydata_card_transactions (
-            fin_id, card_id2, user_id, card_name, res_used_date, res_used_time,
+            fin_id, holding_id, card_id2, user_id, card_name, res_used_date, res_used_time,
             res_card_no, res_card_no1, res_card_name, res_member_store_name,
             res_used_amount, res_payment_type, res_installment_month, res_approval_no,
             res_payment_due_date, res_home_foreign_type, res_member_store_corp_no,
@@ -14,7 +14,7 @@
             res_cash_back, res_krw_amt, comm_start_date, comm_end_date,
             res_account_currency, created_time, last_modified_time
         ) VALUES (
-            #{finId}, #{cardId2}, #{userId}, #{cardName}, #{resUsedDate}, #{resUsedTime},
+            #{finId}, #{holdingId}, #{cardId2}, #{userId}, #{cardName}, #{resUsedDate}, #{resUsedTime},
             #{resCardNo}, #{resCardNo1}, #{resCardName}, #{resMemberStoreName},
             #{resUsedAmount}, #{resPaymentType}, #{resInstallmentMonth}, #{resApprovalNo},
             #{resPaymentDueDate}, #{resHomeForeignType}, #{resMemberStoreCorpNo},
@@ -37,6 +37,7 @@
         SELECT
             transaction_id,
             fin_id,
+            holding_id,
             card_id2,
             user_id,
             card_name,
@@ -88,6 +89,7 @@
         SELECT
             transaction_id,
             fin_id,
+            holding_id,
             card_id2,
             user_id,
             card_name,
@@ -132,5 +134,16 @@
         WHERE res_member_store_name = #{merchantName}
         AND (res_member_store_type IS NULL OR res_member_store_type = '')
     </update>
+    
+    <!-- 거래내역 중복 체크 -->
+    <select id="existsTransaction" parameterType="map" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM mydata_card_transactions
+        WHERE user_id = #{userId}
+        AND res_card_no = #{cardNo}
+        AND res_used_date = #{usedDate}
+        AND res_used_time = #{usedTime}
+        AND res_approval_no = #{approvalNo}
+    </select>
 
 </mapper>
