@@ -437,4 +437,20 @@
         SET exp = exp + #{expAmount}
         WHERE user_id = #{userId}
     </update>
+
+    <!-- 상위 퍼센트용 -->
+    <select id="percentileFindExpByUserId" parameterType="long" resultType="long">
+        SELECT COALESCE(exp, 0) FROM users WHERE user_id = #{userId}
+    </select>
+
+    <select id="percentileCountAllUsers" resultType="long">
+        SELECT COUNT(*) FROM users
+    </select>
+
+    <select id="percentileCountLowerAndEqualByExp" parameterType="long" resultType="map">
+        SELECT
+            SUM(CASE WHEN exp &lt; #{exp} THEN 1 ELSE 0 END) AS lowerCnt,
+            SUM(CASE WHEN exp = #{exp} THEN 1 ELSE 0 END) AS equalCnt
+        FROM users
+    </select>
 </mapper>

@@ -17,6 +17,7 @@ import team2.pjt12.matchumoney.domain.user.dto.res.MyPageResponseDTO;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Mapper
@@ -79,4 +80,9 @@ public interface UserMapper {
     
     // 경험치(EXP) 업데이트
     void updateUserExp(@Param("userId") Long userId, @Param("expAmount") int expAmount);
+
+    // 상위 퍼센트용
+    Long percentileFindExpByUserId(@Param("userId") Long userId);
+    Long percentileCountAllUsers();
+    Map<String, Object> percentileCountLowerAndEqualByExp(@Param("exp") long exp);
 }
