@@ -11,7 +11,8 @@ public class WebConfig extends AbstractAnnotationConfigDispatcherServletInitiali
     protected Class<?>[] getRootConfigClasses() {
         return new Class[] {
                 AppConfig.class,
-                MyBatisConfig.class
+                MyBatisConfig.class,
+                FirebaseConfig.class
         };
     }
 

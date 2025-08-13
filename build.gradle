@@ -113,6 +113,8 @@ dependencies {
     //암호화
     implementation 'commons-codec:commons-codec:1.15'
     implementation "org.bouncycastle:bcprov-jdk18on:${BouncyCastleVersion}"
+
+    implementation 'com.google.firebase:firebase-admin:9.2.0'
 }
 
 test {
