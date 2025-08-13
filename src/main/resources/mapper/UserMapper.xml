@@ -37,7 +37,6 @@
             last_modified_time,
             is_social_login,
             persona_id,
-            favorite_id,
             exp,
             gender,
             birth_date
@@ -60,7 +59,6 @@
             last_modified_time,
             is_social_login,
             persona_id,
-            favorite_id,
             exp,
             gender,
             birth_date
@@ -88,7 +86,6 @@
             last_modified_time,
             is_social_login,
             persona_id,
-            favorite_id,
             exp,
             gender,
             birth_date
