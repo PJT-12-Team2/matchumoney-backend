@@ -24,7 +24,7 @@
         AND uf.user_id = #{userId}
         ) AS isStarred,
 
-        /* 좋아요 여부: EXISTS로 통일, 실제 컬럼명에 맞춰 card_id2 사용 */
+        /* 좋아요 여부 */
         EXISTS (
         SELECT 1
         FROM user_likes ul
@@ -32,7 +32,7 @@
         AND ul.user_id = #{userId}
         ) AS isLiked,
 
-        /* 좋아요 수: 동일 컬럼 사용 */
+        /* 좋아요 수 */
         (
         SELECT COUNT(*)
         FROM user_likes
@@ -75,6 +75,7 @@
             </if>
         </where>
     </select>
+
     <!-- 좋아요 여부 조회 -->
     <select id="isLikedByUser" resultType="boolean">
         SELECT EXISTS(
@@ -83,9 +84,6 @@
               AND card_id2 = #{cardProductId}
         )
     </select>
-
-
-
 
     <!-- 좋아요 개수 조회 -->
     <select id="countLikesByProductId" resultType="int">
@@ -103,4 +101,60 @@
         WHERE user_id = #{userId} AND card_id2 = #{cardProductId}
     </delete>
 
+    <!-- 커서 기반 무한 스크롤: id DESC -->
+    <select id="selectCardsByCursor"
+            resultType="team2.pjt12.matchumoney.domain.cardsearch.dto.CardListItemDTO">
+        SELECT /* DISTINCT 생략: 조인 시 중복 방지 필요하면 DISTINCT 유지 */
+        cp.card_product_id AS id,
+        cp.name,
+        cp.issuer,
+        cp.pre_month_money AS preMonthMoney,
+        cp.annual_fee      AS annualFee,
+        cp.card_image_url  AS imageUrl
+        FROM card_product cp
+
+        <!-- 혜택 필터 있을 때만 조인 -->
+        <if test="request.selectedBenefits != null and request.selectedBenefits.size() > 0">
+            LEFT JOIN card_search_benefit csb
+            ON cp.card_product_id = csb.card_id2
+        </if>
+
+        <where>
+            cp.is_available = 1
+
+            <!-- 카드 타입 필터 -->
+            <choose>
+                <when test="request.creditCard == true and request.debitCard == true">
+                    AND (cp.type = '신용' OR cp.type = '체크')
+                </when>
+                <when test="request.creditCard == true and request.debitCard == false">
+                    AND cp.type = '신용'
+                </when>
+                <when test="request.creditCard == false and request.debitCard == true">
+                    AND cp.type = '체크'
+                </when>
+                <otherwise>
+                    AND 1=1
+                </otherwise>
+            </choose>
+
+            <!-- 혜택 필터 (benefit_text의 첫 단어 매칭) -->
+            <if test="request.selectedBenefits != null and request.selectedBenefits.size() > 0">
+                AND (
+                <foreach item="benefit" collection="request.selectedBenefits" separator=" OR ">
+                    (csb.benefit_text IS NOT NULL
+                    AND SUBSTRING_INDEX(csb.benefit_text, ' ', 1) = #{benefit})
+                </foreach>
+                )
+            </if>
+
+            <!-- 커서 조건: id DESC에서 다음 페이지는 더 작은 id -->
+            <if test="cursorId != null">
+                AND cp.card_product_id &lt; #{cursorId}
+            </if>
+        </where>
+
+        ORDER BY cp.card_product_id DESC
+        LIMIT #{limit}
+    </select>
 </mapper>
