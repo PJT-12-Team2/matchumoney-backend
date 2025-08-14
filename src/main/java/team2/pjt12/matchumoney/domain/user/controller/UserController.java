@@ -8,10 +8,13 @@ import team2.pjt12.matchumoney.domain.user.dto.req.UpdateUserInfoRequestDTO;
 import team2.pjt12.matchumoney.domain.user.dto.res.MyPageResponseDTO;
 import team2.pjt12.matchumoney.domain.user.dto.res.UserResponseDTO;
 import team2.pjt12.matchumoney.domain.user.dto.res.UserUpdateResponseDTO;
+import team2.pjt12.matchumoney.domain.user.service.UserPercentileService;
 import team2.pjt12.matchumoney.domain.user.service.UserService;
 import team2.pjt12.matchumoney.global.success.SuccessResponse;
 
 import javax.validation.Valid;
+
+import static team2.pjt12.matchumoney.global.util.SecurityUtils.getCurrentUser;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,6 +23,7 @@ import javax.validation.Valid;
 public class UserController {
 
     private final UserService userService;
+    private final UserPercentileService userPercentileService;
 
     @PatchMapping("/update")
     public SuccessResponse<UserUpdateResponseDTO> updateUserInfo(@RequestBody @Valid UpdateUserInfoRequestDTO reqDto) {
@@ -52,4 +56,10 @@ public class UserController {
         return new SuccessResponse<>("페르소나 저장 성공");
     }
 
+    @GetMapping("/mypage/top-percent")
+    public SuccessResponse<Integer> getMyTopPercent() {
+        long userId = getCurrentUser().getUserId();
+        int top = userPercentileService.calcTopPercent(userId);
+        return new SuccessResponse<>(top, "전체 유저 누적 EXP 기준 상위 퍼센트");
+    }
 }
