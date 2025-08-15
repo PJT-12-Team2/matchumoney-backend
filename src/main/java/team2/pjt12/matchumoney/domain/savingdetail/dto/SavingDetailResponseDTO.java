@@ -30,6 +30,7 @@ public class SavingDetailResponseDTO {
     private boolean liked;
     private int likeCount;
     private Boolean isStarred;
+    private String requestUrl;
     // 1:N 관계
     private List<SavingOptionDTO> options;
 }

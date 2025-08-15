@@ -13,4 +13,6 @@ public class UpdateUserInfoRequestDTO {
     public Gender gender;
 
     public LocalDate birthDate;
+
+    public String profileImageUrl;   // ← 추가
 }
