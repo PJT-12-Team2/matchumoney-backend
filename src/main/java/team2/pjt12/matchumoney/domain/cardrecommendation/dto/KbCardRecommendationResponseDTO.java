@@ -1,5 +1,6 @@
 package team2.pjt12.matchumoney.domain.cardrecommendation.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,6 +18,9 @@ public class KbCardRecommendationResponseDTO {
     private List<KbCardProductDTO> kbCards;
     private int totalCount;
     private String message;
+    private boolean hasNext;
+    private int currentPage;
+    private int pageSize;
 
     @Getter
     @Setter
@@ -36,5 +40,14 @@ public class KbCardRecommendationResponseDTO {
         private String corpPrContainer;
         private String corpTips;
         private String issuer;
+        
+        @JsonProperty("is_liked")
+        private Boolean liked;
+        
+        @JsonProperty("like_count")
+        private Integer likeCount;
+        
+        @JsonProperty("is_favorited")
+        private Boolean favorited;
     }
 }
