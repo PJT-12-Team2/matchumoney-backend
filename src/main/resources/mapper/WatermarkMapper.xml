@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="team2.pjt12.matchumoney.domain.push.mapper.WatermarkMapper">
+
+    <select id="getLastChecked" resultType="java.time.LocalDateTime">
+        SELECT last_checked_at
+        FROM product_change_watermark
+        WHERE table_name = #{table}
+            LIMIT 1
+    </select>
+
+    <insert id="upsertLastChecked">
+        INSERT INTO product_change_watermark (table_name, last_checked_at)
+        VALUES (#{table}, #{ts})
+            ON DUPLICATE KEY UPDATE last_checked_at = VALUES(last_checked_at)
+    </insert>
+
+</mapper>

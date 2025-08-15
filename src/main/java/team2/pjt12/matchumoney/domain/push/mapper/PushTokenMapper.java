@@ -19,4 +19,8 @@ public interface PushTokenMapper {
 
     int updateLastSeenAt(@Param("token") String token,
                          @Param("lastSeenAt") Instant lastSeenAt);
+
+    List<String> findTokensByUserId(@Param("userId") Long userId);
+
+    List<String> findTokensByUserIds(@Param("userIds") List<Long> userIds);
 }

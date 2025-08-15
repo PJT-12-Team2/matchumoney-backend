@@ -8,18 +8,30 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
-import team2.pjt12.matchumoney.domain.persona.chatbot.util.OpenAIClient;
 
 import javax.sql.DataSource;
 
 @Configuration
-@ComponentScan(basePackages = "team2.pjt12")  // 패키지 구조에 맞게 수정
 @PropertySource("classpath:application.properties")
 @PropertySource("classpath:openAI.properties")
 @EnableTransactionManagement
+@ComponentScan(
+        basePackages = "team2.pjt12",
+        includeFilters = {
+                @ComponentScan.Filter(Service.class),
+                @ComponentScan.Filter(Repository.class),
+                @ComponentScan.Filter(Component.class) // 필요 시
+        },
+        excludeFilters = @ComponentScan.Filter(Controller.class),
+        useDefaultFilters = false
+)
 public class AppConfig {
 
     @Value("${db.url}")

@@ -20,7 +20,6 @@ public class WebConfig extends AbstractAnnotationConfigDispatcherServletInitiali
     protected Class<?>[] getServletConfigClasses() {
         return new Class[] {
                 SwaggerConfig.class,
-                AppConfig.class,
                 MvcConfig.class,
         };
     }
