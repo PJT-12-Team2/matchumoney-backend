@@ -125,4 +125,21 @@ public interface KbCardService {
      * @return 카테고리별 거래 건수 맵 (카테고리명 -> 건수)
      */
     Map<String, Long> getCategoryStatistics(List<CardTransactionVO> transactions);
+    
+    /**
+     * connectedId를 사용하여 최근 30일 카드 거래내역을 조회하고 저장합니다.
+     * 
+     * 주요 기능:
+     *   connectedId를 통해 모든 카드의 거래내역 조회
+     *   카드번호 기반으로 기존 카드 정보와 매칭
+     *   중복 거래내역 방지 (기존 데이터와 비교)
+     *   새로운 거래내역만 저장
+     *   카테고리 자동 분류 및 추천 재계산 트리거
+     * 
+     * @param userId 사용자 ID
+     * @param connectedId KB카드 마이데이터 연동 ID
+     * @return 저장된 거래 내역 목록
+     * @throws Exception 마이데이터 API 호출 실패 등
+     */
+    List<CardTransactionVO> syncTransactionsByConnectedId(Long userId, String connectedId) throws Exception;
 }

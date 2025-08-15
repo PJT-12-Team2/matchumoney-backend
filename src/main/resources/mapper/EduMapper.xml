@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="team2.pjt12.matchumoney.domain.education.mapper.EduMapper">
+
+
+    <select id="getEduMovieList"
+            parameterType="map"
+            resultType="team2.pjt12.matchumoney.domain.education.dto.EduMovieResponseDTO">
+        SELECT id,
+               title       AS title,
+               smrtnCntnt  AS smrtnCntnt,
+               Institution AS Institution,
+               link        AS link,
+               fileDownUrl AS url
+        FROM information_board
+        WHERE typeCode = 1
+          AND link LIKE '%youtube%'
+        ORDER BY created_at DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="countEduMovie" resultType="long">
+        SELECT COUNT(*)
+        FROM information_board
+        WHERE typeCode = 1
+          AND link LIKE '%youtube%';
+    </select>
+
+</mapper>

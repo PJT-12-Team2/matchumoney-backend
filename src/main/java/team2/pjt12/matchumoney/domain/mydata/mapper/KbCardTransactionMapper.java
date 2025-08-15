@@ -39,4 +39,14 @@ public interface KbCardTransactionMapper {
      * 동일한 가맹점명을 가진 모든 거래 내역의 카테고리를 일괄 업데이트합니다.
      */
     void updateAllTransactionsCategory(@Param("merchantName") String merchantName, @Param("category") String category);
+    
+    /**
+     * 거래내역 중복 체크를 위한 메서드
+     * 사용자ID, 카드번호, 거래일, 거래시간, 승인번호를 기준으로 기존 거래내역 존재 여부 확인
+     */
+    boolean existsTransaction(@Param("userId") Long userId, 
+                            @Param("cardNo") String cardNo,
+                            @Param("usedDate") String usedDate, 
+                            @Param("usedTime") String usedTime,
+                            @Param("approvalNo") String approvalNo);
 }

@@ -20,10 +20,7 @@ import team2.pjt12.matchumoney.domain.mydata.vo.CardTransactionVO;
 import team2.pjt12.matchumoney.global.success.SuccessResponse;
 
 import javax.validation.Valid;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -145,5 +142,45 @@ public class KbCardController {
                 holdingId, responseDTOList.size(), categoryStats);
 
         return ResponseEntity.ok(new SuccessResponse<>(responseDTOList, message));
+    }
+    
+    @PutMapping("/transactions/refresh/{userId}")
+    @ApiOperation(
+            value = "connectedId 기반 거래내역 업데이트",
+            notes = "connectedId를 사용하여 최근 30일 카드 거래내역을 조회하고 업데이트합니다. " +
+                    "카드번호와 비밀번호 입력 없이 connectedId만으로 모든 카드의 거래내역을 가져옵니다. " +
+                    "중복 거래내역은 자동으로 필터링되어 새로운 거래내역만 저장됩니다. " +
+                    "프론트엔드의 '내역 업데이트' 버튼과 연결됩니다."
+    )
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "거래내역 업데이트 성공"),
+            @ApiResponse(code = 400, message = "connectedId가 없거나 잘못된 요청"),
+            @ApiResponse(code = 401, message = "인증 실패"),
+            @ApiResponse(code = 404, message = "사용자 카드 정보를 찾을 수 없음"),
+            @ApiResponse(code = 500, message = "MyData API 호출 실패 또는 서버 오류")
+    })
+    public ResponseEntity<SuccessResponse<List<CardTransactionResponseDTO>>> refreshTransactionsByConnectedId(
+            @ApiParam(value = "사용자 ID", required = true, example = "1")
+            @PathVariable Long userId) throws Exception {
+            
+        // 사용자 카드 목록에서 connectedId 조회
+        List<CardHoldingVO> userCards = kbCardService.getCards(userId);
+        if (userCards.isEmpty()) {
+            return ResponseEntity.badRequest().body(new SuccessResponse<>(new ArrayList<>(),
+                    "사용자의 카드 정보가 없습니다. 먼저 카드를 등록해주세요."));
+        }
+        
+        String connectedId = userCards.get(0).getConnectedId();
+        if (connectedId == null || connectedId.isEmpty()) {
+            return ResponseEntity.badRequest().body(new SuccessResponse<>(new ArrayList<>(),
+                    "connectedId가 없습니다. 카드를 다시 등록해주세요."));
+        }
+        
+        // connectedId를 사용하여 거래내역 업데이트
+        List<CardTransactionVO> updatedTransactions = kbCardService.syncTransactionsByConnectedId(userId, connectedId);
+        List<CardTransactionResponseDTO> responseDTOList = CardDTOConverter.toCardTransactionResponseDTOList(updatedTransactions);
+        
+        return ResponseEntity.ok(new SuccessResponse<>(responseDTOList,
+                String.format("최근 30일 거래내역이 업데이트되었습니다. 새로 추가된 거래내역: %d건", responseDTOList.size())));
     }
 }
