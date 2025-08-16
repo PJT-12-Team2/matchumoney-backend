@@ -80,7 +80,6 @@ public class CodefApiClient {
                     .uri(URI.create(url))
                     .header("Authorization", "Bearer " + token)
                     .header("Content-Type", "application/json")
-                    .timeout(Duration.ofSeconds(30))
                     .POST(HttpRequest.BodyPublishers.ofString(payload, StandardCharsets.UTF_8))
                     .build();
 
