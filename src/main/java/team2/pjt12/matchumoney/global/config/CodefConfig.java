@@ -11,12 +11,12 @@ import org.springframework.context.annotation.PropertySource;
 @PropertySource("classpath:application.properties")
 public class CodefConfig {
 
-    @Value("${codef.client-id}")
+    @Value("${mydata.clientId}")
     private String clientId;
 
-    @Value("${codef.client-secret}")
+    @Value("${mydata.clientSecret}")
     private String clientSecret;
 
-    @Value("${codef.public-key}")
+    @Value("${mydata.publicKey}")
     private String publicKey;
 }
