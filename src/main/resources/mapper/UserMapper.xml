@@ -95,9 +95,12 @@
 
     <update id="updateUserInfo">
         UPDATE users
-        SET nickname = #{nickname},
-            gender = #{gender},
-            birth_date = #{birthDate}
+        <set>
+            <if test="nickname != null">nickname = #{nickname},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="birthDate != null">birth_date = #{birthDate},</if>
+            <if test="profileImageUrl != null">profile_image_url = #{profileImageUrl},</if>
+        </set>
         WHERE user_id = #{userId}
     </update>
 

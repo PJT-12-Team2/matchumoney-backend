@@ -22,6 +22,9 @@ import team2.pjt12.matchumoney.domain.user.mapper.UserMapper;
 import team2.pjt12.matchumoney.global.jwt.JwtAuthenticationFilter;
 import team2.pjt12.matchumoney.global.jwt.JwtLogoutHandler;
 import team2.pjt12.matchumoney.global.jwt.JwtService;
+import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.Arrays;
@@ -105,7 +108,13 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        Map<String, PasswordEncoder> encoders = new HashMap<>();
+        encoders.put("bcrypt", new BCryptPasswordEncoder());
+
+        DelegatingPasswordEncoder dpe = new DelegatingPasswordEncoder("bcrypt", encoders);
+        // DB 값에 {bcrypt} 프리픽스가 없어도 bcrypt로 매칭되도록
+        dpe.setDefaultPasswordEncoderForMatches(new BCryptPasswordEncoder());
+        return dpe;
     }
 
     @Bean

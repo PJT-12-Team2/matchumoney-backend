@@ -30,7 +30,9 @@ java {
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
-
+repositories {
+    mavenCentral()
+}
 dependencies {
 
     // Spring Core / MVC
@@ -113,6 +115,9 @@ dependencies {
     //암호화
     implementation 'commons-codec:commons-codec:1.15'
     implementation "org.bouncycastle:bcprov-jdk18on:${BouncyCastleVersion}"
+
+    implementation platform('software.amazon.awssdk:bom:2.25.64')
+    implementation 'software.amazon.awssdk:s3'
 }
 
 test {

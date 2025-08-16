@@ -38,7 +38,7 @@ public class UserServiceImpl implements UserService {
         UserVO user = userMapper.findByUserId(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        userMapper.updateUserInfo(userId, reqDto.nickname, reqDto.gender, reqDto.birthDate);
+        userMapper.updateUserInfo(userId, reqDto.nickname, reqDto.gender, reqDto.birthDate, reqDto.profileImageUrl);
 
         return new UserUpdateResponseDTO(userId);
     }
@@ -71,18 +71,31 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public UserResponseDTO getMyInfo() {
-        UserVO user = getCurrentUser();
-        if (user == null) {
-            throw new CustomException(ErrorCode.USER_NOT_FOUND);
+        Long userId = getCurrentUser().getUserId();
+
+        UserVO user = userMapper.findByUserId(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        // DB 값이 있으면 그대로 사용, 없으면 provider로 판별
+        Boolean isSocial = user.getIsSocialLogin();
+        if (isSocial == null) {
+            String pv = user.getSocialProvider(); // ← 여기 수정
+            isSocial = pv != null && !pv.equalsIgnoreCase("LOCAL");
         }
+
+        // hasPassword: DB 컬럼 없으면 password로 판별
+        Boolean hasPassword = (user.getPassword() != null && !user.getPassword().isBlank());
 
         return new UserResponseDTO(
                 user.getUserId(),
                 user.getEmail(),
                 user.getNickname(),
                 user.getProfileImageUrl(),
-                user.getGender(),
-                user.getBirthDate()
+                user.getGender(),           // Gender enum
+                user.getBirthDate(),        // LocalDate
+                isSocial,
+                user.getSocialProvider(),   // provider 문자열
+                hasPassword
         );
     }
     @Override

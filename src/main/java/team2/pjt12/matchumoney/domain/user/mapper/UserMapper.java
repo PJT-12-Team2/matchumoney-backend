@@ -35,7 +35,8 @@ public interface UserMapper {
             @Param("userId") Long userId,
             @Param("nickname") String nickname,
             @Param("gender") Gender gender,
-            @Param("birthDate") LocalDate birthDate);
+            @Param("birthDate") LocalDate birthDate,
+            @Param("profileImageUrl") String profileImageUrl);
 
     void updatePassword(@Param("userId") Long userId, @Param("newPassword") String newPassword);
 
