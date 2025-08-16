@@ -26,4 +26,5 @@ public final class CodefApiConstants {
     public static final String BUSINESS_TYPE_BANK = "BK";
     public static final String CLIENT_TYPE_PERSONAL = "P";
     public static final String LOGIN_TYPE_ID_PASSWORD = "1";
+
 }
