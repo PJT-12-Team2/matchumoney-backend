@@ -4,6 +4,9 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
+import team2.pjt12.matchumoney.domain.carddetail.dto.CardOptionDTO;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -26,4 +29,6 @@ public class CardListItemDTO {
 
     @ApiModelProperty(value = "카드 이미지 URL", example = "https://cdn.example.com/card/2835.png")
     private String imageUrl;
+
+    private List<CardOptionDTO> options;
 }

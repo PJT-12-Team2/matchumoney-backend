@@ -42,6 +42,15 @@ public class CardSearchServiceImpl implements CardSearchService {
         boolean hasNext = rows.size() > size;
         if (hasNext) rows = rows.subList(0, size);
 
+        for (CardListItemDTO it : rows) {
+            List<team2.pjt12.matchumoney.domain.carddetail.dto.CardOptionDTO> opts =
+                    personaCardMapper.selectCardOptionsByCardId(it.getId());
+            if (opts != null && opts.size() > 3) {
+                opts = opts.subList(0, 3); // 화면은 Top3만
+            }
+            it.setOptions(opts);
+        }
+
         String nextCursor = null;
         if (hasNext && !rows.isEmpty()) {
             Long lastId = rows.get(rows.size() - 1).getId();
