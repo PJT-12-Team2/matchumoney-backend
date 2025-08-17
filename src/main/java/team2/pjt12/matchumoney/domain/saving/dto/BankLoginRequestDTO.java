@@ -19,8 +19,10 @@ public class BankLoginRequestDTO {
     private String password;
     @ApiModelProperty(value = "사용자 생년월일", example = "20250730", required = true)
     private String birthDate;
+ 
 
     public BankLoginRequestDTO() {
 
     }
+ 
 }

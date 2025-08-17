@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="team2.pjt12.matchumoney.domain.push.mapper.ProductScanMapper">
+
+    <select id="findNewCards" resultType="team2.pjt12.matchumoney.domain.push.dto.NewProductResponseDTO">
+        SELECT c.card_product_id AS id, c.persona_id AS personaId, c.created_time AS createdTime
+        FROM card_product c
+        WHERE c.created_time > #{since}
+    </select>
+
+    <select id="findNewDeposits" resultType="team2.pjt12.matchumoney.domain.push.dto.NewProductResponseDTO">
+        SELECT d.deposit_product_id AS id, d.persona_id AS personaId, d.created_time AS createdTime
+        FROM deposit_product d
+        WHERE d.created_time > #{since}
+    </select>
+
+    <select id="findNewSavings" resultType="team2.pjt12.matchumoney.domain.push.dto.NewProductResponseDTO">
+        SELECT s.saving_product_id AS id, s.persona_id AS personaId, s.created_time AS createdTime
+        FROM saving_product s
+        WHERE s.created_time > #{since}
+    </select>
+
+    <!-- persona 보유 사용자 -->
+    <select id="findUserIdsByPersona" resultType="long">
+        SELECT u.user_id
+        FROM users u
+        WHERE u.persona_id = #{personaId}
+    </select>
+
+    <!-- 디듀프 -->
+    <select id="existsPushLog" resultType="int">
+        SELECT COUNT(*) FROM push_sent_log
+        WHERE user_id = #{userId}
+        AND product_type = #{type}
+        AND product_id = #{productId}
+        LIMIT 1
+    </select>
+
+    <insert id="insertPushLog">
+        INSERT INTO push_sent_log (user_id, product_type, product_id)
+        VALUES (#{userId}, #{type}, #{productId})
+    </insert>
+
+</mapper>

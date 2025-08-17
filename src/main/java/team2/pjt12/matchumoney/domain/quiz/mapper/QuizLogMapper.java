@@ -22,6 +22,8 @@ public interface QuizLogMapper {
     
     boolean existsByUserIdAndDate(@Param("userId") Long userId, @Param("solvedDate") LocalDate solvedDate);
     
+    int getTodayQuizCountByUserId(@Param("userId") Long userId, @Param("solvedDate") LocalDate solvedDate);
+    
     boolean existsByUserIdAndProblemId(@Param("userId") Long userId, @Param("problemId") Long problemId);
     
     int getCorrectCountByUserId(@Param("userId") Long userId);
@@ -31,6 +33,8 @@ public interface QuizLogMapper {
     int getCurrentStreakByUserId(@Param("userId") Long userId);
     
     List<QuizLogVO> findRecentLogsByUserId(@Param("userId") Long userId, @Param("limit") int limit);
+    
+    List<QuizLogVO> findRecentHistoryByUserId(@Param("userId") Long userId, @Param("limit") int limit);
     
     void deleteById(@Param("logId") Long logId);
 }

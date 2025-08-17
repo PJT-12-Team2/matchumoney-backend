@@ -12,6 +12,7 @@ import team2.pjt12.matchumoney.domain.mydata.service.MerchantCategoryService;
 import team2.pjt12.matchumoney.domain.cardrecommendation.vo.*;
 import team2.pjt12.matchumoney.domain.carddetail.mapper.CardDetailMapper;
 import team2.pjt12.matchumoney.domain.user.mapper.UserMapper;
+import team2.pjt12.matchumoney.global.util.SecurityUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -543,12 +544,25 @@ public class CardRecommendationServiceImpl implements CardRecommendationService 
     public KbCardRecommendationResponseDTO recommendKbCards() {
         log.info("KB국민카드 추천 카드 목록 조회 시작");
         
+        Long userId = null;
+        try {
+            userId = SecurityUtils.getCurrentUserId();
+        } catch (Exception e) {
+            log.debug("사용자 ID 조회 실패 (비로그인 상태일 수 있음): {}", e.getMessage());
+        }
+        
         try {
             List<CardProductVO> kbCards = cardRecommendationMapper.selectAvailableCardsByIssuer("KB국민카드");
             
             List<KbCardRecommendationResponseDTO.KbCardProductDTO> kbCardDTOs = kbCards.stream()
                 .map(this::convertToKbCardDTO)
                 .collect(Collectors.toList());
+                
+            // 로그인한 사용자인 경우 좋아요와 즐겨찾기 상태 설정
+            if (userId != null) {
+                final Long finalUserId = userId;
+                kbCardDTOs.forEach(cardDto -> setKbCardLikeAndFavoriteStatus(finalUserId, cardDto));
+            }
             
             String message = String.format("KB국민카드에서 발급 가능한 카드 %d개를 조회했습니다.", kbCardDTOs.size());
             
@@ -566,6 +580,67 @@ public class CardRecommendationServiceImpl implements CardRecommendationService 
                 .kbCards(Collections.emptyList())
                 .totalCount(0)
                 .message("KB국민카드 추천 조회 중 오류가 발생했습니다.")
+                .build();
+        }
+    }
+    
+    @Override
+    public KbCardRecommendationResponseDTO recommendKbCardsWithPaging(int page, int size) {
+        log.info("KB국민카드 페이징 추천 카드 목록 조회 시작 - page: {}, size: {}", page, size);
+        
+        Long userId = null;
+        try {
+            userId = SecurityUtils.getCurrentUserId();
+        } catch (Exception e) {
+            log.debug("사용자 ID 조회 실패 (비로그인 상태일 수 있음): {}", e.getMessage());
+        }
+        
+        try {
+            // 총 개수 조회
+            int totalCount = cardRecommendationMapper.countAvailableCardsByIssuer("KB국민카드");
+            
+            // 페이징 계산
+            int offset = page * size;
+            boolean hasNext = (offset + size) < totalCount;
+            
+            // 페이징된 카드 목록 조회
+            List<CardProductVO> kbCards = cardRecommendationMapper.selectAvailableCardsByIssuerWithPaging(
+                "KB국민카드", offset, size);
+            
+            List<KbCardRecommendationResponseDTO.KbCardProductDTO> kbCardDTOs = kbCards.stream()
+                .map(this::convertToKbCardDTO)
+                .collect(Collectors.toList());
+                
+            // 로그인한 사용자인 경우 좋아요와 즐겨찾기 상태 설정
+            if (userId != null) {
+                final Long finalUserId = userId;
+                kbCardDTOs.forEach(cardDto -> setKbCardLikeAndFavoriteStatus(finalUserId, cardDto));
+            }
+            
+            String message = String.format("KB국민카드 %d페이지: %d개 카드 (전체 %d개)", 
+                page + 1, kbCardDTOs.size(), totalCount);
+            
+            log.info("KB국민카드 페이징 추천 완료 - page: {}, size: {}, hasNext: {}", 
+                page, kbCardDTOs.size(), hasNext);
+
+            return KbCardRecommendationResponseDTO.builder()
+                .kbCards(kbCardDTOs)
+                .totalCount(totalCount)
+                .message(message)
+                .hasNext(hasNext)
+                .currentPage(page)
+                .pageSize(size)
+                .build();
+                
+        } catch (Exception e) {
+            log.error("KB국민카드 페이징 추천 중 오류 발생", e);
+            return KbCardRecommendationResponseDTO.builder()
+                .kbCards(Collections.emptyList())
+                .totalCount(0)
+                .message("KB국민카드 추천 조회 중 오류가 발생했습니다.")
+                .hasNext(false)
+                .currentPage(page)
+                .pageSize(size)
                 .build();
         }
     }
@@ -588,6 +663,36 @@ public class CardRecommendationServiceImpl implements CardRecommendationService 
             .corpTips(card.getCorpTips())
             .issuer(card.getIssuer())
             .build();
+    }
+    
+    /**
+     * KB 카드 DTO에 좋아요와 즐겨찾기 상태를 설정합니다.
+     */
+    private void setKbCardLikeAndFavoriteStatus(Long userId, KbCardRecommendationResponseDTO.KbCardProductDTO cardDto) {
+        if (userId != null && cardDto.getCardProductId() != null) {
+            try {
+                // 좋아요 상태 조회
+                boolean isLiked = cardDetailMapper.isLikedByUser(userId, cardDto.getCardProductId());
+                int likeCount = cardDetailMapper.countLikesByProductId(cardDto.getCardProductId());
+                cardDto.setLiked(isLiked);
+                cardDto.setLikeCount(likeCount);
+                
+                // 즐겨찾기 상태 조회
+                boolean isFavorited = userMapper.isCardFavoriteExists(userId, Long.valueOf(cardDto.getCardProductId()));
+                cardDto.setFavorited(isFavorited);
+            } catch (Exception e) {
+                log.warn("KB 카드 {} 좋아요/즐겨찾기 상태 조회 실패: {}", cardDto.getCardProductId(), e.getMessage());
+                // 기본값 설정
+                cardDto.setLiked(false);
+                cardDto.setLikeCount(0);
+                cardDto.setFavorited(false);
+            }
+        } else {
+            // 기본값 설정
+            cardDto.setLiked(false);
+            cardDto.setLikeCount(0);
+            cardDto.setFavorited(false);
+        }
     }
     
     /**

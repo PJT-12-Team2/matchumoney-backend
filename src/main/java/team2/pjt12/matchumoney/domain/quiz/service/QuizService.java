@@ -1,9 +1,12 @@
 package team2.pjt12.matchumoney.domain.quiz.service;
 
 import team2.pjt12.matchumoney.domain.quiz.dto.req.QuizAnswerRequestDTO;
+import team2.pjt12.matchumoney.domain.quiz.dto.res.QuizHistoryResponseDTO;
 import team2.pjt12.matchumoney.domain.quiz.dto.res.QuizProblemResponseDTO;
 import team2.pjt12.matchumoney.domain.quiz.dto.res.QuizResultResponseDTO;
 import team2.pjt12.matchumoney.domain.quiz.dto.res.QuizStatsResponseDTO;
+
+import java.util.List;
 
 public interface QuizService {
 
@@ -14,4 +17,6 @@ public interface QuizService {
     QuizStatsResponseDTO getUserQuizStats(Long userId);
     
     boolean hasCompletedTodayQuiz(Long userId);
+    
+    List<QuizHistoryResponseDTO> getQuizHistory(Long userId);
 }

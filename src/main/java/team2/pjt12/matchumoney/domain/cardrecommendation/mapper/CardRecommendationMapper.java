@@ -152,4 +152,24 @@ public interface CardRecommendationMapper {
      * @return 발급 가능한 카드 목록
      */
     List<CardProductVO> selectAvailableCardsByIssuer(@Param("issuer") String issuer);
+    
+    /**
+     * 발급사별로 발급 가능한 카드 목록을 페이징하여 조회합니다.
+     * @param issuer 발급사명 (예: KB국민카드)
+     * @param offset 시작 위치
+     * @param limit 조회할 개수
+     * @return 발급 가능한 카드 목록 (페이징)
+     */
+    List<CardProductVO> selectAvailableCardsByIssuerWithPaging(
+        @Param("issuer") String issuer,
+        @Param("offset") int offset,
+        @Param("limit") int limit
+    );
+    
+    /**
+     * 발급사별 총 카드 개수를 조회합니다.
+     * @param issuer 발급사명 (예: KB국민카드)
+     * @return 총 카드 개수
+     */
+    int countAvailableCardsByIssuer(@Param("issuer") String issuer);
 }

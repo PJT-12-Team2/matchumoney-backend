@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="team2.pjt12.matchumoney.domain.saving.codef.mapper.CodefMapper">
+
+
+    <insert id="insertCodefConnectedId"
+            parameterType="team2.pjt12.matchumoney.domain.saving.codef.domain.ConnectedIdVO">
+        INSERT INTO user_connected_id (user_id, connected_id)
+        VALUES (#{userId}, #{connectedId})
+    </insert>
+    <insert id="insertCodefConnectedIdOrganization">
+        INSERT INTO connected_id_organizations (connected_id, organization_code)
+        VALUES (#{connectedId}, #{organization})
+    </insert>
+    <delete id="deleteCodefConnectedIdByUserId" parameterType="long">
+        DELETE
+        FROM user_connected_id
+        WHERE user_id = #{userId}
+    </delete>
+    <select id="getCodefConnectedIdByUserId" resultType="java.lang.String">
+        SELECT connected_id
+        from user_connected_id
+        WHERE user_id = #{userId};
+    </select>
+    <select id="selectOrganizationNamesByUserId" resultType="java.lang.String">
+        SELECT o.organization_code
+        FROM organizations o
+                 JOIN connected_id_organizations cco
+                      ON o.organization_code = cco.organization_code
+                 JOIN user_connected_id uci
+                      ON cco.connected_id = uci.connected_id
+        WHERE uci.user_id = #{userId}
+    </select>
+
+</mapper>

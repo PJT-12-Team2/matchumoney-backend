@@ -54,4 +54,12 @@ public interface CardRecommendationService {
      * @return KB국민카드 추천 목록
      */
     KbCardRecommendationResponseDTO recommendKbCards();
+    
+    /**
+     * KB국민카드에서 발급 가능한 카드 목록을 페이징하여 추천합니다.
+     * @param page 페이지 번호 (0부터 시작)
+     * @param size 페이지 크기
+     * @return KB국민카드 추천 목록 (페이징)
+     */
+    KbCardRecommendationResponseDTO recommendKbCardsWithPaging(int page, int size);
 }
