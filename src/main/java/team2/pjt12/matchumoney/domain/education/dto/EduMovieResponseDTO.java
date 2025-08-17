@@ -4,10 +4,12 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @ApiModel(description = "교육 영상 정보 DTO")
+@NoArgsConstructor
 public class EduMovieResponseDTO {
     @ApiModelProperty(value = "교육 영상 id", example = "1")
     private Long id;

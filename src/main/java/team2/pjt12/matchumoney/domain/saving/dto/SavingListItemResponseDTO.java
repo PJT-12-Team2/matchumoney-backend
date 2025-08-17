@@ -3,6 +3,7 @@ package team2.pjt12.matchumoney.domain.saving.dto;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @ApiModel(description = "추천 상품 목록 정보 DTO")
+@Builder
 public class SavingListItemResponseDTO {
     @ApiModelProperty(value = "적금 상품 번호", example = "1")
     Long id;

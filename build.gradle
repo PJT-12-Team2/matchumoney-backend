@@ -13,7 +13,7 @@ repositories {
 ext {
     junitVersion = '5.10.2'
     springVersion = '5.3.37'
-    springSecurityVersion='5.8.13'
+    springSecurityVersion = '5.8.13'
     lombokVersion = '1.18.30'
     mybatisVersion = '3.5.15'
     mybatisSpringVersion = '2.1.1'
@@ -76,7 +76,7 @@ dependencies {
     // Mockito Core & JUnit 5 연동
     testImplementation 'org.mockito:mockito-core:5.12.0'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.12.0'
-
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
     // ssertJ (assertThat을 위한 라이브러리)
     testImplementation 'org.assertj:assertj-core:3.25.3'
 
