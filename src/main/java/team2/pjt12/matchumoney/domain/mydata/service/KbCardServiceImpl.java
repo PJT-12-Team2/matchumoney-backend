@@ -62,6 +62,21 @@ public class KbCardServiceImpl implements KbCardService {
         try {
             cardMatchingService.matchCardHoldingsByUserId(userId);
             log.info("자동 카드 매칭 완료");
+            
+            // 매칭 후 카드 정보 다시 조회하여 업데이트
+            List<CardHoldingVO> updatedCards = kbCardMapper.selectKbCardByUserId(userId);
+            for (CardHoldingVO updatedCard : updatedCards) {
+                for (CardHoldingVO originalCard : cards) {
+                    if (originalCard.getHoldingId().equals(updatedCard.getHoldingId())) {
+                        originalCard.setCardId(updatedCard.getCardId());
+                        if (updatedCard.getCardId() != null) {
+                            log.info("🔄 카드 '{}' 매칭 성공: cardId = {}", 
+                                originalCard.getCardName(), updatedCard.getCardId());
+                        }
+                        break;
+                    }
+                }
+            }
         } catch (Exception e) {
             log.error("자동 카드 매칭 실패: {}", e.getMessage(), e);
         }
@@ -101,8 +116,13 @@ public class KbCardServiceImpl implements KbCardService {
                     transaction.setCardName(card.getCardName());
                     
                     // 로깅 추가 - 카드 매칭 상태 확인
-                    log.info("🔍 거래내역 저장 - 카드: '{}', cardId2: {}, finId: {}, holdingId: {}", 
-                        card.getCardName(), card.getCardId(), card.getFinId(), card.getHoldingId());
+                    if (card.getCardId() != null) {
+                        log.info("✅ 거래내역 저장 - 카드: '{}', cardId2: {}, finId: {}, holdingId: {} (매칭 성공)", 
+                            card.getCardName(), card.getCardId(), card.getFinId(), card.getHoldingId());
+                    } else {
+                        log.warn("⚠️ 거래내역 저장 - 카드: '{}', cardId2: null, finId: {}, holdingId: {} (매칭 실패)", 
+                            card.getCardName(), card.getFinId(), card.getHoldingId());
+                    }
                     
                     // 가맹점명을 기반으로 소비 분야 자동 분류
                     String originalMerchantName = transaction.getResMemberStoreName();
@@ -253,8 +273,16 @@ public class KbCardServiceImpl implements KbCardService {
                 transaction.setHoldingId(matchedCard.getHoldingId()); // holdingId 설정 추가
                 transaction.setCardId2(matchedCard.getCardId());
                 transaction.setCardName(matchedCard.getCardName());
+                
+                if (matchedCard.getCardId() != null) {
+                    log.debug("✅ 카드번호 매칭 성공: {} -> cardId2: {}, holdingId: {}", 
+                        transaction.getResCardNo(), matchedCard.getCardId(), matchedCard.getHoldingId());
+                } else {
+                    log.warn("⚠️ 카드번호 매칭되었으나 cardId null: {} -> holdingId: {}", 
+                        transaction.getResCardNo(), matchedCard.getHoldingId());
+                }
             } else {
-                log.warn("매칭되지 않은 카드번호: {} - 거래내역 저장하지만 카드 정보 누락", transaction.getResCardNo());
+                log.warn("❌ 매칭되지 않은 카드번호: {} - 거래내역 저장하지만 카드 정보 누락", transaction.getResCardNo());
                 // finId, holdingId, cardId2를 null로 설정하고 저장
                 transaction.setFinId(null);
                 transaction.setHoldingId(null);
@@ -357,8 +385,16 @@ public class KbCardServiceImpl implements KbCardService {
                 transaction.setHoldingId(matchedCard.getHoldingId()); // holdingId 설정 추가
                 transaction.setCardId2(matchedCard.getCardId());
                 transaction.setCardName(matchedCard.getCardName());
+                
+                if (matchedCard.getCardId() != null) {
+                    log.debug("✅ 카드번호 매칭 성공: {} -> cardId2: {}, holdingId: {}", 
+                        transaction.getResCardNo(), matchedCard.getCardId(), matchedCard.getHoldingId());
+                } else {
+                    log.warn("⚠️ 카드번호 매칭되었으나 cardId null: {} -> holdingId: {}", 
+                        transaction.getResCardNo(), matchedCard.getHoldingId());
+                }
             } else {
-                log.warn("매칭되지 않은 카드번호: {} - 거래내역 저장하지만 카드 정보 누락", transaction.getResCardNo());
+                log.warn("❌ 매칭되지 않은 카드번호: {} - 거래내역 저장하지만 카드 정보 누락", transaction.getResCardNo());
                 // finId, holdingId, cardId2를 null로 설정하고 저장
                 transaction.setFinId(null);
                 transaction.setHoldingId(null);
