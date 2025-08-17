@@ -54,8 +54,26 @@ public class KbCardController {
                 request.getCardPw()
         );
         List<CardInfoResponseDTO> responseDTOList = CardDTOConverter.toCardInfoResponseDTOList(cardHoldingVOList);
-        return ResponseEntity.ok(new SuccessResponse<>(responseDTOList,
-                String.format("총 %d개의 카드 정보가 동기화되었습니다.", responseDTOList.size())));
+        
+        // 매칭된 카드 개수 확인
+        long matchedCardCount = cardHoldingVOList.stream()
+                .filter(card -> card.getCardId() != null)
+                .count();
+        
+        long unmatchedCardCount = cardHoldingVOList.size() - matchedCardCount;
+        
+        String message;
+        if (unmatchedCardCount == 0) {
+            message = String.format("총 %d개의 카드 정보가 동기화되었습니다. " +
+                    "모든 카드가 성공적으로 매칭되어 추천 계산이 백그라운드에서 진행됩니다.", 
+                    responseDTOList.size());
+        } else {
+            message = String.format("총 %d개의 카드 정보가 동기화되었습니다. " +
+                    "(카드 추천 가능: %d개, 매칭 실패: %d개) 추천 계산이 백그라운드에서 진행됩니다.", 
+                    responseDTOList.size(), matchedCardCount, unmatchedCardCount);
+        }
+        
+        return ResponseEntity.ok(new SuccessResponse<>(responseDTOList, message));
     }
 
     @GetMapping("/{userId}/cards")
@@ -180,7 +198,21 @@ public class KbCardController {
         List<CardTransactionVO> updatedTransactions = kbCardService.syncTransactionsByConnectedId(userId, connectedId);
         List<CardTransactionResponseDTO> responseDTOList = CardDTOConverter.toCardTransactionResponseDTOList(updatedTransactions);
         
-        return ResponseEntity.ok(new SuccessResponse<>(responseDTOList,
-                String.format("최근 30일 거래내역이 업데이트되었습니다. 새로 추가된 거래내역: %d건", responseDTOList.size())));
+        // 추천 재계산이 진행 중인 카드 개수 확인
+        long recommendationCardCount = userCards.stream()
+                .filter(card -> card.getCardId() != null)
+                .count();
+        
+        // card_id2가 제대로 설정된 거래내역 개수 확인
+        long transactionsWithCardId = updatedTransactions.stream()
+                .filter(transaction -> transaction.getCardId2() != null)
+                .count();
+        
+        String message = String.format("최근 30일 거래내역이 업데이트되었습니다. " +
+                "새로 추가된 거래내역: %d건, 카드 추천 재계산 진행 중: %d개 카드, " +
+                "매칭된 거래내역: %d건", 
+                responseDTOList.size(), recommendationCardCount, transactionsWithCardId);
+        
+        return ResponseEntity.ok(new SuccessResponse<>(responseDTOList, message));
     }
 }
