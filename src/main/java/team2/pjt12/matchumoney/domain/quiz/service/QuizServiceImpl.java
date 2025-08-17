@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import team2.pjt12.matchumoney.domain.quiz.domain.QuizLogVO;
 import team2.pjt12.matchumoney.domain.quiz.domain.QuizProblemVO;
 import team2.pjt12.matchumoney.domain.quiz.dto.req.QuizAnswerRequestDTO;
+import team2.pjt12.matchumoney.domain.quiz.dto.res.QuizHistoryResponseDTO;
 import team2.pjt12.matchumoney.domain.quiz.dto.res.QuizProblemResponseDTO;
 import team2.pjt12.matchumoney.domain.quiz.dto.res.QuizResultResponseDTO;
 import team2.pjt12.matchumoney.domain.quiz.dto.res.QuizStatsResponseDTO;
@@ -14,6 +15,9 @@ import team2.pjt12.matchumoney.domain.quiz.mapper.QuizProblemMapper;
 import team2.pjt12.matchumoney.domain.user.mapper.UserMapper;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +30,12 @@ public class QuizServiceImpl implements QuizService {
 
     @Override
     public QuizProblemResponseDTO getTodayQuiz(Long userId) {
+        // 오늘 풀은 퀴즈 개수 확인 (하루 최대 2개 제한)
+        int todayQuizCount = quizLogMapper.getTodayQuizCountByUserId(userId, LocalDate.now());
+        if (todayQuizCount >= 2) {
+            throw new RuntimeException("오늘 퀴즈를 모두 완료했습니다! 하루에 최대 2개까지 풀 수 있습니다.");
+        }
+
         int unsolvedCount = quizProblemMapper.getUnsolvedCountByUserId(userId);
 
         if (unsolvedCount == 0) {
@@ -97,6 +107,33 @@ public class QuizServiceImpl implements QuizService {
 
     @Override
     public boolean hasCompletedTodayQuiz(Long userId) {
-        return quizLogMapper.existsByUserIdAndDate(userId, LocalDate.now());
+        // 하루에 2개 문제를 모두 풀었는지 확인
+        int todayQuizCount = quizLogMapper.getTodayQuizCountByUserId(userId, LocalDate.now());
+        return todayQuizCount >= 2;
+    }
+
+    @Override
+    public List<QuizHistoryResponseDTO> getQuizHistory(Long userId) {
+        List<QuizLogVO> recentLogs = quizLogMapper.findRecentHistoryByUserId(userId, 5);
+        
+        if (recentLogs.isEmpty()) {
+            return List.of();
+        }
+        
+        List<Long> problemIds = recentLogs.stream()
+                .map(QuizLogVO::getProblemId)
+                .collect(Collectors.toList());
+        
+        List<QuizProblemVO> problems = quizProblemMapper.findByLogIds(problemIds);
+        
+        Map<Long, QuizProblemVO> problemMap = problems.stream()
+                .collect(Collectors.toMap(QuizProblemVO::getProblemId, problem -> problem));
+        
+        return recentLogs.stream()
+                .map(log -> {
+                    QuizProblemVO problem = problemMap.get(log.getProblemId());
+                    return QuizHistoryResponseDTO.from(log, problem);
+                })
+                .collect(Collectors.toList());
     }
 }

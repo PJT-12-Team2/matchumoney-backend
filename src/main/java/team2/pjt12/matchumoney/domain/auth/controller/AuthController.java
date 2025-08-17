@@ -64,4 +64,12 @@ public class AuthController {
         authService.resetPassword(reqDto);
         return new SuccessResponse<>("비밀번호 재설정 성공");
     }
+    // src/main/java/team2/pjt12/matchumoney/domain/auth/controller/AuthController.java
+    @PostMapping("/verify/password")
+    public SuccessResponse<Boolean> verifyPassword(
+            @RequestBody @Valid VerifyPasswordRequestDTO reqDto) {
+        boolean valid = authService.verifyCurrentPassword(reqDto.getPassword());
+        return new SuccessResponse<>(valid);
+    }
+
 }

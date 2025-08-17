@@ -6,6 +6,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,8 @@ import team2.pjt12.matchumoney.global.email.EmailService;
 import team2.pjt12.matchumoney.global.exception.CustomException;
 import team2.pjt12.matchumoney.global.exception.ErrorCode;
 import team2.pjt12.matchumoney.global.jwt.JwtServiceImpl;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.servlet.http.HttpServletResponse;
 import java.time.Duration;
@@ -183,5 +186,23 @@ public class AuthServiceImpl implements AuthService{
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         authMapper.updatePassword(reqDto.getEmail(), passwordEncoder.encode(reqDto.getNewPassword()));
+    }
+
+    @Override
+    public boolean verifyCurrentPassword(String rawPassword) {
+        // 1) 현재 로그인 사용자 이메일(또는 ID) 확보
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+
+        // 2) 사용자 조회 (이미 쓰는 UserMapper 또는 Repository 활용)
+        UserVO user = userMapper.findByEmail(email)
+                .orElse(null); // 기존에 쓰던 메서드 재활용
+
+        if (user == null || user.getPassword() == null) {
+            return false; // 소셜-only 등 비번 없음
+        }
+
+        // 3) 비밀번호 비교
+        return passwordEncoder.matches(rawPassword, user.getPassword());
     }
 }

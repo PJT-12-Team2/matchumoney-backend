@@ -268,13 +268,18 @@ public class CardRecommendationController {
             @ApiResponse(code = 200, message = "KB국민카드 추천 성공"),
             @ApiResponse(code = 500, message = "서버 오류")
     })
-    public ResponseEntity<KbCardRecommendationResponseDTO> getKbCardRecommendations() {
+    public ResponseEntity<KbCardRecommendationResponseDTO> getKbCardRecommendations(
+            @ApiParam(value = "페이지 번호 (0부터 시작, 기본값: 0)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @ApiParam(value = "페이지 크기 (기본값: 6)", example = "6")
+            @RequestParam(defaultValue = "6") int size) {
         try {
-            log.info("KB국민카드 추천 요청");
+            log.info("KB국민카드 추천 요청 - page: {}, size: {}", page, size);
             
-            KbCardRecommendationResponseDTO response = cardRecommendationService.recommendKbCards();
+            KbCardRecommendationResponseDTO response = cardRecommendationService.recommendKbCardsWithPaging(page, size);
             
-            log.info("KB국민카드 추천 완료: {} 개", response.getTotalCount());
+            log.info("KB국민카드 추천 완료 - page: {}, count: {}, hasNext: {}", 
+                page, response.getKbCards().size(), response.isHasNext());
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
