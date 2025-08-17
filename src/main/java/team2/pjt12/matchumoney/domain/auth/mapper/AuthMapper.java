@@ -13,4 +13,5 @@ public interface AuthMapper {
             @Param("email") String email,
             @Param("password") String password
     );
+
 }

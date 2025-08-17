@@ -2,16 +2,20 @@ package team2.pjt12.matchumoney.domain.auth.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import team2.pjt12.matchumoney.domain.auth.dto.LoginResponseDTO;
 import team2.pjt12.matchumoney.domain.auth.dto.SocialLoginRequestDTO;
 import team2.pjt12.matchumoney.domain.auth.dto.TokenDTO;
 import team2.pjt12.matchumoney.domain.auth.dto.req.*;
 import team2.pjt12.matchumoney.domain.auth.service.AuthService;
+import team2.pjt12.matchumoney.global.security.UserDetailsImpl;
 import team2.pjt12.matchumoney.global.success.SuccessResponse;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -66,10 +70,12 @@ public class AuthController {
     }
     // src/main/java/team2/pjt12/matchumoney/domain/auth/controller/AuthController.java
     @PostMapping("/verify/password")
-    public SuccessResponse<Boolean> verifyPassword(
-            @RequestBody @Valid VerifyPasswordRequestDTO reqDto) {
-        boolean valid = authService.verifyCurrentPassword(reqDto.getPassword());
-        return new SuccessResponse<>(valid);
+    public ResponseEntity<?> verifyPassword(
+            @AuthenticationPrincipal UserDetailsImpl user,
+            @RequestBody VerifyPasswordRequestDTO req) {
+
+        authService.verifyPassword(user.getUser().getUserId(), req.getRawPassword());
+        return ResponseEntity.ok(Map.of("ok", true));
     }
 
 }

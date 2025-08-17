@@ -4,9 +4,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,8 +25,6 @@ import team2.pjt12.matchumoney.global.email.EmailService;
 import team2.pjt12.matchumoney.global.exception.CustomException;
 import team2.pjt12.matchumoney.global.exception.ErrorCode;
 import team2.pjt12.matchumoney.global.jwt.JwtServiceImpl;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.servlet.http.HttpServletResponse;
 import java.time.Duration;
@@ -189,20 +189,27 @@ public class AuthServiceImpl implements AuthService{
     }
 
     @Override
-    public boolean verifyCurrentPassword(String rawPassword) {
-        // 1) 현재 로그인 사용자 이메일(또는 ID) 확보
-        String email = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
-
-        // 2) 사용자 조회 (이미 쓰는 UserMapper 또는 Repository 활용)
-        UserVO user = userMapper.findByEmail(email)
-                .orElse(null); // 기존에 쓰던 메서드 재활용
-
-        if (user == null || user.getPassword() == null) {
-            return false; // 소셜-only 등 비번 없음
+    @Transactional(readOnly = true)
+    public void verifyPassword(Long userId, String rawPassword) {
+        if (rawPassword == null || rawPassword.isEmpty()) {
+            throw new BadCredentialsException("비밀번호가 비어 있습니다.");
         }
 
-        // 3) 비밀번호 비교
-        return passwordEncoder.matches(rawPassword, user.getPassword());
+        UserVO user = userMapper.findByUserId(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("user not found: " + userId));
+
+        boolean ok = passwordEncoder.matches(rawPassword, user.getPassword());
+
+        // 민감정보 노출 주의: 원문 비번은 절대 로그에 찍지 않음
+        log.info("verifyPassword: uid={}, rawLen={}, hashPrefix={}, matches={}",
+                userId,
+                rawPassword.length(),
+                user.getPassword() == null ? null : user.getPassword().substring(0, 7), // ex) $2a$10
+                ok
+        );
+
+        if (!ok) {
+            throw new BadCredentialsException("비밀번호 불일치");
+        }
     }
 }
