@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DepositProductResponseDTO {
+    private Long id;
     private String bankName;            // 은행명 (kor_co_nm)
     private String productName;         // 상품명 (fin_prdt_nm)
     private String etcNote;             // 기타유의사항 (etc_note)

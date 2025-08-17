@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="team2.pjt12.matchumoney.domain.push.mapper.PushTokenMapper">
+
+    <!-- =========================
+         Result Map (VO 매핑)
+         ========================= -->
+    <resultMap id="PushTokenMap" type="team2.pjt12.matchumoney.domain.push.domain.PushTokenVO">
+        <id     property="id"               column="id"/>
+        <result property="userId"           column="user_id"/>
+        <result property="token"            column="token"/>
+        <result property="userAgent"        column="user_agent"/>
+        <result property="createdTime"      column="created_time"      jdbcType="TIMESTAMP" javaType="java.time.LocalDateTime"/>
+        <result property="lastModifiedTime" column="last_modified_time" jdbcType="TIMESTAMP" javaType="java.time.LocalDateTime"/>
+        <!-- Instant 사용 시 타입핸들러 지정 (MyBatis 3.5+ 지원) -->
+        <result property="lastSeenAt"       column="last_seen_at"
+                jdbcType="TIMESTAMP"
+                javaType="java.time.Instant"
+                typeHandler="org.apache.ibatis.type.InstantTypeHandler"/>
+    </resultMap>
+
+    <!-- =========================
+         공용 컬럼 목록
+         ========================= -->
+    <sql id="Base_Column_List">
+        id, user_id, token, user_agent, created_time, last_modified_time, last_seen_at
+    </sql>
+
+    <!-- =========================
+         UPSERT (token UNIQUE 전제)
+         ========================= -->
+    <insert id="upsert">
+        INSERT INTO push_token
+        (user_id, token, user_agent, created_time, last_modified_time, last_seen_at)
+        VALUES
+            (#{userId}, #{token}, #{userAgent}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL)
+            ON DUPLICATE KEY UPDATE
+                                 user_id = VALUES(user_id),
+                                 user_agent = VALUES(user_agent),
+                                 last_modified_time = CURRENT_TIMESTAMP
+    </insert>
+
+    <!-- =========================
+         DELETE by token (멱등)
+         ========================= -->
+    <delete id="deleteByToken">
+        DELETE FROM push_token WHERE token = #{token}
+    </delete>
+
+    <!-- =========================
+         SELECT by token
+         ========================= -->
+    <select id="findByToken" resultMap="PushTokenMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM push_token
+        WHERE token = #{token}
+        LIMIT 1
+    </select>
+
+    <!-- =========================
+         SELECT all by userId
+         ========================= -->
+    <select id="findAllByUserId" resultMap="PushTokenMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM push_token
+        WHERE user_id = #{userId}
+        ORDER BY last_modified_time DESC
+    </select>
+
+    <!-- =========================
+         UPDATE last_seen_at (UTC)
+         ========================= -->
+    <update id="updateLastSeenAt">
+        UPDATE push_token
+        SET last_seen_at = #{lastSeenAt, jdbcType=TIMESTAMP,
+                         javaType=java.time.Instant,
+                         typeHandler=org.apache.ibatis.type.InstantTypeHandler},
+            last_modified_time = CURRENT_TIMESTAMP
+        WHERE token = #{token}
+    </update>
+
+    <select id="findTokensByUserId" resultType="string">
+        SELECT token FROM push_token WHERE user_id = #{userId}
+    </select>
+
+    <select id="findTokensByUserIds" resultType="string">
+        SELECT token FROM push_token
+        WHERE user_id IN
+        <foreach collection="userIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+</mapper>

@@ -320,6 +320,7 @@
         SELECT *
         FROM (
                  SELECT
+                     dp.deposit_product_id AS id,
                      dp.kor_co_nm AS bank_name,
                      dp.fin_prdt_nm AS product_name,
                      dp.etc_note AS etc_note,

@@ -13,7 +13,7 @@ repositories {
 ext {
     junitVersion = '5.10.2'
     springVersion = '5.3.37'
-    springSecurityVersion='5.8.13'
+    springSecurityVersion = '5.8.13'
     lombokVersion = '1.18.30'
     mybatisVersion = '3.5.15'
     mybatisSpringVersion = '2.1.1'
@@ -48,7 +48,7 @@ dependencies {
     annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
     // SLF4J + Log4j2 연동
-    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.20.0'
+    implementation 'org.slf4j:slf4j-api:2.0.13'
 
     // JSTL & Servlet API
     implementation 'javax.servlet:jstl:1.2'
@@ -66,9 +66,9 @@ dependencies {
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
     testImplementation "org.springframework:spring-test:${springVersion}"
 
-    implementation 'org.apache.logging.log4j:log4j-api:2.18.0'
-    implementation 'org.apache.logging.log4j:log4j-core:2.18.0'
-    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.18.0'
+    implementation 'org.apache.logging.log4j:log4j-api:2.22.1'
+    implementation 'org.apache.logging.log4j:log4j-core:2.22.1'
+    implementation 'org.apache.logging.log4j:log4j-slf4j2-impl:2.22.1'
 
     // 파라미터화 테스트
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.2'
@@ -76,7 +76,7 @@ dependencies {
     // Mockito Core & JUnit 5 연동
     testImplementation 'org.mockito:mockito-core:5.12.0'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.12.0'
-
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
     // ssertJ (assertThat을 위한 라이브러리)
     testImplementation 'org.assertj:assertj-core:3.25.3'
 
@@ -115,6 +115,8 @@ dependencies {
     //암호화
     implementation 'commons-codec:commons-codec:1.15'
     implementation "org.bouncycastle:bcprov-jdk18on:${BouncyCastleVersion}"
+
+    implementation 'com.google.firebase:firebase-admin:9.2.0'
 
     implementation platform('software.amazon.awssdk:bom:2.25.64')
     implementation 'software.amazon.awssdk:s3'

@@ -74,6 +74,8 @@ public class SecurityConfig {
                                         "/api/card-products/**",
                                         "/api/like/**",
                                         "/api/favorite/**",
+                                        "/api/push/**",
+                                        "/api/favorite/**",
                                         "/api/webtoon",
                                         "api/webtoon/**"
                                 ).permitAll()  // 허용 URL 설정
