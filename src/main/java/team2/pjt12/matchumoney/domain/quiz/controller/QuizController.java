@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import team2.pjt12.matchumoney.domain.quiz.dto.req.QuizAnswerRequestDTO;
+import team2.pjt12.matchumoney.domain.quiz.dto.res.QuizHistoryResponseDTO;
 import team2.pjt12.matchumoney.domain.quiz.dto.res.QuizProblemResponseDTO;
 import team2.pjt12.matchumoney.domain.quiz.dto.res.QuizResultResponseDTO;
 import team2.pjt12.matchumoney.domain.quiz.dto.res.QuizStatsResponseDTO;
@@ -14,6 +15,7 @@ import team2.pjt12.matchumoney.global.security.UserDetailsImpl;
 import team2.pjt12.matchumoney.global.success.SuccessResponse;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,12 +29,12 @@ public class QuizController {
     @GetMapping("/today")
     @ApiOperation(
             value = "오늘의 퀴즈 문제 조회",
-            notes = "사용자별로 오늘 풀어야 할 금융 퀴즈 문제를 1개 제공합니다. 이미 오늘 문제를 모두 푼 경우 400 오류가 발생할 수 있습니다."
+            notes = "사용자별로 오늘 풀어야 할 금융 퀴즈 문제를 제공합니다. 하루에 최대 2개까지 풀 수 있으며, 이미 오늘 문제를 모두 푼 경우 400 오류가 발생할 수 있습니다."
     )
     @ApiResponses({
             @ApiResponse(code = 200, message = "퀴즈 문제 조회 성공"),
             @ApiResponse(code = 401, message = "인증 실패"),
-            @ApiResponse(code = 400, message = "오늘 풀 수 있는 문제가 없음")
+            @ApiResponse(code = 400, message = "오늘 풀 수 있는 문제가 없음 (최대 2개 제한)")
     })
     public SuccessResponse<QuizProblemResponseDTO> getTodayQuiz(
             @ApiParam(hidden = true) Authentication authentication) {
@@ -79,10 +81,10 @@ public class QuizController {
     @GetMapping("/today/completed")
     @ApiOperation(
             value = "오늘의 퀴즈 완료 여부 조회",
-            notes = "오늘 퀴즈를 모두 풀었는지 여부를 반환합니다. true면 완료, false면 아직 미완료입니다."
+            notes = "오늘 퀴즈를 모두 풀었는지 여부를 반환합니다. 하루에 2개 문제를 모두 풀었으면 true, 아직 풀 수 있는 문제가 있으면 false를 반환합니다."
     )
     @ApiResponses({
-            @ApiResponse(code = 200, message = "오늘의 퀴즈 완료 여부 반환"),
+            @ApiResponse(code = 200, message = "오늘의 퀴즈 완료 여부 반환 (2개 모두 완료 시 true)"),
             @ApiResponse(code = 401, message = "인증 실패")
     })
     public SuccessResponse<Boolean> checkTodayQuizCompleted(
@@ -90,6 +92,22 @@ public class QuizController {
         Long userId = getUserId(authentication);
         boolean completed = quizService.hasCompletedTodayQuiz(userId);
         return new SuccessResponse<>(completed);
+    }
+
+    @GetMapping("/history")
+    @ApiOperation(
+            value = "퀴즈 이력 조회",
+            notes = "사용자가 최근 풀었던 퀴즈 이력을 최대 5개까지 조회합니다. 각 이력에는 문제, 정답, 사용자 답안, 해설이 포함됩니다."
+    )
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "퀴즈 이력 조회 성공"),
+            @ApiResponse(code = 401, message = "인증 실패")
+    })
+    public SuccessResponse<List<QuizHistoryResponseDTO>> getQuizHistory(
+            @ApiParam(hidden = true) Authentication authentication) {
+        Long userId = getUserId(authentication);
+        List<QuizHistoryResponseDTO> history = quizService.getQuizHistory(userId);
+        return new SuccessResponse<>(history);
     }
 
     private Long getUserId(Authentication authentication) {
