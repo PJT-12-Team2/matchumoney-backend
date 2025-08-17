@@ -262,7 +262,75 @@ public class CategoryMappingUtil {
         }
         
         String mappedCategory = mapBenefitToTransactionCategory(benefitCategory);
-        return mappedCategory.equals(transactionCategory.trim());
+        String trimmedTransactionCategory = transactionCategory.trim();
+        
+        // 정확한 매칭
+        if (mappedCategory.equals(trimmedTransactionCategory)) {
+            return true;
+        }
+        
+        // 고도화된 매칭 로직 - 유사 카테고리 매칭
+        return isAdvancedCategoryMatch(benefitCategory, trimmedTransactionCategory);
+    }
+    
+    /**
+     * 고도화된 카테고리 매칭 로직
+     * 더 세밀한 카테고리 매칭을 위한 추가 규칙을 적용합니다.
+     */
+    private static boolean isAdvancedCategoryMatch(String benefitCategory, String transactionCategory) {
+        // 1. 모든가맹점 혜택은 모든 카테고리와 매칭
+        if ("모든가맹점".equals(benefitCategory) || "국내외가맹점".equals(benefitCategory)) {
+            return true;
+        }
+        
+        // 2. 선택형 혜택은 주요 카테고리와 매칭
+        if ("선택형".equals(benefitCategory)) {
+            return isSelectiveCompatibleCategory(transactionCategory);
+        }
+        
+        // 3. 세부 카테고리 매칭 규칙
+        return isDetailedCategoryMatch(benefitCategory, transactionCategory);
+    }
+    
+    /**
+     * 선택형 혜택과 호환되는 카테고리인지 확인합니다.
+     */
+    private static boolean isSelectiveCompatibleCategory(String transactionCategory) {
+        // 선택형 혜택은 주로 일상 소비 카테고리에 적용
+        Set<String> selectiveCategories = Set.of(
+            "푸드", "카페/디저트", "마트/편의점", "쇼핑", "교통", "주유", 
+            "통신", "공과금/렌탈", "뷰티/피트니스", "OTT/영화/문화"
+        );
+        return selectiveCategories.contains(transactionCategory);
+    }
+    
+    /**
+     * 세부 카테고리 매칭 규칙을 적용합니다.
+     */
+    private static boolean isDetailedCategoryMatch(String benefitCategory, String transactionCategory) {
+        // 유사한 의미의 카테고리들을 매칭
+        Map<String, Set<String>> similarCategories = Map.of(
+            "교통", Set.of("교통", "대중교통", "지하철", "버스"),
+            "푸드", Set.of("푸드", "외식", "음식점", "일반음식점", "점심", "저녁"),
+            "쇼핑", Set.of("쇼핑", "온라인쇼핑", "백화점", "아울렛", "패션"),
+            "마트/편의점", Set.of("마트", "편의점", "대형마트", "SSM", "생활"),
+            "카페/디저트", Set.of("카페", "베이커리", "디저트", "아이스크림"),
+            "OTT/영화/문화", Set.of("영화", "공연", "도서", "음원", "문화", "구독서비스")
+        );
+        
+        for (Map.Entry<String, Set<String>> entry : similarCategories.entrySet()) {
+            String standardCategory = entry.getKey();
+            Set<String> aliases = entry.getValue();
+            
+            if (transactionCategory.equals(standardCategory)) {
+                return aliases.contains(benefitCategory) || 
+                       aliases.stream().anyMatch(alias -> benefitCategory.contains(alias));
+            }
+        }
+        
+        // 부분 매칭 - 혜택 카테고리가 거래 카테고리를 포함하거나 그 반대
+        return benefitCategory.contains(transactionCategory) || 
+               transactionCategory.contains(benefitCategory);
     }
     
     /**
