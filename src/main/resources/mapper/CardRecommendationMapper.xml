@@ -310,5 +310,42 @@
         AND is_available = 1
         ORDER BY pre_month_money ASC, name ASC
     </select>
+    
+    <!-- 발급사별로 발급 가능한 카드 목록을 페이징하여 조회 -->
+    <select id="selectAvailableCardsByIssuerWithPaging" resultType="team2.pjt12.matchumoney.domain.cardrecommendation.vo.CardProductVO">
+        SELECT 
+            card_product_id as cardProductId,
+            name,
+            type,
+            is_available as isAvailable,
+            issuer_id as issuerId,
+            annual_fee as annualFee,
+            pre_month_money as preMonthMoney,
+            online_only as onlineOnly,
+            card_image_url as cardImageUrl,
+            request_pc_url as requestPcUrl,
+            request_mobile_url as requestMobileUrl,
+            annual_fee_detail as annualFeeDetail,
+            corp_pr_container as corpPrContainer,
+            corp_pr_detail as corpPrDetail,
+            corp_tips as corpTips,
+            created_time as createdTime,
+            last_modified_time as lastModifiedTime,
+            persona_id as personaId,
+            issuer
+        FROM card_product
+        WHERE issuer = #{issuer}
+        AND is_available = 1
+        ORDER BY pre_month_money ASC, name ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+    
+    <!-- 발급사별 총 카드 개수 조회 -->
+    <select id="countAvailableCardsByIssuer" resultType="int">
+        SELECT COUNT(*)
+        FROM card_product
+        WHERE issuer = #{issuer}
+        AND is_available = 1
+    </select>
 
 </mapper>
