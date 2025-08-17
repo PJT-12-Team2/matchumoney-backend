@@ -5,7 +5,6 @@ import org.apache.ibatis.annotations.Param;
 import team2.pjt12.matchumoney.domain.cardsearch.dto.CardSearchResponseDTO;
 import team2.pjt12.matchumoney.domain.deposit.dto.res.DepositProductResponseDTO;
 import team2.pjt12.matchumoney.domain.favorite.domain.FavoriteVO;
-import team2.pjt12.matchumoney.domain.persona.dto.PersonaResponseDTO;
 import team2.pjt12.matchumoney.domain.persona.dto.PersonaSimpleResponseDTO;
 import team2.pjt12.matchumoney.domain.personacard.dto.PersonaCardDTO;
 import team2.pjt12.matchumoney.domain.personadeposit.dto.PersonaDepositDTO;
@@ -13,7 +12,6 @@ import team2.pjt12.matchumoney.domain.personasaving.dto.PersonaSavingDTO;
 import team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO;
 import team2.pjt12.matchumoney.domain.user.domain.Gender;
 import team2.pjt12.matchumoney.domain.user.domain.UserVO;
-import team2.pjt12.matchumoney.domain.user.dto.res.MyPageResponseDTO;
 
 import java.time.LocalDate;
 import java.util.List;
