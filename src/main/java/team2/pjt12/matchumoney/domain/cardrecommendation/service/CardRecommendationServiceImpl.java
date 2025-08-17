@@ -41,11 +41,48 @@ public class CardRecommendationServiceImpl implements CardRecommendationService 
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusDays(ANALYSIS_PERIOD_DAYS);
 
-        // 특정 카드의 카테고리별 거래 통계 조회 (holding_id 기준)
-        log.info("🔍 거래내역 통계 조회 - userId: {}, cardId: {}, 기간: {} ~ {}", 
-            userId, cardId, startDate, endDate);
-        List<CardTransactionSummaryVO> transactionSummaries = 
-            cardRecommendationMapper.selectTransactionSummaryByUserAndCard(userId, cardId, startDate, endDate);
+        // 카드 정보 조회 (cardId가 실제로는 cardProductId 또는 holdingId일 수 있음)
+        CardProductVO targetCard = null;
+        List<CardProductVO> ownedCards = cardRecommendationMapper.selectUserOwnedCards(userId);
+        
+        // cardId로 매칭되는 카드 찾기
+        for (CardProductVO card : ownedCards) {
+            if (cardId.equals(card.getCardProductId()) || 
+                (card.getCardProductId() == null && cardId.equals(card.getHoldingId().intValue()))) {
+                targetCard = card;
+                break;
+            }
+        }
+        
+        if (targetCard == null) {
+            log.warn("사용자 {}의 카드 {}를 찾을 수 없습니다.", userId, cardId);
+            return MyCardBenefitResponseDTO.builder()
+                .totalSpendAmount(0L)
+                .categoryStats(Collections.emptyList())
+                .ownedCardBenefits(Collections.emptyList())
+                .build();
+        }
+        
+        // 거래내역 통계 조회 (매칭된 카드는 cardId, 매칭되지 않은 카드는 holdingId 사용)
+        log.info("🔍 거래내역 통계 조회 - userId: {}, cardId: {}, holdingId: {}, 기간: {} ~ {}", 
+            userId, cardId, targetCard.getHoldingId(), startDate, endDate);
+            
+        List<CardTransactionSummaryVO> transactionSummaries;
+        Long totalSpendAmount;
+        
+        if (targetCard.getCardProductId() != null) {
+            // 매칭된 카드: 기존 로직 사용
+            transactionSummaries = cardRecommendationMapper.selectTransactionSummaryByUserAndCard(
+                userId, targetCard.getCardProductId(), startDate, endDate);
+            totalSpendAmount = cardRecommendationMapper.selectTotalSpendByUserAndCard(
+                userId, targetCard.getCardProductId(), startDate, endDate);
+        } else {
+            // 매칭되지 않은 카드: holdingId 기준 조회
+            transactionSummaries = cardRecommendationMapper.selectTransactionSummaryByHoldingId(
+                userId, targetCard.getHoldingId(), startDate, endDate);
+            totalSpendAmount = cardRecommendationMapper.selectTotalSpendByHoldingId(
+                userId, targetCard.getHoldingId(), startDate, endDate);
+        }
 
         log.info("📊 거래내역 통계 조회 완료 - 카테고리 수: {}", transactionSummaries.size());
         if (transactionSummaries.isEmpty()) {
@@ -57,46 +94,55 @@ public class CardRecommendationServiceImpl implements CardRecommendationService 
                 .build();
         }
 
-        // 특정 카드의 총 거래액 조회
-        Long totalSpendAmount = cardRecommendationMapper.selectTotalSpendByUserAndCard(userId, cardId, startDate, endDate);
+        // 카드 혜택 계산 (매칭된 카드만 혜택 계산 가능)
+        List<CardBenefitDTO> cardBenefits = new ArrayList<>();
+        
+        if (targetCard.getCardProductId() != null) {
+            // 매칭된 카드: 혜택 계산
+            List<CardParsedBenefitVO> benefits = 
+                cardRecommendationMapper.selectCardBenefitsByCardId(targetCard.getCardProductId());
 
-        // 특정 카드 정보 조회
-        CardProductVO card = cardRecommendationMapper.selectCardById(cardId);
+            BigDecimal totalBenefit = BenefitCalculationUtil.calculateTotalBenefit(
+                benefits, transactionSummaries, totalSpendAmount, targetCard.getPreMonthMoney());
 
-        if (card == null) {
-            log.warn("카드 {}를 찾을 수 없습니다.", cardId);
-            return MyCardBenefitResponseDTO.builder()
-                .totalSpendAmount(totalSpendAmount)
-                .categoryStats(transactionSummaries.stream()
-                    .map(this::convertToCategoryStatDTO)
-                    .collect(Collectors.toList()))
-                .ownedCardBenefits(Collections.emptyList())
-                .build();
+            cardBenefits.add(CardBenefitDTO.builder()
+                .cardId(targetCard.getCardProductId())
+                .cardName(targetCard.getName())
+                .cardType(targetCard.getType())
+                .issuer(targetCard.getIssuer())
+                .estimatedBenefit(totalBenefit.longValue())
+                .annualFee(targetCard.getAnnualFee())
+                .preMonthMoney(targetCard.getPreMonthMoney())
+                .cardImageUrl(targetCard.getCardImageUrl())
+                .requestPcUrl(targetCard.getRequestPcUrl())
+                .requestMobileUrl(targetCard.getRequestMobileUrl())
+                .build()
+            );
+            
+            log.info("✅ 매칭된 카드 혜택 계산 완료 - 카드: '{}', 예상 혜택: {}원", 
+                targetCard.getName(), totalBenefit);
+        } else {
+            // 매칭되지 않은 카드: 거래내역 통계만 제공
+            log.info("⚠️ 매칭되지 않은 카드 - 카드: '{}', 거래내역만 제공", targetCard.getName());
+            cardBenefits.add(CardBenefitDTO.builder()
+                .cardId(targetCard.getHoldingId().intValue()) // holdingId를 임시 ID로 사용
+                .cardName(targetCard.getName())
+                .cardType(targetCard.getType())
+                .issuer(targetCard.getIssuer())
+                .estimatedBenefit(0L) // 매칭되지 않아 혜택 계산 불가
+                .annualFee("알 수 없음")
+                .preMonthMoney(null)
+                .cardImageUrl(null)
+                .requestPcUrl(null)
+                .requestMobileUrl(null)
+                .build()
+            );
         }
 
-        // 특정 카드 혜택 계산
-        List<CardParsedBenefitVO> benefits = 
-            cardRecommendationMapper.selectCardBenefitsByCardId(cardId);
-
-        BigDecimal totalBenefit = BenefitCalculationUtil.calculateTotalBenefit(
-            benefits, transactionSummaries, totalSpendAmount, card.getPreMonthMoney());
-
-        List<CardBenefitDTO> cardBenefits = Collections.singletonList(
-            CardBenefitDTO.builder()
-                .cardId(card.getCardProductId())
-                .cardName(card.getName())
-                .cardType(card.getType())
-                .issuer(card.getIssuer())
-                .estimatedBenefit(totalBenefit.longValue())
-                .annualFee(card.getAnnualFee())
-                .preMonthMoney(card.getPreMonthMoney())
-                .cardImageUrl(card.getCardImageUrl())
-                .requestPcUrl(card.getRequestPcUrl())
-                .requestMobileUrl(card.getRequestMobileUrl())
-                .build()
-        );
-
-        log.info("사용자 {}의 카드 {} 혜택 계산 완료. 예상 혜택: {}원", userId, cardId, totalBenefit);
+        long totalBenefitAmount = cardBenefits.stream()
+            .mapToLong(benefit -> benefit.getEstimatedBenefit() != null ? benefit.getEstimatedBenefit() : 0L)
+            .sum();
+        log.info("사용자 {}의 카드 {} 혜택 계산 완료. 예상 혜택: {}원", userId, cardId, totalBenefitAmount);
 
         return MyCardBenefitResponseDTO.builder()
             .totalSpendAmount(totalSpendAmount)
@@ -115,49 +161,107 @@ public class CardRecommendationServiceImpl implements CardRecommendationService 
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusDays(ANALYSIS_PERIOD_DAYS);
 
-        // 특정 카드의 카테고리별 거래 통계 조회
-        List<CardTransactionSummaryVO> transactionSummaries = 
-            cardRecommendationMapper.selectTransactionSummaryByUserAndCard(userId, cardId, startDate, endDate);
-
-        if (transactionSummaries.isEmpty()) {
-            log.warn("사용자 {}의 카드 {}에 대한 최근 {}일 거래 내역이 없어 추천이 어렵습니다.", userId, cardId, ANALYSIS_PERIOD_DAYS);
+        // 카드 정보 조회
+        CardProductVO targetCard = null;
+        List<CardProductVO> ownedCards = cardRecommendationMapper.selectUserOwnedCards(userId);
+        
+        for (CardProductVO card : ownedCards) {
+            if (cardId.equals(card.getCardProductId()) || 
+                (card.getCardProductId() == null && cardId.equals(card.getHoldingId().intValue()))) {
+                targetCard = card;
+                break;
+            }
+        }
+        
+        if (targetCard == null) {
+            log.warn("사용자 {}의 카드 {}를 찾을 수 없습니다.", userId, cardId);
             return CardRecommendationResponseDTO.builder()
                 .totalSpendAmount(0L)
                 .categoryStats(Collections.emptyList())
                 .recommendedCards(Collections.emptyList())
-                .message("해당 카드의 최근 " + ANALYSIS_PERIOD_DAYS + "일 거래 내역이 없어 추천이 어렵습니다.")
+                .message("카드 정보를 찾을 수 없습니다.")
                 .build();
         }
 
-        // 특정 카드의 총 거래액 조회
-        Long totalSpendAmount = cardRecommendationMapper.selectTotalSpendByUserAndCard(userId, cardId, startDate, endDate);
+        // 거래내역 통계 조회
+        List<CardTransactionSummaryVO> transactionSummaries;
+        Long totalSpendAmount;
+        
+        if (targetCard.getCardProductId() != null) {
+            transactionSummaries = cardRecommendationMapper.selectTransactionSummaryByUserAndCard(
+                userId, targetCard.getCardProductId(), startDate, endDate);
+            totalSpendAmount = cardRecommendationMapper.selectTotalSpendByUserAndCard(
+                userId, targetCard.getCardProductId(), startDate, endDate);
+        } else {
+            transactionSummaries = cardRecommendationMapper.selectTransactionSummaryByHoldingId(
+                userId, targetCard.getHoldingId(), startDate, endDate);
+            totalSpendAmount = cardRecommendationMapper.selectTotalSpendByHoldingId(
+                userId, targetCard.getHoldingId(), startDate, endDate);
+        }
 
-        // 기준 카드 정보 조회
-        CardProductVO baseCard = cardRecommendationMapper.selectCardById(cardId);
-        if (baseCard == null) {
-            log.warn("기준 카드 {}를 찾을 수 없습니다.", cardId);
+        if (transactionSummaries.isEmpty()) {
+            String cardName = targetCard.getName();
+            log.warn("사용자 {}의 카드 '{}'에 대한 최근 {}일 거래 내역이 없어 추천이 어렵습니다.", userId, cardName, ANALYSIS_PERIOD_DAYS);
+            return CardRecommendationResponseDTO.builder()
+                .totalSpendAmount(0L)
+                .categoryStats(Collections.emptyList())
+                .recommendedCards(Collections.emptyList())
+                .message(String.format("카드 '%s'의 최근 %d일 거래 내역이 없어 추천이 어렵습니다. " +
+                        "카드를 사용하신 후 거래내역을 업데이트해 주세요.", cardName, ANALYSIS_PERIOD_DAYS))
+                .build();
+        }
+
+        // 매칭되지 않은 카드의 경우 거래내역 기반으로만 추천
+        if (targetCard.getCardProductId() == null) {
+            log.info("🔍 매칭되지 않은 카드 '{}'에 대한 거래내역 기반 추천 시작", targetCard.getName());
+            
+            // 매칭되지 않은 카드는 거래내역 패턴만으로 추천
+            List<CardProductVO> allAvailableCards = cardRecommendationMapper.selectAvailableCardsByType("신용", Collections.emptyList());
+            
+            // 거래 패턴과 유사한 카드들을 추천 (간단한 버전)
+            List<CardBenefitDTO> recommendedCards = allAvailableCards.stream()
+                .limit(5) // 상위 5개만
+                .map(card -> CardBenefitDTO.builder()
+                    .cardId(card.getCardProductId())
+                    .cardName(card.getName())
+                    .cardType(card.getType())
+                    .issuer(card.getIssuer())
+                    .estimatedBenefit(0L) // 정확한 계산 불가
+                    .annualFee(card.getAnnualFee())
+                    .preMonthMoney(card.getPreMonthMoney())
+                    .cardImageUrl(card.getCardImageUrl())
+                    .requestPcUrl(card.getRequestPcUrl())
+                    .requestMobileUrl(card.getRequestMobileUrl())
+                    .recommendationReasons(java.util.Arrays.asList("거래내역 패턴을 기반으로 추천된 카드입니다"))
+                    .build())
+                .collect(Collectors.toList());
+                
+            String message = String.format("카드 '%s'는 매칭되지 않아 정확한 혜택 비교는 어렵지만, " +
+                    "거래내역 패턴을 기반으로 %d개 카드를 추천합니다.", 
+                    targetCard.getName(), recommendedCards.size());
+                    
             return CardRecommendationResponseDTO.builder()
                 .totalSpendAmount(totalSpendAmount)
                 .categoryStats(transactionSummaries.stream()
                     .map(this::convertToCategoryStatDTO)
                     .collect(Collectors.toList()))
-                .recommendedCards(Collections.emptyList())
-                .message("기준 카드 정보를 찾을 수 없습니다.")
+                .recommendedCards(recommendedCards)
+                .message(message)
                 .build();
         }
 
-        // 기준 카드의 혜택 계산
+        // 매칭된 카드의 기존 추천 로직
         List<CardParsedBenefitVO> baseBenefits = 
-            cardRecommendationMapper.selectCardBenefitsByCardId(cardId);
+            cardRecommendationMapper.selectCardBenefitsByCardId(targetCard.getCardProductId());
         BigDecimal baseCardBenefit = BenefitCalculationUtil.calculateTotalBenefit(
-            baseBenefits, transactionSummaries, totalSpendAmount, baseCard.getPreMonthMoney());
+            baseBenefits, transactionSummaries, totalSpendAmount, targetCard.getPreMonthMoney());
 
         log.info("기준 카드 {} 혜택: {}원", cardId, baseCardBenefit);
 
         // 같은 타입의 카드들 조회 (기준 카드 제외)
-        log.info("기준 카드 타입: {} - 같은 타입 카드만 추천합니다", baseCard.getType());
+        log.info("기준 카드 타입: {} - 같은 타입 카드만 추천합니다", targetCard.getType());
         List<CardProductVO> availableCards = cardRecommendationMapper
-            .selectAvailableCardsByType(baseCard.getType(), Collections.singletonList(cardId));
+            .selectAvailableCardsByType(targetCard.getType(), Collections.singletonList(targetCard.getCardProductId()));
 
         List<CardBenefitDTO> betterCards = new ArrayList<>();
 
@@ -227,7 +331,7 @@ public class CardRecommendationServiceImpl implements CardRecommendationService 
         String message;
         if (topRecommendations.isEmpty()) {
             message = String.format("현재 카드(%s, 예상혜택: %s원)가 해당 소비 패턴에 가장 적합합니다.", 
-                baseCard.getName(), baseCardBenefit.toString());
+                targetCard.getName(), baseCardBenefit.toString());
         } else {
             Long maxBenefit = topRecommendations.get(0).getEstimatedBenefit();
             Long benefitDiff = maxBenefit - baseCardBenefit.longValue();
@@ -290,18 +394,25 @@ public class CardRecommendationServiceImpl implements CardRecommendationService 
 
         for (CardProductVO card : ownedCards) {
             try {
-                log.info("🔍 카드 혜택 계산 시작 - 카드: '{}', cardProductId: {}", 
-                    card.getName(), card.getCardProductId());
-                MyCardBenefitResponseDTO cardBenefit = calculateSpecificCardBenefit(userId, card.getCardProductId());
+                Integer cardIdForCalculation = card.getCardProductId() != null ? 
+                    card.getCardProductId() : card.getHoldingId().intValue();
+                    
+                log.info("🔍 카드 혜택 계산 시작 - 카드: '{}', cardProductId: {}, holdingId: {}", 
+                    card.getName(), card.getCardProductId(), card.getHoldingId());
+                    
+                MyCardBenefitResponseDTO cardBenefit = calculateSpecificCardBenefit(userId, cardIdForCalculation);
                 myCardsBenefits.add(cardBenefit);
+                
                 long totalBenefit = cardBenefit.getOwnedCardBenefits().stream()
                     .mapToLong(benefit -> benefit.getEstimatedBenefit() != null ? benefit.getEstimatedBenefit() : 0L)
                     .sum();
-                log.info("✅ 카드 혜택 계산 완료 - 카드: '{}', 총혜택: {}원, 카테고리: {}개", 
-                    card.getName(), totalBenefit, cardBenefit.getCategoryStats().size());
+                    
+                String matchStatus = card.getCardProductId() != null ? "매칭됨" : "매칭되지 않음";
+                log.info("✅ 카드 혜택 계산 완료 - 카드: '{}' ({}), 총혜택: {}원, 카테고리: {}개", 
+                    card.getName(), matchStatus, totalBenefit, cardBenefit.getCategoryStats().size());
             } catch (Exception e) {
-                log.warn("⚠️ 사용자 {}의 카드 {} ('{}') 혜택 계산 중 오류 발생, 건너뜁니다: {}", 
-                    userId, card.getCardProductId(), card.getName(), e.getMessage());
+                log.warn("⚠️ 사용자 {}의 카드 '{}' 혜택 계산 중 오류 발생, 건너뜁니다: {}", 
+                    userId, card.getName(), e.getMessage());
             }
         }
 

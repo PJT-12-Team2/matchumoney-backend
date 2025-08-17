@@ -35,10 +35,12 @@ public class CardRecommendationRefreshServiceImpl implements CardRecommendationR
             // 각 보유 카드에 대해 추천 재계산
             for (CardProductVO card : ownedCards) {
                 try {
-                    refreshRecommendationsForUserCard(userId, card.getCardProductId());
+                    Integer cardIdForRecommendation = card.getCardProductId() != null ? 
+                        card.getCardProductId() : card.getHoldingId().intValue();
+                    refreshRecommendationsForUserCard(userId, cardIdForRecommendation);
                 } catch (Exception e) {
-                    log.warn("사용자 {}의 카드 {} 추천 재계산 중 오류 발생, 다음 카드로 진행", 
-                        userId, card.getCardProductId(), e);
+                    log.warn("사용자 {}의 카드 '{}' 추천 재계산 중 오류 발생, 다음 카드로 진행", 
+                        userId, card.getName(), e);
                 }
             }
 
