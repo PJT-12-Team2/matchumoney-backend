@@ -28,4 +28,6 @@ public interface QuizProblemMapper {
     int getTotalCount();
     
     int getUnsolvedCountByUserId(@Param("userId") Long userId);
+    
+    List<QuizProblemVO> findByLogIds(@Param("logIds") List<Long> logIds);
 }

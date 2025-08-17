@@ -90,4 +90,13 @@
         )
     </select>
 
+    <select id="findByLogIds" resultMap="QuizProblemResultMap">
+        SELECT problem_id, quiz_text, quiz_answer, explanation, created_time, last_modified_time
+        FROM quiz_problem
+        WHERE problem_id IN
+        <foreach item="id" collection="logIds" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
 </mapper>
