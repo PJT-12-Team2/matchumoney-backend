@@ -15,10 +15,7 @@ import team2.pjt12.matchumoney.global.exception.CodefApiSubError;
 import team2.pjt12.matchumoney.global.exception.CustomException;
 import team2.pjt12.matchumoney.global.exception.ErrorCode;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -197,7 +194,7 @@ public class CodefConnectedIdProvider {
             account.put("birthDate", birthDate); // 아이디 방식에서 은행별로 필수인 경우가 많음
         }
 
-        Map<String, Object> body = new HashMap<>();
+        Map<String, Object> body = new LinkedHashMap<>();
         body.put("accountList", List.of(account));
 
         ObjectMapper mapper = new ObjectMapper();
@@ -211,7 +208,7 @@ public class CodefConnectedIdProvider {
                                           String encryptedPassword,
                                           String orgCode,
                                           String birthDate) throws JsonProcessingException {
-        Map<String, Object> account = new HashMap<>();
+        Map<String, Object> account = new LinkedHashMap<>();
         account.put("countryCode", CodefApiConstants.COUNTRY_CODE_KR);
         account.put("businessType", CodefApiConstants.BUSINESS_TYPE_BANK);  // BK
         account.put("clientType", CodefApiConstants.CLIENT_TYPE_PERSONAL);  // P (법인은 별도 상수 사용)
@@ -224,7 +221,7 @@ public class CodefConnectedIdProvider {
         }
         // 기관 요구 시: account.put("isEncrypted", "Y"); 등 부가 필드 추가
 
-        Map<String, Object> body = new HashMap<>();
+        Map<String, Object> body = new LinkedHashMap<>();
         body.put("accountList", List.of(account));
 
         ObjectMapper mapper = new ObjectMapper();
