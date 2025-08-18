@@ -19,4 +19,15 @@
         WHERE email = #{email}
     </update>
 
+    <insert id="insertWithdrawLog" parameterType="team2.pjt12.matchumoney.domain.user.domain.WithdrawLog"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO withdrawal_log (reason, detail, created_time, last_modified_time)
+        VALUES (#{reason}, #{detail}, NOW(), NOW())
+    </insert>
+
+    <delete id="deleteById" parameterType="long">
+        DELETE FROM users
+        WHERE user_id = #{userId}
+    </delete>
+
 </mapper>

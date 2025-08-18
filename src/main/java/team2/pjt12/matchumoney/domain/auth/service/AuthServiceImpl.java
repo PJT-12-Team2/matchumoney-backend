@@ -7,24 +7,25 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team2.pjt12.matchumoney.domain.auth.client.KakaoApiClient;
-import team2.pjt12.matchumoney.domain.auth.dto.LoginResponseDTO;
-import team2.pjt12.matchumoney.domain.auth.dto.SocialLoginRequestDTO;
-import team2.pjt12.matchumoney.domain.auth.dto.SocialUserInfo;
-import team2.pjt12.matchumoney.domain.auth.dto.TokenDTO;
+import team2.pjt12.matchumoney.domain.auth.dto.res.LoginResponseDTO;
+import team2.pjt12.matchumoney.domain.auth.dto.req.SocialLoginRequestDTO;
+import team2.pjt12.matchumoney.domain.auth.dto.res.SocialUserInfo;
+import team2.pjt12.matchumoney.domain.auth.dto.res.TokenDTO;
 import team2.pjt12.matchumoney.domain.auth.dto.req.*;
 import team2.pjt12.matchumoney.domain.auth.mapper.AuthMapper;
 import team2.pjt12.matchumoney.domain.user.domain.UserVO;
+import team2.pjt12.matchumoney.domain.user.domain.WithdrawLog;
 import team2.pjt12.matchumoney.domain.user.mapper.UserMapper;
 import team2.pjt12.matchumoney.global.email.EmailService;
 import team2.pjt12.matchumoney.global.exception.CustomException;
 import team2.pjt12.matchumoney.global.exception.ErrorCode;
 import team2.pjt12.matchumoney.global.jwt.JwtServiceImpl;
+import team2.pjt12.matchumoney.global.util.SecurityUtils;
 
 import javax.servlet.http.HttpServletResponse;
 import java.time.Duration;
@@ -45,16 +46,20 @@ public class AuthServiceImpl implements AuthService{
     private final EmailService emailService;
 
     @Override
-    public LoginResponseDTO loginOrSignUp(SocialLoginRequestDTO request) {
+    public LoginResponseDTO loginOrSignUp(SocialLoginRequestDTO request, HttpServletResponse response) {
         SocialUserInfo userInfo = kakaoApiClient.getUserInfoByCode(request.getCode());
 
         UserVO user = userMapper.findBySocialIdAndSocialProvider(userInfo.getSocialId(), "KAKAO")
                 .orElseGet(() -> registerUser(userInfo));
 
-        String jwt = jwtService.createAccessToken(user);
+        String at = jwtService.createAccessToken(user);
+        String rt = jwtService.createRefreshToken(user);
+        redisTemplate.opsForValue().set("refresh:" + user.getEmail(), rt, jwtService.getExpiration(rt), TimeUnit.MILLISECONDS);
+        jwtService.sendAccessAndRefreshToken(response, at, rt);
+        jwtService.registerTokens(user.getUserId(), at, rt);
 
         return LoginResponseDTO.builder()
-                .accessToken(jwt)
+                .accessToken(at)
                 .userId(user.getUserId())
                 .nickname(user.getNickname())
                 .personaId(user.getPersonaId())
@@ -211,5 +216,21 @@ public class AuthServiceImpl implements AuthService{
         if (!ok) {
             throw new BadCredentialsException("비밀번호 불일치");
         }
+    }
+
+    @Override
+    @Transactional
+    public void withdraw(WithdrawRequestDTO req) {
+        Long userId = SecurityUtils.getCurrentUser().getUserId();
+
+        WithdrawLog log = WithdrawLog.builder()
+                .reason(req.getReason())
+                .detail(req.getDetail())
+                .build();
+
+        authMapper.insertWithdrawLog(log);
+        authMapper.deleteById(userId);
+
+        jwtService.revokeAllForUser(userId);
     }
 }

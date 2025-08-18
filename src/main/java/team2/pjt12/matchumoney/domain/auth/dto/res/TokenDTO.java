@@ -1,11 +1,11 @@
-package team2.pjt12.matchumoney.domain.auth.dto;
+package team2.pjt12.matchumoney.domain.auth.dto.res;
 
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @Builder
-public class LoginResponseDTO {
+public class TokenDTO {
 
     private final String accessToken;
     private final Long userId;

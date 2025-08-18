@@ -1,4 +1,4 @@
-package team2.pjt12.matchumoney.domain.auth.dto;
+package team2.pjt12.matchumoney.domain.auth.dto.req;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
