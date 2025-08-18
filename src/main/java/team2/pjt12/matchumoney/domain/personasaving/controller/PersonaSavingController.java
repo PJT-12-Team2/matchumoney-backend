@@ -49,6 +49,10 @@ public class PersonaSavingController {
         return ResponseEntity.ok(new SuccessResponse<>(response));
     }
 
+    @ApiOperation(
+            value = "사용자의 페르소나 ID 조회",
+            notes = "현재 로그인된 사용자의 페르소나 ID를 반환합니다."
+    )
     @GetMapping("/user/persona-id")
     public ResponseEntity<Map<String, Object>> getPersonaId(HttpServletRequest request) {
         Long userId = SecurityUtils.getCurrentUser().getUserId();
@@ -60,6 +64,10 @@ public class PersonaSavingController {
         return ResponseEntity.ok(response);
     }
 
+    @ApiOperation(
+            value = "사용자 페르소나 기반 적금 추천",
+            notes = "로그인된 사용자의 페르소나에 맞는 적금 상품 3개를 추천합니다."
+    )
     @GetMapping("/user/recommendation")
     public ResponseEntity<SuccessResponse<PersonaSavingResponseDTO>> getUserPersonaRecommendation(HttpServletRequest request) {
         Long userId = SecurityUtils.getCurrentUser().getUserId();
