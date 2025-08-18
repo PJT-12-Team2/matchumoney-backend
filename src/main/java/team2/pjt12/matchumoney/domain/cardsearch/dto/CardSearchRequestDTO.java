@@ -11,7 +11,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@ApiModel(description = "카드 검색 요청 파라미터")
+@ApiModel(description = "카드 검색 요청 파라미터 DTO")
 public class CardSearchRequestDTO {
     @ApiModelProperty(value = "신용카드 포함 여부", example = "true")
     private boolean creditCard;

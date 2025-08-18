@@ -1,5 +1,6 @@
 package team2.pjt12.matchumoney.domain.cardrecommendation.dto;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.*;
 
@@ -10,6 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ApiModel(description = "보유 카드 혜택 응답 DTO")
 public class MyCardBenefitResponseDTO {
     @ApiModelProperty(value = "최근 30일 총 사용금액", example = "485000")
     private Long totalSpendAmount;
