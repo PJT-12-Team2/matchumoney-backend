@@ -11,17 +11,18 @@ import lombok.NoArgsConstructor;
 @ApiModel(description = "교육 영상 정보 DTO")
 @NoArgsConstructor
 public class EduMovieResponseDTO {
-    @ApiModelProperty(value = "교육 영상 id", example = "1")
+    @ApiModelProperty(value = "교육 영상 id", example = "555")
     private Long id;
 
-    @ApiModelProperty(value = "적금 상품 id", example = "1")
+    @ApiModelProperty(value = "교육 영상 제목", example = "[여이주TV]#24, 스마트폰으로 주식을 사고팔아보기")
     private String title;
 
-    @ApiModelProperty(value = "간단한 설명", example = "군장병, 군간부를 대상으로 보이스피싱 등 금융사기, 불법사금융, 유사수신, 보험사기 피해사례 및 예방법을 안내하는 동영상입니다.")
+    @ApiModelProperty(value = "간단한 설명", example = "투자할 때 참고할 만한 현명한 매도 매수 방법에 대해 알아봅니다.")
     private String smrtnCntnt;
 
-    @ApiModelProperty(value = "출처?", example = "금융감독원")
+    @ApiModelProperty(value = "출처", example = "투자자교육협의회")
     private String Institution;
+
     @ApiModelProperty(value = "영상 링크", example = "https://youtu.be/oLJw2sqLAdo")
     private String link;
 }

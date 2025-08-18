@@ -9,7 +9,7 @@ import team2.pjt12.matchumoney.domain.education.dto.EduMovieResponseDTO;
 
 import java.util.List;
 
-@Api(tags = "Education Api", description = "교육자료 API")
+@Api(tags = "Education API", description = "교육자료 API")
 @RequestMapping("/api/education")
 public interface EducationApi {
 

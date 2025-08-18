@@ -1,5 +1,7 @@
 package team2.pjt12.matchumoney.domain.education.dto;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import team2.pjt12.matchumoney.domain.education.domain.WebtoonVO;
 import lombok.Data;
 import lombok.Builder;
@@ -10,12 +12,22 @@ import lombok.AllArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ApiModel(description = "웹툰 응답 DTO")
 public class WebtoonResponseDTO {
 
+    @ApiModelProperty(value = "웹툰 ID", example = "856")
     private Long id;
+
+    @ApiModelProperty(value = "제목", example = "금융교육 웹툰 4화 -중장년편-")
     private String title;
+
+    @ApiModelProperty(value = "첫 번째 이미지 URL", example = "https://...&fileSn=1")
     private String fileDownUrl;
+
+    @ApiModelProperty(value = "두 번째 이미지 URL", example = "https://...&fileSn=2")
     private String secondImageUrl;
+
+    @ApiModelProperty(value = "유형 코드", example = "1")
     private Integer typeCode;
 
     /**

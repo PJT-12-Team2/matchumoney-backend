@@ -1,5 +1,7 @@
 package team2.pjt12.matchumoney.domain.education.controller;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import team2.pjt12.matchumoney.domain.education.dto.WebtoonResponseDTO;
 import team2.pjt12.matchumoney.domain.education.service.WebtoonService;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @Slf4j
+@Api(tags = "Webtoon API", description = "웹툰 교육자료 API")
 public class WebtoonController {
 
     private final WebtoonService webtoonService;
@@ -22,6 +25,7 @@ public class WebtoonController {
      * 전체 웹툰 목록 조회
      * GET /api/webtoon
      */
+    @ApiOperation(value = "전체 웹툰 목록 조회", notes = "전체 웹툰 리스트를 반환합니다.")
     @GetMapping
     public ResponseEntity<List<WebtoonResponseDTO>> getAllWebtoons() {
         try {
@@ -39,6 +43,7 @@ public class WebtoonController {
      * 전체 웹툰의 상위 4개 조회
      * GET /api/webtoon/top4
      */
+    @ApiOperation(value = "상위 4개 웹툰 조회", notes = "전체 웹툰 중 상위 4개를 반환합니다.")
     @GetMapping("/top4")
     public ResponseEntity<List<WebtoonResponseDTO>> getTop4Webtoons() {
         try {
