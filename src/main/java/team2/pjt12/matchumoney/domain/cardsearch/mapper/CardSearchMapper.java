@@ -20,6 +20,12 @@ public interface CardSearchMapper {
             @Param("cursorId") Long cursorId, // 마지막으로 본 id (null이면 첫 페이지)
             @Param("limit") int limit // size+1로 호출
     );
+
+    List<CardListItemDTO> selectCardsByPage(@Param("request") CardSearchRequestDTO request,
+                                            @Param("userId") Long userId,
+                                            @Param("offset") int offset,
+                                            @Param("limit") int limit);
+
 }
 
 
