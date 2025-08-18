@@ -22,11 +22,11 @@
             resultType="team2.pjt12.matchumoney.domain.saving.dto.MySavingProductResponseDTO">
         SELECT account_id             AS id,
                res_account_name       AS title,
-               res_account_start_date AS start_date,
-               res_account_end_date   AS end_date,
+               res_account_start_date AS startDate,
+               res_account_end_date   AS endDate,
                res_rate               AS rate,
                res_valid_period       AS period,
-               user_id                as user_id
+               user_id                as userId
         FROM mydata_saving_accounts
         WHERE user_id = #{userId}
     </select>
@@ -36,11 +36,11 @@
             resultType="team2.pjt12.matchumoney.domain.saving.dto.MySavingProductResponseDTO">
         SELECT account_id             AS id,
                res_account_name       AS title,
-               res_account_start_date AS start_date,
-               res_account_end_date   AS end_date,
+               res_account_start_date AS startDate,
+               res_account_end_date   AS endDate,
                res_rate               AS rate,
                res_valid_period       AS period,
-               user_id                as user_id
+               user_id                as userId
         FROM mydata_saving_accounts
         WHERE account_id = #{id}
     </select>
