@@ -12,9 +12,9 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import team2.pjt12.matchumoney.domain.saving.codef.CodefAccountRetrievalService;
 import team2.pjt12.matchumoney.domain.saving.codef.CodefApiClient;
 import team2.pjt12.matchumoney.domain.saving.codef.CodefConnectedIdProvider;
+import team2.pjt12.matchumoney.domain.saving.codef.mapper.CodefMapper;
 import team2.pjt12.matchumoney.domain.saving.dto.BankLoginRequestDTO;
 import team2.pjt12.matchumoney.domain.saving.dto.MySavingProductResponseDTO;
 import team2.pjt12.matchumoney.domain.saving.mapper.SavingAccountMapper;
@@ -40,11 +40,11 @@ class CodefAccountRetrievalServiceTest {
     SavingAccountMapper savingAccountMapper;
     @Mock
     CodefConnectedIdProvider codefConnectedIdProvider;
-    @Mock
     SavingAccountConverter dataTransformService;
+    @Mock
 
     @InjectMocks
-    CodefAccountRetrievalService service;
+    team2.pjt12.matchumoney.domain.saving.codef.service.CodefAccountRetrievalService service;
 
     @BeforeEach
     void setUp() {
