@@ -252,7 +252,7 @@ public class SavingAccountServiceImpl implements SavingAccountService {
             throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
         }
 
-        if (!mySavingProduct.getUser_id().equals(userId)) {
+        if (!mySavingProduct.getUserId().equals(userId)) {
             throw new CustomException(ErrorCode.USER_NOT_AUTHORIZED);
         }
 

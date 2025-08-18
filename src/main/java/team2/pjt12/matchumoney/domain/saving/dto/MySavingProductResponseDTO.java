@@ -21,10 +21,10 @@ public class MySavingProductResponseDTO {
     private String title;
 
     @ApiModelProperty(value = "적금 시작일 (YYYYMMDD)", example = "20240101")
-    private String start_date;
+    private String startDate;
 
     @ApiModelProperty(value = "적금 만기일 (YYYYMMDD)", example = "20250101")
-    private String end_date;
+    private String endDate;
 
     @ApiModelProperty(value = "적용 금리 (연 %)", example = "2.500")
     private String rate;
@@ -33,6 +33,6 @@ public class MySavingProductResponseDTO {
     private String period;
 
     @ApiModelProperty(value = "유저 id", example = "1")
-    private Long user_id;
+    private Long userId;
 }
 
