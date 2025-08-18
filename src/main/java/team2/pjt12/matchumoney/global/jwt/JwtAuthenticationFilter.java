@@ -24,7 +24,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     // ✅ 실제 API 경로에 맞춤
     private static final String SOCIAL_LOGIN_URL = "/api/auth/kakao-login";
     private static final String LOGIN_URL        = "/api/auth/login";
-    private static final String LOGOUT_URL       = "/api/auth/logout"; // 실제 경로에 맞추세요
+    private static final String LOGOUT_URL       = "/api/auth/logout";
 
     private final JwtService jwtService;
     private final RedisTemplate<String, String> redisTemplate;
@@ -48,9 +48,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || uri.startsWith("/v3/api-docs")
                 || uri.startsWith("/swagger-resources")
                 || uri.startsWith("/webjars")
-                || uri.startsWith("/static/")
-                || uri.equals("/kakao_login_medium_narrow.png")
-                || uri.equals("/page/login")) {
+                || uri.startsWith("/static/")) {
             return true;
         }
 
