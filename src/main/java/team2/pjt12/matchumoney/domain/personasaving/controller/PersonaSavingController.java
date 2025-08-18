@@ -5,10 +5,12 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import team2.pjt12.matchumoney.domain.personasaving.dto.PersonaSavingResponseDTO;
 import team2.pjt12.matchumoney.domain.personasaving.service.PersonaSavingService;
-import team2.pjt12.matchumoney.global.jwt.JwtService;
 import team2.pjt12.matchumoney.global.success.SuccessResponse;
 import team2.pjt12.matchumoney.global.util.SecurityUtils;
 
@@ -19,10 +21,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/savings/recommendations")
 @RequiredArgsConstructor
-@Api(tags = "Persona Saving Recommendations",
+@Api(tags = "Persona Saving API",
         description = "페르소나 기반 적금상품 추천 API")
 public class PersonaSavingController {
-    private final JwtService jwtService;
     private final PersonaSavingService personaSavingService;
 
     @ApiOperation(
@@ -47,6 +48,7 @@ public class PersonaSavingController {
         PersonaSavingResponseDTO response = personaSavingService.getRecommendedSaving(parsedPersonaId);
         return ResponseEntity.ok(new SuccessResponse<>(response));
     }
+
     @GetMapping("/user/persona-id")
     public ResponseEntity<Map<String, Object>> getPersonaId(HttpServletRequest request) {
         Long userId = SecurityUtils.getCurrentUser().getUserId();
@@ -57,6 +59,7 @@ public class PersonaSavingController {
         response.put("personaId", personaId);
         return ResponseEntity.ok(response);
     }
+
     @GetMapping("/user/recommendation")
     public ResponseEntity<SuccessResponse<PersonaSavingResponseDTO>> getUserPersonaRecommendation(HttpServletRequest request) {
         Long userId = SecurityUtils.getCurrentUser().getUserId();
