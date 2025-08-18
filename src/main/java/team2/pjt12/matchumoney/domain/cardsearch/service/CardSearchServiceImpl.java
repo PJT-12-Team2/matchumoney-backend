@@ -1,6 +1,7 @@
 package team2.pjt12.matchumoney.domain.cardsearch.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import team2.pjt12.matchumoney.domain.carddetail.dto.CardOptionDTO;
 import team2.pjt12.matchumoney.domain.cardsearch.dto.CardListItemDTO;
@@ -14,6 +15,7 @@ import java.util.List;
 
 import static team2.pjt12.matchumoney.global.util.SecurityUtils.getCurrentUser;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CardSearchServiceImpl implements CardSearchService {
@@ -21,14 +23,22 @@ public class CardSearchServiceImpl implements CardSearchService {
     private final PersonaCardMapper personaCardMapper;
 
     @Override
-    public List<CardSearchResponseDTO> searchCards(CardSearchRequestDTO request) {
-        Long userId = getCurrentUser().getUserId();
-        List<CardSearchResponseDTO> cards = cardSearchMapper.selectCardsByFilter(request, userId);
-        for (CardSearchResponseDTO card : cards) {
-            List<CardOptionDTO> options = personaCardMapper.selectCardOptionsByCardId(card.getId());
-            card.setOptions(options);
+    public List<CardListItemDTO> searchCards(Long userId, CardSearchRequestDTO req, int page, int size) {
+        log.info("[searchCards] userId={}, page={}, size={}, credit={}, debit={}, benefits={}",
+                userId, page, size, req.isCreditCard(), req.isDebitCard(), req.getSelectedBenefits());
+        if (!req.isCreditCard() && !req.isDebitCard()) {
+            req = new CardSearchRequestDTO(true, true, req.getSelectedBenefits());
         }
-        return cards;
+
+        int offset = Math.max(0, page) * Math.max(1, size);
+        List<CardListItemDTO> rows = cardSearchMapper.selectCardsByPage(req, userId, offset, size);
+
+        for (CardListItemDTO it : rows) {
+            var opts = personaCardMapper.selectCardOptionsByCardId(it.getId());
+            if (opts != null && opts.size() > 3) opts = opts.subList(0, 3);
+            it.setOptions(opts);
+        }
+        return rows;
     }
 
     @Override
@@ -41,6 +51,15 @@ public class CardSearchServiceImpl implements CardSearchService {
 
         boolean hasNext = rows.size() > size;
         if (hasNext) rows = rows.subList(0, size);
+
+        for (CardListItemDTO it : rows) {
+            List<team2.pjt12.matchumoney.domain.carddetail.dto.CardOptionDTO> opts =
+                    personaCardMapper.selectCardOptionsByCardId(it.getId());
+            if (opts != null && opts.size() > 3) {
+                opts = opts.subList(0, 3); // 화면은 Top3만
+            }
+            it.setOptions(opts);
+        }
 
         String nextCursor = null;
         if (hasNext && !rows.isEmpty()) {

@@ -25,36 +25,16 @@ public class CardSearchController {
 
     @PostMapping("/cardsearch")
     @ApiOperation(
-            value = "카드 검색(전체 반환)",
-            notes = "신용/체크 여부 및 혜택 선택 조건에 따라 카드를 검색해 한 번에 모두 반환합니다."
+            value = "카드 검색(페이지네이션)",
+            notes = "신용/체크/혜택 필터로 검색하고 page/size 기준으로 페이지네이션합니다."
     )
-    public ResponseEntity<List<CardSearchResponseDTO>> searchCards(
-            @ApiParam(value = "검색 조건(신용/체크/혜택 목록)", required = true)
-            @RequestBody CardSearchRequestDTO request) {
-        if (request.getSelectedBenefits() == null) {
-            request = new CardSearchRequestDTO(
-                    request.isCreditCard(),
-                    request.isDebitCard(),
-                    Collections.emptyList()
-            );
-        }
-
-        List<CardSearchResponseDTO> result = cardSearchService.searchCards(request);
-        return ResponseEntity.ok(result);
-    }
-
-    @PostMapping("/infinite")
-    @ApiOperation(
-            value = "카드 검색(커서 기반 무한스크롤)",
-            notes = "커서 기반 페이지네이션으로 카드를 검색합니다."
-    )
-    public CursorPageResponse<CardListItemDTO> searchInfinite(
-            @RequestParam(required = false) String cursor,     // 마지막 커서(다음 페이지 시작점)
-            @RequestParam(defaultValue = "6") int size,        // 페이지 기본 6개
-            @ApiParam(value = "검색 조건(신용/체크/혜택 목록)", required = true)
-            @RequestBody CardSearchRequestDTO req
+    public ResponseEntity<List<CardListItemDTO>> searchCardsPage(
+            @RequestBody CardSearchRequestDTO req,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size
     ) {
-        Long userId = SecurityUtils.getCurrentUser().getUserId();
-        return cardSearchService.searchInfinite(userId, req, cursor, size);
+        Long userId = SecurityUtils.getCurrentUserId();
+        List<CardListItemDTO> result = cardSearchService.searchCards(userId, req, page, size);
+        return ResponseEntity.ok(result);
     }
 }
