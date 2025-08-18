@@ -23,8 +23,7 @@ public interface AuthService {
 
     void resetPassword(ResetRequestDTO reqDto);
 
-    // src/main/java/team2/pjt12/matchumoney/domain/auth/service/AuthService.java
-    boolean verifyCurrentPassword(String rawPassword);
+    void verifyPassword(Long userId, String rawPassword);
 
 
 }

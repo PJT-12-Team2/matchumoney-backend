@@ -44,53 +44,60 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .authorizeHttpRequests(authorizeRequests ->
-                        authorizeRequests
-                                .requestMatchers(
-                                        "/swagger-ui/**",
-                                        "/swagger-ui.html",
-                                        "/v2/api-docs",
-                                        "/swagger-resources/**",
-                                        "/v3/api-docs/**",
-                                        "/oauth/**",
-                                        "/api/auth/**",
-                                        "/api/user/**",
-                                        "/static/**",
-                                        "/kakao_login_medium_narrow.png",
-                                        "/page/login",
-                                        "/webjars/**",
-                                        "/api/chatbot",
-                                        "/api/persona/**",
-                                        "/api/saving/**",
-                                        "/api/user/update/**",
-                                        "/api/persona-saving/recommendation",
-                                        "/api/deposits/**",
-                                        "/api/deposit/**",
-                                        "/api/cards/**",
-                                        "/api/persona/**",
-                                        "/api/users/me/**",
-                                        "/api/deposit-products/**",
-                                        "/api/saving-products/**",
-                                        "/api/card-products/**",
-                                        "/api/like/**",
-                                        "/api/favorite/**",
-                                        "/api/push/**",
-                                        "/api/favorite/**",
-                                        "/api/webtoon",
-                                        "api/webtoon/**"
-                                ).permitAll()  // 허용 URL 설정
-                                .requestMatchers("/user/update").authenticated()
-                                .anyRequest().authenticated()  // 그 외 모든 요청은 인증 필요
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers(
+                                // 문서/정적
+                                "/swagger-ui/**", "/swagger-ui.html", "/v2/api-docs",
+                                "/swagger-resources/**", "/v3/api-docs/**",
+                                "/webjars/**", "/static/**",
+                                "/kakao_login_medium_narrow.png", "/page/login",
+
+                                // OAuth 콜백/연동
+                                "/oauth/**",
+
+                                // ===== 공개 Auth 엔드포인트만 정확히 지정 =====
+                                "/api/auth/login",
+                                "/api/auth/kakao-login",
+                                "/api/auth/signup",
+                                "/api/auth/signup/email/send",
+                                "/api/auth/email/verify",
+                                "/api/auth/reset/**",
+
+                                // (필요 시) 비회원도 조회 가능한 공개 API들만 여기에 추가
+                                "/api/chatbot",
+                                "/api/persona/**",
+                                "/api/saving/**",
+                                "/api/persona-saving/recommendation",
+                                "/api/deposits/**",
+                                "/api/deposit/**",
+                                "/api/cards/**",
+                                "/api/deposit-products/**",
+                                "/api/saving-products/**",
+                                "/api/card-products/**",
+                                "/api/like/**",
+                                "/api/favorite/**",
+                                "/api/webtoon", "api/webtoon/**"
+                        ).permitAll()
+
+                        // ===== 인증 필요한 엔드포인트 =====
+                        // 비밀번호 검증은 반드시 인증 필요
+                        .requestMatchers("/api/auth/verify/password").authenticated()
+                        // (예: 사용자 정보 수정/조회 등)
+                        .requestMatchers("/api/user/**").authenticated()
+                        .requestMatchers("/user/update").authenticated()
+
+                        // 그 외는 모두 인증 필요
+                        .anyRequest().authenticated()
                 )
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .formLogin(AbstractHttpConfigurer::disable).logout((logout) -> logout
-                        .addLogoutHandler(jwtLogoutHandler) // JwtLogoutHandler 추가
-                        .logoutSuccessHandler((request, response, authentication) -> response.setStatus(HttpServletResponse.SC_OK)))
-
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .formLogin(AbstractHttpConfigurer::disable)
+                .logout(logout -> logout
+                        .addLogoutHandler(jwtLogoutHandler)
+                        .logoutSuccessHandler((req, res, auth) -> res.setStatus(HttpServletResponse.SC_OK)))
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 
