@@ -1,5 +1,8 @@
 package team2.pjt12.matchumoney.domain.deposit.dto.res;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,11 +15,20 @@ import java.text.DecimalFormat;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@ApiModel(description = "사용자 예금 계좌 응답 DTO")
 public class UserDepositResponseDTO {
-    private String accountNo;        // 계좌번호 (마스킹 처리된)
-    private String accountName;      // 계좌명
-    private String formattedBalance; // 포맷팅된 잔액 (예: 1,000,000원)
-    private String nickname;  // 이름
+    @ApiModelProperty(value = "마스킹된 계좌번호", example = "12345****67890")
+    private String accountNo;
+
+    @ApiModelProperty(value = "계좌명", example = "KB 주거래 예금")
+    private String accountName;
+
+    @ApiModelProperty(value = "포맷팅된 잔액", example = "1,000,000원")
+    private String formattedBalance;
+
+    @ApiModelProperty(value = "사용자 닉네임", example = "머니머니")
+    private String nickname;
 
     /**
      * VO에서 DTO로 변환하는 정적 팩토리 메소드
@@ -31,7 +43,6 @@ public class UserDepositResponseDTO {
                 .nickname(UserDepositVO.getNickname())
                 .build();
     }
-
 
     private static String maskAccountNumber(String accountNo) {
         if (accountNo == null || accountNo.length() < 8) {
