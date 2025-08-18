@@ -54,5 +54,3 @@ out/
 .idea/
 openAI.properties
 src/main/resources/openAI.properties
-
-node_modules
