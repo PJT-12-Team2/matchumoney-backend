@@ -66,7 +66,7 @@ public class PersonaSavingController {
 
     @ApiOperation(
             value = "사용자 페르소나 기반 적금 추천",
-            notes = "로그인된 사용자의 페르소나에 맞는 적금 상품 3개를 추천합니다."
+            notes = "JWT 기반 사용자 정보로부터 페르소나 ID를 조회하고, 해당 페르소나에 맞는 적금 상품 최대 3개를 추천합니다."
     )
     @GetMapping("/user/recommendation")
     public ResponseEntity<SuccessResponse<PersonaSavingResponseDTO>> getUserPersonaRecommendation(HttpServletRequest request) {

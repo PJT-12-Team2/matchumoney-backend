@@ -37,6 +37,10 @@ public class PersonaDepositController {
         return ResponseEntity.ok(new SuccessResponse<>(response));
     }
 
+    @ApiOperation(
+            value = "사용자 페르소나 ID 조회",
+            notes = "요청자의 JWT 토큰을 기반으로 사용자 ID를 추출하고, 해당 사용자의 페르소나 ID를 반환합니다."
+    )
     @GetMapping("/user/persona-id")
     public ResponseEntity<Map<String, Object>> getPersonaId(HttpServletRequest request) {
         Long userId = jwtService.getUserIdFromToken(request)
@@ -49,6 +53,10 @@ public class PersonaDepositController {
         return ResponseEntity.ok(response);
     }
 
+    @ApiOperation(
+            value = "사용자 페르소나 기반 예금 추천",
+            notes = "JWT 기반 사용자 정보로부터 페르소나 ID를 조회하고, 해당 페르소나에 맞는 예금 상품 최대 3개를 추천합니다."
+    )
     @GetMapping("/user/recommendation")
     public ResponseEntity<SuccessResponse<PersonaDepositResponseDTO>> getUserPersonaRecommendation(HttpServletRequest request) {
         Long userId = jwtService.getUserIdFromToken(request)
