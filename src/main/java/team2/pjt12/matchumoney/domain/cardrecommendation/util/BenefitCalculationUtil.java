@@ -68,17 +68,29 @@ public class BenefitCalculationUtil {
                     .multiply(benefitValue)
                     .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
             } else {
-                // 고정 금액 혜택 계산
+                // 고정 금액 혜택 계산 - 더 안전한 로직
                 if (conditionText != null && conditionText.contains("건당")) {
-                    // 건당 고정 혜택: 혜택금액 × 거래건수
-                    benefitAmount = benefitValue
-                        .multiply(BigDecimal.valueOf(transactionSummary.getTransactionCount()));
+                    // 건당 고정 혜택: 혜택금액 × 거래건수 (단, 합리적 범위 내에서)
+                    Integer transactionCount = transactionSummary.getTransactionCount();
+                    if (transactionCount != null && transactionCount > 0) {
+                        // 건당 혜택이 과도하게 높지 않도록 제한 (건당 최대 5,000원)
+                        BigDecimal maxPerTransaction = BigDecimal.valueOf(5000);
+                        BigDecimal actualBenefitPerTransaction = benefitValue.min(maxPerTransaction);
+                        
+                        benefitAmount = actualBenefitPerTransaction.multiply(BigDecimal.valueOf(transactionCount));
+                        
+                        // 총 혜택이 사용액을 초과하지 않도록 제한
+                        if (benefitAmount.compareTo(transactionAmount) > 0) {
+                            benefitAmount = transactionAmount.multiply(BigDecimal.valueOf(0.5)); // 최대 50% 혜택
+                        }
+                    } else {
+                        benefitAmount = benefitValue;
+                    }
                 } else if (conditionText != null && (conditionText.contains("월") || conditionText.contains("매월"))) {
                     // 월 단위 고정 혜택: 조건 만족 시 한 번만 지급
                     benefitAmount = benefitValue;
                 } else {
                     // 사용액 기준 고정 혜택: 일정 사용액당 혜택
-                    // 예: 10만원당 5천원 -> (총사용액 / 10만원) * 5천원
                     if (conditionText != null && conditionText.contains("만원당")) {
                         String[] parts = conditionText.split("만원당");
                         if (parts.length > 0) {
@@ -88,17 +100,23 @@ public class BenefitCalculationUtil {
                                     int timesEligible = (int) (transactionAmount.longValue() / (baseAmount * 10000));
                                     benefitAmount = benefitValue.multiply(BigDecimal.valueOf(timesEligible));
                                 } else {
-                                    benefitAmount = benefitValue;
+                                    benefitAmount = BigDecimal.ZERO; // 조건 미충족
                                 }
                             } catch (NumberFormatException e) {
-                                benefitAmount = benefitValue;
+                                benefitAmount = BigDecimal.ZERO;
                             }
                         } else {
-                            benefitAmount = benefitValue;
+                            benefitAmount = BigDecimal.ZERO;
                         }
                     } else {
-                        // 기본 고정 혜택
-                        benefitAmount = benefitValue;
+                        // 기본 고정 혜택 - 월 한도가 있는 경우만 적용
+                        Integer maxBenefit = benefit.getMaxBenefitMonthly();
+                        if (maxBenefit != null && maxBenefit > 0) {
+                            benefitAmount = benefitValue;
+                        } else {
+                            // 월 한도가 없는 무제한 고정 혜택은 의심스러우므로 제한
+                            benefitAmount = BigDecimal.ZERO;
+                        }
                     }
                 }
             }
@@ -126,29 +144,49 @@ public class BenefitCalculationUtil {
      * @return 퍼센트 혜택 여부
      */
     private static boolean isPercentageBenefit(BigDecimal benefitValue, String conditionText, String title) {
-        // 조건 텍스트나 제목에 '%' 포함 시 퍼센트 혜택
+        // 1. 명시적으로 '%' 표시가 있으면 퍼센트 혜택
         if ((conditionText != null && conditionText.contains("%")) || 
             (title != null && title.contains("%"))) {
             return true;
         }
         
-        // 조건 텍스트에 '원' 포함 시 고정 금액 혜택
-        if (conditionText != null && conditionText.contains("원")) {
+        // 2. 명시적으로 '원' 표시가 있으면 고정 금액 혜택
+        if (conditionText != null && (conditionText.contains("원") || conditionText.contains("포인트"))) {
             return false;
         }
         
-        // 혜택 값이 100 이하이고 소수점이 있으면 퍼센트일 가능성 높음
-        if (benefitValue.compareTo(BigDecimal.valueOf(100)) <= 0 && 
+        // 3. 건당, 월단위 등의 키워드가 있으면 고정 금액 혜택
+        if (conditionText != null && (conditionText.contains("건당") || 
+            conditionText.contains("월") || conditionText.contains("매월") ||
+            conditionText.contains("만원당"))) {
+            return false;
+        }
+        
+        // 4. 혜택 값이 1000 이상이면 고정 금액일 가능성 높음
+        if (benefitValue.compareTo(BigDecimal.valueOf(1000)) >= 0) {
+            return false;
+        }
+        
+        // 5. 혜택 값이 50 이하이고 정수가 아니면 퍼센트일 가능성 높음
+        if (benefitValue.compareTo(BigDecimal.valueOf(50)) <= 0 && 
             benefitValue.scale() > 0) {
             return true;
         }
         
-        // 혜택 값이 10 이하면 퍼센트로 가정 (일반적인 카드 혜택율)
+        // 6. 혜택 값이 10 이하이면 퍼센트로 추정 (일반적인 카드 혜택율)
         if (benefitValue.compareTo(BigDecimal.valueOf(10)) <= 0) {
             return true;
         }
         
-        // 그 외는 고정 금액으로 가정
+        // 7. 혜택 값이 10-100 사이면 조건부로 판단
+        if (benefitValue.compareTo(BigDecimal.valueOf(100)) <= 0) {
+            // 소수점이 있거나, 50 이하면 퍼센트로 추정
+            if (benefitValue.scale() > 0 || benefitValue.compareTo(BigDecimal.valueOf(50)) <= 0) {
+                return true;
+            }
+        }
+        
+        // 8. 그 외는 고정 금액으로 가정
         return false;
     }
     
@@ -256,7 +294,16 @@ public class BenefitCalculationUtil {
                 totalBenefit = cardLimit;
             }
         }
-        // cardTotalMonthlyLimit이 null이거나 0이면 제한 없음
+        
+        // 전체 사용액 대비 혜택이 과도하지 않도록 추가 안전장치
+        if (previousMonthSpend != null && previousMonthSpend > 0) {
+            BigDecimal totalSpendAmount = BigDecimal.valueOf(previousMonthSpend);
+            BigDecimal maxReasonableBenefit = totalSpendAmount.multiply(BigDecimal.valueOf(0.20)); // 최대 20% 혜택
+            
+            if (totalBenefit.compareTo(maxReasonableBenefit) > 0) {
+                totalBenefit = maxReasonableBenefit;
+            }
+        }
         
         return totalBenefit.setScale(0, RoundingMode.HALF_UP);
     }

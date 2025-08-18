@@ -29,4 +29,5 @@ public class CardProductVO {
     private Timestamp lastModifiedTime;
     private Long personaId;
     private String issuer; // 발급사명
+    private Long holdingId; // 카드 보유 ID (매칭되지 않은 카드의 경우)
 }

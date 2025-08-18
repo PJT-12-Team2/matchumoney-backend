@@ -172,4 +172,34 @@ public interface CardRecommendationMapper {
      * @return 총 카드 개수
      */
     int countAvailableCardsByIssuer(@Param("issuer") String issuer);
+    
+    /**
+     * holding_id를 기준으로 거래내역 통계를 조회합니다 (매칭되지 않은 카드용).
+     * @param userId 사용자 ID
+     * @param holdingId 카드 보유 ID
+     * @param startDate 조회 시작일
+     * @param endDate 조회 종료일
+     * @return 카테고리별 거래 통계 목록
+     */
+    List<CardTransactionSummaryVO> selectTransactionSummaryByHoldingId(
+        @Param("userId") Long userId,
+        @Param("holdingId") Long holdingId,
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate
+    );
+    
+    /**
+     * holding_id를 기준으로 총 거래액을 조회합니다 (매칭되지 않은 카드용).
+     * @param userId 사용자 ID
+     * @param holdingId 카드 보유 ID
+     * @param startDate 조회 시작일
+     * @param endDate 조회 종료일
+     * @return 총 거래액
+     */
+    Long selectTotalSpendByHoldingId(
+        @Param("userId") Long userId,
+        @Param("holdingId") Long holdingId,
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate
+    );
 }
