@@ -33,4 +33,8 @@ public interface JwtService {
      * Assumes the token includes a "userId" claim of type Long.
      */
     Optional<Long> getUserIdFromToken(HttpServletRequest request);
+
+    void registerTokens(Long userId, String accessToken, String refreshToken);
+
+    void revokeAllForUser(Long userId);
 }

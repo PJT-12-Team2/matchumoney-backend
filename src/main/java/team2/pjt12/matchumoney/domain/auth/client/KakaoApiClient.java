@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import team2.pjt12.matchumoney.domain.auth.dto.SocialUserInfo;
+import team2.pjt12.matchumoney.domain.auth.dto.res.SocialUserInfo;
 import team2.pjt12.matchumoney.domain.auth.dto.kakao.KakaoTokenResponse;
 import team2.pjt12.matchumoney.domain.auth.dto.kakao.KakaoUserResponse;
 import team2.pjt12.matchumoney.global.oauth.KakaoOauthProperties;

@@ -16,6 +16,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -24,7 +25,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     // ✅ 실제 API 경로에 맞춤
     private static final String SOCIAL_LOGIN_URL = "/api/auth/kakao-login";
     private static final String LOGIN_URL        = "/api/auth/login";
-    private static final String LOGOUT_URL       = "/api/auth/logout"; // 실제 경로에 맞추세요
+    private static final String LOGOUT_URL       = "/api/auth/logout";
 
     private final JwtService jwtService;
     private final RedisTemplate<String, String> redisTemplate;
@@ -48,9 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || uri.startsWith("/v3/api-docs")
                 || uri.startsWith("/swagger-resources")
                 || uri.startsWith("/webjars")
-                || uri.startsWith("/static/")
-                || uri.equals("/kakao_login_medium_narrow.png")
-                || uri.equals("/page/login")) {
+                || uri.startsWith("/static/")) {
             return true;
         }
 
@@ -144,6 +143,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (accessToken == null && refreshToken != null) {
             final String newAccessToken = reIssueAccessToken(refreshToken);
             jwtService.sendAccessToken(response, newAccessToken);
+            jwtService.getUserIdFromToken(request).
+                    ifPresent(userId -> jwtService.registerTokens(userId, newAccessToken, refreshToken));
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Access token re-issued. Please retry with new token.");
             return;
@@ -186,6 +187,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     .orElseThrow(() -> new IllegalArgumentException("해당 이메일의 회원을 찾을 수 없습니다."));
             String newAccessToken = jwtService.createAccessToken(user);
             log.info("AccessToken 재발급: {}", newAccessToken);
+
             return newAccessToken;
         }
         throw new IllegalArgumentException("유효하지 않은 refresh token");

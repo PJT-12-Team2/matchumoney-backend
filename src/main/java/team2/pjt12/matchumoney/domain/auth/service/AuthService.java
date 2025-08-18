@@ -1,15 +1,15 @@
 package team2.pjt12.matchumoney.domain.auth.service;
 
-import team2.pjt12.matchumoney.domain.auth.dto.LoginResponseDTO;
-import team2.pjt12.matchumoney.domain.auth.dto.SocialLoginRequestDTO;
-import team2.pjt12.matchumoney.domain.auth.dto.TokenDTO;
+import team2.pjt12.matchumoney.domain.auth.dto.res.LoginResponseDTO;
+import team2.pjt12.matchumoney.domain.auth.dto.req.SocialLoginRequestDTO;
+import team2.pjt12.matchumoney.domain.auth.dto.res.TokenDTO;
 import team2.pjt12.matchumoney.domain.auth.dto.req.*;
 
 import javax.servlet.http.HttpServletResponse;
 
 public interface AuthService {
 
-    LoginResponseDTO loginOrSignUp(SocialLoginRequestDTO request);
+    LoginResponseDTO loginOrSignUp(SocialLoginRequestDTO request, HttpServletResponse response);
 
     void signup(SignupRequestDTO reqDto);
 
@@ -25,5 +25,5 @@ public interface AuthService {
 
     void verifyPassword(Long userId, String rawPassword);
 
-
+    void withdraw(WithdrawRequestDTO req);
 }

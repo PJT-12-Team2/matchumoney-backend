@@ -3,6 +3,7 @@ package team2.pjt12.matchumoney.domain.auth.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import team2.pjt12.matchumoney.domain.user.domain.UserVO;
+import team2.pjt12.matchumoney.domain.user.domain.WithdrawLog;
 
 @Mapper
 public interface AuthMapper {
@@ -14,4 +15,9 @@ public interface AuthMapper {
             @Param("password") String password
     );
 
+    void insertWithdrawLog (
+            WithdrawLog log
+    );
+
+    void deleteById(Long userId);
 }
