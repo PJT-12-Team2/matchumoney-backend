@@ -32,7 +32,7 @@ public class UserController {
     @PatchMapping("/update")
     @ApiOperation(value = "회원 정보 수정", notes = "닉네임, 성별, 생년월일, 프로필 이미지 등 수정")
     public SuccessResponse<UserUpdateResponseDTO> updateUserInfo(
-            @RequestBody @Valid UpdateUserInfoRequestDTO reqDto) {
+            @ApiParam(value = "회원 정보 수정 요청 DTO") @RequestBody @Valid UpdateUserInfoRequestDTO reqDto) {
         UserUpdateResponseDTO resDto = userService.updateUserInfo(reqDto);
         return new SuccessResponse<>(resDto, "회원정보 수정 성공");
     }
@@ -40,7 +40,7 @@ public class UserController {
     @PatchMapping("/update/password")
     @ApiOperation(value = "비밀번호 수정", notes = "현재 비밀번호 검증 후 새 비밀번호로 변경")
     public SuccessResponse<String> updatePassword(
-            @RequestBody @Valid UpdatePasswordRequestDTO reqDto) {
+            @ApiParam(value = "비밀번호 수정 요청 DTO") @RequestBody @Valid UpdatePasswordRequestDTO reqDto) {
         userService.updatePassword(reqDto);
         return new SuccessResponse<>("비밀번호 수정 성공");
     }
@@ -60,9 +60,9 @@ public class UserController {
     }
 
     @PatchMapping("/update/persona")
-    @ApiOperation(value = "페르소나 저장", notes = "선택한 페르소나 ID를 저장합니다.")
+    @ApiOperation(value = "페르소나 수정(초기 저장)", notes = "변경된 페르소나 ID를 저장합니다.")
     public SuccessResponse<String> updatePersona(
-            @ApiParam(value = "선택한 페르소나 ID", example = "P01", required = true)
+            @ApiParam(value = "변경할 페르소나 ID", example = "1", required = true)
             @RequestParam("persona_id") String personaId) {
         userService.updatePersona(personaId);
         return new SuccessResponse<>("페르소나 저장 성공");
