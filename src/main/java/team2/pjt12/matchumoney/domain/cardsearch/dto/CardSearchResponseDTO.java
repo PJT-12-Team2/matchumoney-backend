@@ -38,7 +38,7 @@ public class CardSearchResponseDTO {
     @ApiModelProperty(value = "카드사", example = "신한카드", position = 5)
     private String issuer;
 
-    @ApiModelProperty(value = "연회비", example = "[국내] 10,000원 / [해외] 15,000원", position = 6)
+    @ApiModelProperty(value = "연회비", example = "국내 10,000원 / 해외 15,000원", position = 6)
     private String annualFee;
 
     @ApiModelProperty(value = "전월 실적", example = "300000", position = 7)

@@ -24,7 +24,7 @@ public class CardListItemDTO {
     @ApiModelProperty(value = "전월 실적 금액", example = "300000")
     private Integer preMonthMoney;
 
-    @ApiModelProperty(value = "연회비", example = "[국내전용] 12,000원 / [해외겸용] 15,000원")
+    @ApiModelProperty(value = "연회비", example = "국내전용 12,000원 / 해외겸용 15,000원")
     private String annualFee;
 
     @ApiModelProperty(value = "카드 이미지 URL", example = "https://cdn.example.com/card/2835.png")
