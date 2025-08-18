@@ -1,4 +1,4 @@
-package team2.pjt12.matchumoney.global.config;
+package team2.pjt12.matchumoney.global.config; 
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
