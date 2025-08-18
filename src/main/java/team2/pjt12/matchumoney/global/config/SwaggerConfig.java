@@ -47,20 +47,26 @@ public class SwaggerConfig implements WebMvcConfigurer {
                 .securitySchemes(Collections.singletonList(apiKey()))
                 .securityContexts(Collections.singletonList(securityContext()));
 
-    }private ApiKey apiKey() {
+    }
+
+    private ApiKey apiKey() {
         return new ApiKey("Authorization", "Authorization", "header");
-    }private SecurityContext securityContext() {
+    }
+
+    private SecurityContext securityContext() {
         return SecurityContext.builder()
                 .securityReferences(defaultAuth())
                 .forPaths(PathSelectors.any())
                 .build();
     }
+
     private List<SecurityReference> defaultAuth() {
         AuthorizationScope authorizationScope = new AuthorizationScope("global", "accessEverything");
         AuthorizationScope[] authorizationScopes = new AuthorizationScope[1];
         authorizationScopes[0] = authorizationScope;
         return Collections.singletonList(new SecurityReference("Authorization", authorizationScopes));
     }
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/swagger-ui.html")
