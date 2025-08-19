@@ -1,10 +1,6 @@
 package team2.pjt12.matchumoney.domain.mydata.controller;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -20,13 +16,15 @@ import team2.pjt12.matchumoney.domain.mydata.vo.CardTransactionVO;
 import team2.pjt12.matchumoney.global.success.SuccessResponse;
 
 import javax.validation.Valid;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
 @RequestMapping("/api/users/me")
 @RequiredArgsConstructor
-@Api(tags = "KB Card MyData API", description = "KB카드 마이데이터 연동 API")
+@Api(tags = "Codef API(Card)", description = "KB 카드 마이데이터 연동(Codef) API")
 public class KbCardController {
 
     private final KbCardService kbCardService;
@@ -54,25 +52,25 @@ public class KbCardController {
                 request.getCardPw()
         );
         List<CardInfoResponseDTO> responseDTOList = CardDTOConverter.toCardInfoResponseDTOList(cardHoldingVOList);
-        
+
         // 매칭된 카드 개수 확인
         long matchedCardCount = cardHoldingVOList.stream()
                 .filter(card -> card.getCardId() != null)
                 .count();
-        
+
         long unmatchedCardCount = cardHoldingVOList.size() - matchedCardCount;
-        
+
         String message;
         if (unmatchedCardCount == 0) {
             message = String.format("총 %d개의 카드 정보가 동기화되었습니다. " +
-                    "모든 카드가 성공적으로 매칭되어 추천 계산이 백그라운드에서 진행됩니다.", 
+                            "모든 카드가 성공적으로 매칭되어 추천 계산이 백그라운드에서 진행됩니다.",
                     responseDTOList.size());
         } else {
             message = String.format("총 %d개의 카드 정보가 동기화되었습니다. " +
-                    "(카드 추천 가능: %d개, 매칭 실패: %d개) 추천 계산이 백그라운드에서 진행됩니다.", 
+                            "(카드 추천 가능: %d개, 매칭 실패: %d개) 추천 계산이 백그라운드에서 진행됩니다.",
                     responseDTOList.size(), matchedCardCount, unmatchedCardCount);
         }
-        
+
         return ResponseEntity.ok(new SuccessResponse<>(responseDTOList, message));
     }
 
@@ -126,7 +124,7 @@ public class KbCardController {
                 request.getStartDate(),
                 request.getEndDate()
         );
-        
+
         List<CardTransactionResponseDTO> responseDTOList = CardDTOConverter.toCardTransactionResponseDTOList(transactionVOList);
         return ResponseEntity.ok(new SuccessResponse<>(responseDTOList,
                 String.format("총 %d건의 거래 내역이 동기화되었습니다.", responseDTOList.size())));
@@ -134,10 +132,10 @@ public class KbCardController {
 
     @GetMapping("/cards/{holdingId}/transactions")
     @ApiOperation(
-        value = "저장된 카드 거래 내역 조회",
-        notes = "이미 저장된 특정 카드의 거래 내역을 조회합니다. " +
-                "MyData API를 호출하지 않고 데이터베이스에서 조회합니다. " +
-                "각 거래 내역에는 자동 분류된 소비 분야(merchantCategory)가 포함됩니다."
+            value = "저장된 카드 거래 내역 조회",
+            notes = "이미 저장된 특정 카드의 거래 내역을 조회합니다. " +
+                    "MyData API를 호출하지 않고 데이터베이스에서 조회합니다. " +
+                    "각 거래 내역에는 자동 분류된 소비 분야(merchantCategory)가 포함됩니다."
     )
     @ApiResponses({
             @ApiResponse(code = 200, message = "거래 내역 조회 성공"),
@@ -161,7 +159,7 @@ public class KbCardController {
 
         return ResponseEntity.ok(new SuccessResponse<>(responseDTOList, message));
     }
-    
+
     @PutMapping("/transactions/refresh/{userId}")
     @ApiOperation(
             value = "connectedId 기반 거래내역 업데이트",
@@ -180,39 +178,39 @@ public class KbCardController {
     public ResponseEntity<SuccessResponse<List<CardTransactionResponseDTO>>> refreshTransactionsByConnectedId(
             @ApiParam(value = "사용자 ID", required = true, example = "1")
             @PathVariable Long userId) throws Exception {
-            
+
         // 사용자 카드 목록에서 connectedId 조회
         List<CardHoldingVO> userCards = kbCardService.getCards(userId);
         if (userCards.isEmpty()) {
             return ResponseEntity.badRequest().body(new SuccessResponse<>(new ArrayList<>(),
                     "사용자의 카드 정보가 없습니다. 먼저 카드를 등록해주세요."));
         }
-        
+
         String connectedId = userCards.get(0).getConnectedId();
         if (connectedId == null || connectedId.isEmpty()) {
             return ResponseEntity.badRequest().body(new SuccessResponse<>(new ArrayList<>(),
                     "connectedId가 없습니다. 카드를 다시 등록해주세요."));
         }
-        
+
         // connectedId를 사용하여 거래내역 업데이트
         List<CardTransactionVO> updatedTransactions = kbCardService.syncTransactionsByConnectedId(userId, connectedId);
         List<CardTransactionResponseDTO> responseDTOList = CardDTOConverter.toCardTransactionResponseDTOList(updatedTransactions);
-        
+
         // 추천 재계산이 진행 중인 카드 개수 확인
         long recommendationCardCount = userCards.stream()
                 .filter(card -> card.getCardId() != null)
                 .count();
-        
+
         // card_id2가 제대로 설정된 거래내역 개수 확인
         long transactionsWithCardId = updatedTransactions.stream()
                 .filter(transaction -> transaction.getCardId2() != null)
                 .count();
-        
+
         String message = String.format("최근 30일 거래내역이 업데이트되었습니다. " +
-                "새로 추가된 거래내역: %d건, 카드 추천 재계산 진행 중: %d개 카드, " +
-                "매칭된 거래내역: %d건", 
+                        "새로 추가된 거래내역: %d건, 카드 추천 재계산 진행 중: %d개 카드, " +
+                        "매칭된 거래내역: %d건",
                 responseDTOList.size(), recommendationCardCount, transactionsWithCardId);
-        
+
         return ResponseEntity.ok(new SuccessResponse<>(responseDTOList, message));
     }
 }
