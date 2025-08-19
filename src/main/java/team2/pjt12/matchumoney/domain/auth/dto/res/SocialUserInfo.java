@@ -1,4 +1,4 @@
-package team2.pjt12.matchumoney.domain.auth.dto;
+package team2.pjt12.matchumoney.domain.auth.dto.res;
 
 import lombok.Getter;
 

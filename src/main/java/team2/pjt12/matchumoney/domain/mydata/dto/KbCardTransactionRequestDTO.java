@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @Setter
 @ApiModel(description = "카드 거래 내역 입력 DTO")
 public class KbCardTransactionRequestDTO {
-    @ApiModelProperty(value = "로그인 한 사용자 고유 ID", example = "1", position = 1)
+    @ApiModelProperty(value = "사용자 고유 ID", example = "1", position = 1)
     private Long userId;
 
     @ApiModelProperty(value = "선택된 카드의 holdingId (CardInfoVO의 PK)", example = "1", position = 2)

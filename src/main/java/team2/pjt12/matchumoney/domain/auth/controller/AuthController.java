@@ -8,9 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import team2.pjt12.matchumoney.domain.auth.dto.LoginResponseDTO;
-import team2.pjt12.matchumoney.domain.auth.dto.SocialLoginRequestDTO;
-import team2.pjt12.matchumoney.domain.auth.dto.TokenDTO;
+import team2.pjt12.matchumoney.domain.auth.dto.res.LoginResponseDTO;
+import team2.pjt12.matchumoney.domain.auth.dto.req.SocialLoginRequestDTO;
+import team2.pjt12.matchumoney.domain.auth.dto.res.TokenDTO;
 import team2.pjt12.matchumoney.domain.auth.dto.req.*;
 import team2.pjt12.matchumoney.domain.auth.service.AuthService;
 import team2.pjt12.matchumoney.global.security.UserDetailsImpl;
@@ -33,10 +33,9 @@ public class AuthController {
             value = "카카오 로그인",
             notes = "카카오 인가 코드를 받아 로그인/회원가입 처리 후 JWT 액세스 토큰을 반환합니다.")
     @PostMapping("/kakao-login")
-    public SuccessResponse<LoginResponseDTO> kakaoLogin(@ApiParam(value = "카카오 인가 코드 요청 바디", required = true)
-                                                        @RequestBody SocialLoginRequestDTO request) {
-        LoginResponseDTO response = authService.loginOrSignUp(request);
-        return new SuccessResponse<>(response);
+    public SuccessResponse<LoginResponseDTO> kakaoLogin(@RequestBody SocialLoginRequestDTO request, HttpServletResponse response) {
+        LoginResponseDTO resDto = authService.loginOrSignUp(request, response);
+        return new SuccessResponse<>(resDto);
     }
 
     @ApiOperation(
@@ -121,4 +120,15 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("ok", true));
     }
 
+    @ApiOperation(
+            value = "회원 탈퇴",
+            notes = "현재 로그인된 사용자를 탈퇴 처리합니다."
+    )
+    @PostMapping("/withdraw")
+    public SuccessResponse<?> withdraw(
+            @RequestBody @Valid WithdrawRequestDTO reqDto
+    ) {
+        authService.withdraw(reqDto);
+        return new SuccessResponse<>("회원 탈퇴 완료");
+    }
 }

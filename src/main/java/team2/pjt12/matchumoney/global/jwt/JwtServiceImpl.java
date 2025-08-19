@@ -7,6 +7,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import team2.pjt12.matchumoney.domain.user.domain.UserVO;
 
@@ -36,6 +37,8 @@ public class JwtServiceImpl implements JwtService {
     private String accessTokenHeader;
 
     private Key secretKey;
+
+    private final RedisTemplate<String, String> redisTemplate;
 
     @PostConstruct
     public void init() {
@@ -137,7 +140,7 @@ public class JwtServiceImpl implements JwtService {
 
         Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
         refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(false); // 추후 true로 변경 필요 (HTTPS 환경에서만)
+        refreshCookie.setSecure(false);
         refreshCookie.setPath("/");
         refreshCookie.setMaxAge((int) (refreshTokenExpireTime / 1000)); // 초 단위로 설정
 
@@ -165,5 +168,26 @@ public class JwtServiceImpl implements JwtService {
                         return null;
                     }
                 });
+    }
+
+    @Override
+    public void registerTokens(Long userId, String accessToken, String refreshToken) {
+        String key = "USER_TOKENS:" + userId;
+        if (accessToken != null) redisTemplate.opsForList().rightPush(key, accessToken);
+        if (refreshToken != null) redisTemplate.opsForList().rightPush(key, refreshToken);
+        redisTemplate.expire(key, Math.max(accessTokenExpireTime, refreshTokenExpireTime), java.util.concurrent.TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public void revokeAllForUser(Long userId) {
+        String key = "USER_TOKENS:" + userId;
+        var tokens = redisTemplate.opsForList().range(key, 0, -1);
+        if (tokens != null) tokens.forEach(this::blacklist);
+        redisTemplate.delete(key);
+    }
+
+    private void blacklist(String token) {
+        long ttl = getExpiration(token) - System.currentTimeMillis();
+        if (ttl > 0) redisTemplate.opsForValue().set("BLACKLIST:" + token, "revoked", ttl, java.util.concurrent.TimeUnit.MILLISECONDS);
     }
 }

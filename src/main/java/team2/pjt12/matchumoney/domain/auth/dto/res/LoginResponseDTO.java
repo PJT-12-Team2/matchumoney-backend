@@ -1,4 +1,4 @@
-package team2.pjt12.matchumoney.domain.auth.dto;
+package team2.pjt12.matchumoney.domain.auth.dto.res;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

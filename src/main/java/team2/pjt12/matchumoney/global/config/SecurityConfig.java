@@ -50,43 +50,16 @@ public class SecurityConfig {
                                 "/swagger-ui/**", "/swagger-ui.html", "/v2/api-docs",
                                 "/swagger-resources/**", "/v3/api-docs/**",
                                 "/webjars/**", "/static/**",
-                                "/kakao_login_medium_narrow.png", "/page/login",
 
-                                // OAuth 콜백/연동
                                 "/oauth/**",
 
-                                // ===== 공개 Auth 엔드포인트만 정확히 지정 =====
                                 "/api/auth/login",
                                 "/api/auth/kakao-login",
                                 "/api/auth/signup",
                                 "/api/auth/signup/email/send",
                                 "/api/auth/email/verify",
-                                "/api/auth/reset/**",
-
-                                // (필요 시) 비회원도 조회 가능한 공개 API들만 여기에 추가
-                                "/api/chatbot",
-                                "/api/persona/**",
-                                "/api/saving/**",
-                                "/api/persona-saving/recommendation",
-                                "/api/deposits/**",
-                                "/api/deposit/**",
-                                "/api/cards/**",
-                                "/api/deposit-products/**",
-                                "/api/saving-products/**",
-                                "/api/card-products/**",
-                                "/api/like/**",
-                                "/api/favorite/**",
-                                "/api/webtoon", "api/webtoon/**"
+                                "/api/auth/reset/**"
                         ).permitAll()
-
-                        // ===== 인증 필요한 엔드포인트 =====
-                        // 비밀번호 검증은 반드시 인증 필요
-                        .requestMatchers("/api/auth/verify/password").authenticated()
-                        // (예: 사용자 정보 수정/조회 등)
-                        .requestMatchers("/api/user/**").authenticated()
-                        .requestMatchers("/user/update").authenticated()
-
-                        // 그 외는 모두 인증 필요
                         .anyRequest().authenticated()
                 )
                 .csrf(AbstractHttpConfigurer::disable)

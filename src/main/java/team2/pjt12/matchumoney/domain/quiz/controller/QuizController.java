@@ -17,18 +17,20 @@ import team2.pjt12.matchumoney.global.success.SuccessResponse;
 import javax.validation.Valid;
 import java.util.List;
 
+import static team2.pjt12.matchumoney.global.util.SecurityUtils.getCurrentUser;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/quiz")
 @Slf4j
-@Api(tags = "퀴즈", description = "금융 퀴즈 문제 조회/제출/통계 API")
+@Api(tags = "Quiz API", description = "금융 퀴즈 문제 조회/제출/통계 API")
 public class QuizController {
 
     private final QuizService quizService;
 
     @GetMapping("/today")
     @ApiOperation(
-            value = "오늘의 퀴즈 문제 조회",
+            value = "오늘의 퀴즈 조회",
             notes = "사용자별로 오늘 풀어야 할 금융 퀴즈 문제를 제공합니다. 하루에 최대 2개까지 풀 수 있으며, 이미 오늘 문제를 모두 푼 경우 400 오류가 발생할 수 있습니다."
     )
     @ApiResponses({
@@ -36,9 +38,8 @@ public class QuizController {
             @ApiResponse(code = 401, message = "인증 실패"),
             @ApiResponse(code = 400, message = "오늘 풀 수 있는 문제가 없음 (최대 2개 제한)")
     })
-    public SuccessResponse<QuizProblemResponseDTO> getTodayQuiz(
-            @ApiParam(hidden = true) Authentication authentication) {
-        Long userId = getUserId(authentication);
+    public SuccessResponse<QuizProblemResponseDTO> getTodayQuiz() {
+        Long userId = getCurrentUser().getUserId();
         QuizProblemResponseDTO response = quizService.getTodayQuiz(userId);
         return new SuccessResponse<>(response);
     }
@@ -54,10 +55,9 @@ public class QuizController {
             @ApiResponse(code = 401, message = "인증 실패")
     })
     public SuccessResponse<QuizResultResponseDTO> submitAnswer(
-            @ApiParam(hidden = true) Authentication authentication,
             @ApiParam(value = "정답 제출 요청 DTO", required = true)
             @RequestBody @Valid QuizAnswerRequestDTO requestDTO) {
-        Long userId = getUserId(authentication);
+        Long userId = getCurrentUser().getUserId();
         QuizResultResponseDTO response = quizService.submitAnswer(userId, requestDTO);
         return new SuccessResponse<>(response);
     }
@@ -72,8 +72,8 @@ public class QuizController {
             @ApiResponse(code = 401, message = "인증 실패")
     })
     public SuccessResponse<QuizStatsResponseDTO> getUserStats(
-            @ApiParam(hidden = true) Authentication authentication) {
-        Long userId = getUserId(authentication);
+    ) {
+        Long userId = getCurrentUser().getUserId();
         QuizStatsResponseDTO response = quizService.getUserQuizStats(userId);
         return new SuccessResponse<>(response);
     }
@@ -87,9 +87,8 @@ public class QuizController {
             @ApiResponse(code = 200, message = "오늘의 퀴즈 완료 여부 반환 (2개 모두 완료 시 true)"),
             @ApiResponse(code = 401, message = "인증 실패")
     })
-    public SuccessResponse<Boolean> checkTodayQuizCompleted(
-            @ApiParam(hidden = true) Authentication authentication) {
-        Long userId = getUserId(authentication);
+    public SuccessResponse<Boolean> checkTodayQuizCompleted() {
+        Long userId = getCurrentUser().getUserId();
         boolean completed = quizService.hasCompletedTodayQuiz(userId);
         return new SuccessResponse<>(completed);
     }
@@ -103,9 +102,8 @@ public class QuizController {
             @ApiResponse(code = 200, message = "퀴즈 이력 조회 성공"),
             @ApiResponse(code = 401, message = "인증 실패")
     })
-    public SuccessResponse<List<QuizHistoryResponseDTO>> getQuizHistory(
-            @ApiParam(hidden = true) Authentication authentication) {
-        Long userId = getUserId(authentication);
+    public SuccessResponse<List<QuizHistoryResponseDTO>> getQuizHistory() {
+        Long userId = getCurrentUser().getUserId();
         List<QuizHistoryResponseDTO> history = quizService.getQuizHistory(userId);
         return new SuccessResponse<>(history);
     }
