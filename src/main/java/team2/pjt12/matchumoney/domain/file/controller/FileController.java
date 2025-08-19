@@ -1,16 +1,19 @@
 package team2.pjt12.matchumoney.domain.file.controller;
 
+import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
-
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
-import team2.pjt12.matchumoney.domain.file.dto.PresignResponse;
 import team2.pjt12.matchumoney.domain.file.dto.PresignRequest;
+import team2.pjt12.matchumoney.domain.file.dto.PresignResponse;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -18,17 +21,18 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/files")
+@Api(tags = "File API", description = "파일 업로드용 S3 Presigned URL 발급")
 public class FileController {
 
+
     private final S3Presigner presigner;
+    // application.properties 에 넣어도 되고, 없으면 환경변수 사용
+    @Value("${S3_BUCKET:#{null}}")
+    private String bucketProp;
 
     public FileController(S3Presigner presigner) {
         this.presigner = presigner;
     }
-
-    // application.properties 에 넣어도 되고, 없으면 환경변수 사용
-    @Value("${S3_BUCKET:#{null}}")
-    private String bucketProp;
 
     @PostMapping("/profile/presign")
     public PresignResponse presignProfile(@RequestBody PresignRequest req) {
@@ -77,7 +81,9 @@ public class FileController {
         return new PresignResponse(presigned.url().toString(), publicUrl, key);
     }
 
-    /** 프로젝트 보안 구조에 맞게 사용자 ID를 꺼내세요. 지금은 임시 0L 반환 */
+    /**
+     * 프로젝트 보안 구조에 맞게 사용자 ID를 꺼내세요. 지금은 임시 0L 반환
+     */
     private long currentUserIdOrFallback() {
         // 예: Spring Security 사용 시
         // Authentication auth = SecurityContextHolder.getContext().getAuthentication();

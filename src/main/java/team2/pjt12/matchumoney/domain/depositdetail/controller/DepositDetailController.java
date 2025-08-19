@@ -16,6 +16,8 @@ import team2.pjt12.matchumoney.global.security.UserDetailsImpl;
 
 import java.security.Principal;
 
+import static team2.pjt12.matchumoney.global.util.SecurityUtils.getCurrentUser;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/deposit-products")
@@ -31,11 +33,9 @@ public class DepositDetailController {
     )
     @GetMapping("/{id}")
     public DepositDetailResponseDTO getDepositProduct(@ApiParam(value = "예금 상품 ID", example = "10", required = true)
-                                                      @PathVariable Long id,
-                                                      @AuthenticationPrincipal UserDetailsImpl user) {
-        UserVO vo = user.getUser();       // 사용자 ID 조회
-        log.info("로그인 사용자: {} / {}", vo.getUserId(), vo.getEmail());
-        return depositDetailService.getDepositDetailById(vo.getUserId(), id);
+                                                      @PathVariable Long id) {
+        Long userId = getCurrentUser().getUserId();
+        return depositDetailService.getDepositDetailById(userId, id);
     }
 
     @ApiOperation(
@@ -44,9 +44,8 @@ public class DepositDetailController {
     )
     @PostMapping("/{id}/likes")
     public LikeStatusResponseDTO likeDeposit(@ApiParam(value = "예금 상품 ID", example = "10", required = true)
-                                             @PathVariable Long id,
-                                             @AuthenticationPrincipal UserDetailsImpl user) {
-        long userId = user.getUser().getUserId();
+                                             @PathVariable Long id) {
+        Long userId = getCurrentUser().getUserId();
         return depositDetailService.isUserLikedDeposit(userId, id);
     }
 
@@ -56,9 +55,8 @@ public class DepositDetailController {
     )
     @DeleteMapping("/{id}/likes")
     public LikeStatusResponseDTO unlikeDeposit(@ApiParam(value = "예금 상품 ID", example = "10", required = true)
-                                               @PathVariable Long id,
-                                               @AuthenticationPrincipal UserDetailsImpl user) {
-        long userId = user.getUser().getUserId();
+                                               @PathVariable Long id) {
+        Long userId = getCurrentUser().getUserId();
         return depositDetailService.isUserLikedDeposit(userId, id);
     }
 }
