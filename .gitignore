@@ -54,3 +54,4 @@ out/
 openAI.properties
 src/main/resources/openAI.propertiessrc/main/resources/openAI.properties
 src/main/resources/openAI.properties
+.DS_Store
