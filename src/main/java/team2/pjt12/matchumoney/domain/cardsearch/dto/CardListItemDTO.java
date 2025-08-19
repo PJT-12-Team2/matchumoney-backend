@@ -10,7 +10,7 @@ import java.util.List;
 
 @Getter
 @Setter
-@ApiModel(description = "카드 무한스크롤 목록에 노출되는 최소 카드 정보")
+@ApiModel(description = "카드 무한스크롤 목록에 노출되는 최소 카드 정보 DTO")
 public class CardListItemDTO {
     @ApiModelProperty(value = "카드 상품 ID", example = "10")
     private Long id;
@@ -30,8 +30,15 @@ public class CardListItemDTO {
     @ApiModelProperty(value = "카드 이미지 URL", example = "https://cdn.example.com/card/2835.png")
     private String imageUrl;
 
-    private Boolean isStarred;   // 즐겨찾기 여부
-    private Boolean isLiked;     // 사용자가 좋아요 눌렀는지
-    private Integer likeCount;   // 좋아요 수
+    @ApiModelProperty(value = "즐겨찾기 여부", example = "false")
+    private Boolean isStarred;
+
+    @ApiModelProperty(value = "사용자 좋아요 여부", example = "true")
+    private Boolean isLiked;
+
+    @ApiModelProperty(value = "좋아요 수", example = "42")
+    private Integer likeCount;
+
+    @ApiModelProperty(value = "대표 혜택 옵션 목록")
     private List<CardOptionDTO> options;
 }

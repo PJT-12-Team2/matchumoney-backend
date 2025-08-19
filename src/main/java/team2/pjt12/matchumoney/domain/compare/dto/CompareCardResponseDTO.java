@@ -30,9 +30,9 @@ public class CompareCardResponseDTO {
     private String finPrdtName;
 
     @ApiModelProperty(value = "카드 종류", example = "신용")
-    private String type; // 신용 or 체크
+    private String type;
 
-    @ApiModelProperty(value = "연회비", example = "해외겸용 [8,000]원")
+    @ApiModelProperty(value = "연회비", example = "해외겸용 8,000원")
     private String annualFee;
 
     @ApiModelProperty(value = "전월 실적 기준 금액", example = "200000")

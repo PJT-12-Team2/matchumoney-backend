@@ -1,5 +1,7 @@
 package team2.pjt12.matchumoney.domain.deposit.controller;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -17,14 +19,20 @@ import java.util.List;
 @RequestMapping("/api/deposits")
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
+@Api(tags = "Deposit Product API", description = "마이데이터 기반 예금 상품 추천/조회 API")
 public class DepositProductController {
 
     private final DepositProductService depositProductService;
 
     /**
      * 모든 예금 상품 조회 (프론트엔드에서 호출하는 엔드포인트)
+     *
      * @return 예금 상품 목록 (minAmount 포함)
      */
+    @ApiOperation(
+            value = "모든 예금 상품 조회",
+            notes = "전체 예금 상품 목록을 반환합니다. (minAmount 포함)"
+    )
     @GetMapping("/recommendations/allProducts")
     public ResponseEntity<List<DepositProductResponseDTO>> getAllDepositProducts() {
         List<DepositProductResponseDTO> products = depositProductService.getAllDepositProducts();
@@ -33,14 +41,23 @@ public class DepositProductController {
 
     /**
      * KB국민은행 예금 상품만 조회 (계좌가 없는 사용자용)
+     *
      * @return KB국민은행 예금 상품 목록
      */
+    @ApiOperation(
+            value = "KB국민은행 예금 상품 조회",
+            notes = "계좌가 없는 사용자용. KB국민은행 예금 상품만 반환합니다."
+    )
     @GetMapping("/recommendations/kb-products")
     public ResponseEntity<List<DepositProductResponseDTO>> getKBDepositProducts() {
         List<DepositProductResponseDTO> products = depositProductService.getDepositProductsByBank("국민은행");
         return ResponseEntity.ok(products);
     }
 
+    @ApiOperation(
+            value = "잔액 기반 예금 추천",
+            notes = "사용자 잔액을 기반으로 적합한 예금 상품을 추천합니다."
+    )
     @PostMapping("/recommendations/byBalance")
     public ResponseEntity<List<DepositProductResponseDTO>> getProductsByBalance(@RequestBody BalanceRequestDTO request) {
 //        log.info("잔액 기반 상품 추천 API 호출: userId={}, balance={}, accountNumber={}",
