@@ -1,7 +1,12 @@
 package team2.pjt12.matchumoney.domain.auth.dto.res;
 
+import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
+import org.springframework.stereotype.Service;
 
+@Builder
+@Setter
 @Getter
 public class SocialUserInfo {
 

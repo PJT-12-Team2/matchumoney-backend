@@ -10,13 +10,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import team2.pjt12.matchumoney.domain.user.domain.UserVO;
 import team2.pjt12.matchumoney.domain.user.mapper.UserMapper;
 import team2.pjt12.matchumoney.global.security.UserDetailsImpl;
-
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -25,7 +23,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     // ✅ 실제 API 경로에 맞춤
     private static final String SOCIAL_LOGIN_URL = "/api/auth/kakao-login";
     private static final String LOGIN_URL        = "/api/auth/login";
-    private static final String LOGOUT_URL       = "/api/auth/logout";
+    private static final String LOGOUT_URL       = "/api/auth/logout"; // 실제 경로에 맞추세요
 
     private final JwtService jwtService;
     private final RedisTemplate<String, String> redisTemplate;
@@ -49,7 +47,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || uri.startsWith("/v3/api-docs")
                 || uri.startsWith("/swagger-resources")
                 || uri.startsWith("/webjars")
-                || uri.startsWith("/static/")) {
+                || uri.startsWith("/static/")
+                || uri.equals("/kakao_login_medium_narrow.png")
+                || uri.equals("/page/login")) {
             return true;
         }
 
@@ -97,10 +97,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // ====== 토큰 추출/검증 로그 ======
         final String rawAuthHeader = request.getHeader("Authorization");
-        log.info("Authorization Header: {}", rawAuthHeader);
+        log.info("Authorization Header: {}", mask(rawAuthHeader));
 
         final String extractedToken = jwtService.extractAccessToken(request).orElse("null");
-        log.info("🔍 추출된 AccessToken(검사용): {}", extractedToken);
+        log.info("🔍 추출된 AccessToken(검사용): {}", mask(extractedToken));
 
         final boolean isValid = jwtService.extractAccessToken(request)
                 .filter(jwtService::isTokenValid)
@@ -123,8 +123,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         log.info("Request URI: {}", requestURI);
-        log.info("AccessToken: {}", accessToken);
-        log.info("RefreshToken: {}", refreshToken);
+        log.info("AccessToken: {}", mask(accessToken));
+        log.info("RefreshToken: {}", mask(refreshToken));
 
         // 액세스+리프레시 모두 있는 경우 (정상 시나리오)
         if (accessToken != null && refreshToken != null) {
@@ -139,14 +139,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 액세스는 없고 리프레시만 있는 경우: 액세스 재발급
+        // 액세스는 없고 리프레시만 있는 경우: 액세스 재발급 후 이번 요청도 인증 처리
         if (accessToken == null && refreshToken != null) {
             final String newAccessToken = reIssueAccessToken(refreshToken);
-            jwtService.sendAccessToken(response, newAccessToken);
-            jwtService.getUserIdFromToken(request).
-                    ifPresent(userId -> jwtService.registerTokens(userId, newAccessToken, refreshToken));
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Access token re-issued. Please retry with new token.");
+
+            // 이번 요청 컨텍스트에 인증 세팅
+            authenticateUser(newAccessToken);
+
+            // (선택) 토큰 저장/회전 로직 유지
+            jwtService.getUserIdFromToken(request)
+                    .ifPresent(userId -> jwtService.registerTokens(userId, newAccessToken, refreshToken));
+
+            // 프론트에서 읽을 수 있도록 헤더로 전달
+            response.setHeader("Authorization", "Bearer " + newAccessToken);
+            response.setHeader("Access-Control-Expose-Headers", "Authorization");
+
+            // 재시도 요구 없이 그대로 다음 필터/컨트롤러 진행
+            filterChain.doFilter(request, response);
             return;
         }
 
@@ -186,10 +195,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UserVO user = userMapper.findByEmail(email)
                     .orElseThrow(() -> new IllegalArgumentException("해당 이메일의 회원을 찾을 수 없습니다."));
             String newAccessToken = jwtService.createAccessToken(user);
-            log.info("AccessToken 재발급: {}", newAccessToken);
-
+            log.info("AccessToken 재발급: {}", mask(newAccessToken));
             return newAccessToken;
         }
         throw new IllegalArgumentException("유효하지 않은 refresh token");
+    }
+
+    // 민감한 토큰 마스킹 유틸리티
+    private String mask(String value) {
+        if (value == null || "null".equals(value)) return String.valueOf(value);
+        try {
+            String v = value.startsWith("Bearer ") ? value.substring(7) : value;
+            if (v.length() <= 12) return "***";
+            return (value.startsWith("Bearer ") ? "Bearer " : "") + v.substring(0, 6) + "..." + v.substring(v.length() - 6);
+        } catch (Exception e) {
+            return "***";
+        }
     }
 }

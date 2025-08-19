@@ -3,10 +3,12 @@ package team2.pjt12.matchumoney.domain.user.domain;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@Setter
 @Getter
 @NoArgsConstructor
 public class UserVO {
