@@ -21,7 +21,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/cards/recommendations")
 @RequiredArgsConstructor
-@Api(tags = "Persona Card Recommendations",
+@Api(tags = "Persona Card API",
         description = "페르소나 기반 카드상품 추천 API")
 public class PersonaCardController {
     private final PersonaCardService personaCardService;
@@ -48,6 +48,11 @@ public class PersonaCardController {
         PersonaCardResponseDTO response = personaCardService.getRecommendedCards(parsedPersonaId);
         return ResponseEntity.ok(new SuccessResponse<>(response));
     }
+
+    @ApiOperation(
+            value = "사용자의 페르소나 ID 조회",
+            notes = "현재 로그인된 사용자의 페르소나 ID를 반환합니다."
+    )
     @GetMapping("/user/persona-id")
     public ResponseEntity<Map<String, Object>> getPersonaId(HttpServletRequest request) {
         Long userId = SecurityUtils.getCurrentUser().getUserId();
@@ -58,6 +63,11 @@ public class PersonaCardController {
         response.put("personaId", personaId);
         return ResponseEntity.ok(response);
     }
+
+    @ApiOperation(
+            value = "사용자 페르소나 기반 카드 추천",
+            notes = "JWT 기반 사용자 정보로부터 페르소나 ID를 조회하고, 해당 페르소나에 맞는 카드 상품 최대 3개를 추천합니다."
+    )
     @GetMapping("/user/recommendation")
     public ResponseEntity<SuccessResponse<PersonaCardResponseDTO>> getUserPersonaRecommendation(HttpServletRequest request) {
         Long userId = SecurityUtils.getCurrentUser().getUserId();

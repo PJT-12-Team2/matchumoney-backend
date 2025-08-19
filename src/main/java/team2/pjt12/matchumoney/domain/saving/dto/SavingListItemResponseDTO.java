@@ -23,7 +23,7 @@ public class SavingListItemResponseDTO {
     String maxRate;
     @ApiModelProperty(value = "기본 적용 금리 (연 %)", example = "2.500")
     String baseRate;
-    @ApiModelProperty(value = "적금 기간", example = "12")
+    @ApiModelProperty(value = "적금 기간(개월)", example = "12")
     String period;
     @ApiModelProperty(value = "한 달 최대 적금 가능 금액", example = "100000")
     String amount;

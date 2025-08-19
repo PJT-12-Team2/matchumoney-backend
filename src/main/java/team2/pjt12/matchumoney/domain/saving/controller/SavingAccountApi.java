@@ -13,17 +13,16 @@ import team2.pjt12.matchumoney.domain.saving.dto.SavingListItemResponseDTO;
 
 import java.util.List;
 
-@Api(tags = "My SavingAccount API", description = "내 적금 계좌 관련 API")
+@Api(tags = "My Saving API", description = "내 적금 계좌 관련 API")
 @RequestMapping("/api/user/me/savings")
 public interface SavingAccountApi {
-
 
     @ApiOperation(value = "적금 계좌 조회", notes = "DB에 저장된 사용자의 적금 계좌 정보를 조회합니다.")
     @GetMapping("")
     ResponseEntity<List<MySavingProductResponseDTO>> getMySavingAccount();
 
 
-    @ApiOperation(value = "추천 적금 리스트 (페이징)", notes = "특정 적금 계좌 기반 추천 적금 리스트를 페이징으로 반환")
+    @ApiOperation(value = "추천 적금 리스트 (페이징)", notes = "특정 적금 계좌 기반 추천 적금 리스트를 페이징으로 반환합니다.")
     @GetMapping("/{id}/recommend")
     ResponseEntity<List<SavingListItemResponseDTO>> getRecommendSavingAccountList(
             @ApiParam(value = "적금 계좌 ID") @PathVariable("id") Long id,
