@@ -153,11 +153,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 액세스만 있는 경우: 인증 세팅
         if (accessToken != null) {
             // 로그아웃 블랙리스트 체크 (필요시 활성화)
-//            if (redisTemplate.opsForValue().get("blacklist:" + accessToken) != null) {
-//                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//                response.getWriter().write("this token is expired token");
-//                return;
-//            }
+            if (redisTemplate.opsForValue().get("blacklist:" + accessToken) != null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("this token is expired token");
+                return;
+            }
             authenticateUser(accessToken);
         }
 

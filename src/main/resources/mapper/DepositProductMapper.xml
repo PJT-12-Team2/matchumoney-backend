@@ -12,7 +12,7 @@
         <result property="maxIntrRate2" column="max_intr_rate2"/>
         <result property="depositProductId" column="deposit_product_id"/>
         <result property="likeCount" column="like_count"/>
-        <result property="favorite" column="is_favorite"/>
+        <result property="isFavorite" column="is_favorite"/>
         <result property="liked" column="is_liked"/>
     </resultMap>
 
