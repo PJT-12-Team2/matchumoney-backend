@@ -3,7 +3,6 @@ package team2.pjt12.matchumoney.domain.saving.codef;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,7 +14,10 @@ import team2.pjt12.matchumoney.global.exception.CodefApiSubError;
 import team2.pjt12.matchumoney.global.exception.CustomException;
 import team2.pjt12.matchumoney.global.exception.ErrorCode;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -82,17 +84,10 @@ public class CodefConnectedIdProvider {
 
         String encryptedPassword = RsaEncryptor.encryptRSA(password, config.getPublicKey());
 
-        // 추가용 payload 생성
-        String payload = buildAccountAddPayload(bankId, encryptedPassword, orgCode, birthDate);
+        // 추가용 payload 생성 - connectedId를 포함하여 생성
+        String payload = buildAccountAddPayload(bankId, encryptedPassword, orgCode, birthDate, connectedId);
 
-        // connectedId 주입
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode root = (ObjectNode) mapper.readTree(payload);
-        root.put("connectedId", connectedId);
-        payload = mapper.writeValueAsString(root);
-
-        log.info("계정 추가 요청 - 기관코드: {}, 사용자ID: {}, connectedId 존재 여부: {}",
-                orgCode, bankId, (connectedId != null));
+        log.info("계정 추가 요청 - 기관코드: {}, 사용자ID: {}, connectedId: {}", orgCode, bankId, connectedId);
 
         JsonNode response = codefApiClient.postJson(CodefApiConstants.ACCOUNT_ADD_URL, accessToken, payload);
 
@@ -135,17 +130,10 @@ public class CodefConnectedIdProvider {
 
         String encryptedPassword = RsaEncryptor.encryptRSA(password, config.getPublicKey());
 
-        // 추가용 payload 생성
-        String payload = buildAccountAddPayload(bankId, encryptedPassword, orgCode, birthDate);
+        // 업데이트용 payload 생성 - connectedId를 포함하여 생성
+        String payload = buildAccountUpdatePayload(bankId, encryptedPassword, orgCode, birthDate, connectedId);
 
-        // connectedId 주입
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode root = (ObjectNode) mapper.readTree(payload);
-        root.put("connectedId", connectedId);
-        payload = mapper.writeValueAsString(root);
-
-        log.info("계정 추가 요청 - 기관코드: {}, 사용자ID: {}, connectedId 존재 여부: {}",
-                orgCode, bankId, (connectedId != null));
+        log.info("계정 업데이트 요청 - 기관코드: {}, 사용자ID: {}, connectedId: {}", orgCode, bankId, connectedId);
 
         JsonNode response = codefApiClient.postJson(CodefApiConstants.ACCOUNT_UPDATE_URL, accessToken, payload);
 
@@ -182,16 +170,18 @@ public class CodefConnectedIdProvider {
                                                  String encryptedPassword,
                                                  String orgCode,
                                                  String birthDate) throws JsonProcessingException {
-        Map<String, Object> account = new HashMap<>();
+        Map<String, Object> account = new LinkedHashMap<>();
         account.put("countryCode", CodefApiConstants.COUNTRY_CODE_KR);
         account.put("businessType", CodefApiConstants.BUSINESS_TYPE_BANK);  // BK
         account.put("clientType", CodefApiConstants.CLIENT_TYPE_PERSONAL);  // P
         account.put("organization", orgCode);
-        account.put("loginType", CodefApiConstants.LOGIN_TYPE_ID_PASSWORD); // 1 (아이디/비번)
+        account.put("loginType", CodefApiConstants.LOGIN_TYPE_ID_PASSWORD); // "1" (아이디/비번)
         account.put("id", bankId);
         account.put("password", encryptedPassword);
+
+        // birthDate는 필수가 아닌 경우가 많으므로 조건부 추가
         if (birthDate != null && !birthDate.isBlank()) {
-            account.put("birthDate", birthDate); // 아이디 방식에서 은행별로 필수인 경우가 많음
+            account.put("birthDate", birthDate);
         }
 
         Map<String, Object> body = new LinkedHashMap<>();
@@ -207,21 +197,52 @@ public class CodefConnectedIdProvider {
     private String buildAccountAddPayload(String bankId,
                                           String encryptedPassword,
                                           String orgCode,
-                                          String birthDate) throws JsonProcessingException {
+                                          String birthDate,
+                                          String connectedId) throws JsonProcessingException {
         Map<String, Object> account = new LinkedHashMap<>();
         account.put("countryCode", CodefApiConstants.COUNTRY_CODE_KR);
         account.put("businessType", CodefApiConstants.BUSINESS_TYPE_BANK);  // BK
-        account.put("clientType", CodefApiConstants.CLIENT_TYPE_PERSONAL);  // P (법인은 별도 상수 사용)
+        account.put("clientType", CodefApiConstants.CLIENT_TYPE_PERSONAL);  // P
         account.put("organization", orgCode);
-        account.put("loginType", CodefApiConstants.LOGIN_TYPE_ID_PASSWORD); // 1
+        account.put("loginType", CodefApiConstants.LOGIN_TYPE_ID_PASSWORD); // "1"
         account.put("id", bankId);
         account.put("password", encryptedPassword);
+
         if (birthDate != null && !birthDate.isBlank()) {
             account.put("birthDate", birthDate);
         }
-        // 기관 요구 시: account.put("isEncrypted", "Y"); 등 부가 필드 추가
 
         Map<String, Object> body = new LinkedHashMap<>();
+        body.put("connectedId", connectedId); // connectedId를 루트 레벨에 추가
+        body.put("accountList", List.of(account));
+
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(body);
+    }
+
+    /**
+     * 계정 업데이트(account/update)용 페이로드
+     */
+    private String buildAccountUpdatePayload(String bankId,
+                                             String encryptedPassword,
+                                             String orgCode,
+                                             String birthDate,
+                                             String connectedId) throws JsonProcessingException {
+        Map<String, Object> account = new LinkedHashMap<>();
+        account.put("countryCode", CodefApiConstants.COUNTRY_CODE_KR);
+        account.put("businessType", CodefApiConstants.BUSINESS_TYPE_BANK);  // BK
+        account.put("clientType", CodefApiConstants.CLIENT_TYPE_PERSONAL);  // P
+        account.put("organization", orgCode);
+        account.put("loginType", CodefApiConstants.LOGIN_TYPE_ID_PASSWORD); // "1"
+        account.put("id", bankId);
+        account.put("password", encryptedPassword);
+
+        if (birthDate != null && !birthDate.isBlank()) {
+            account.put("birthDate", birthDate);
+        }
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("connectedId", connectedId); // connectedId를 루트 레벨에 추가
         body.put("accountList", List.of(account));
 
         ObjectMapper mapper = new ObjectMapper();
