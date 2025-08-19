@@ -14,6 +14,8 @@ import team2.pjt12.matchumoney.domain.user.domain.UserVO;
 import team2.pjt12.matchumoney.global.security.UserDetailsImpl;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
+import static team2.pjt12.matchumoney.global.util.SecurityUtils.getCurrentUser;
+
 @RestController
 @RequestMapping("/api/card-products")
 @RequiredArgsConstructor
@@ -28,10 +30,9 @@ public class CardDetailController {
     )
     @GetMapping("/{id}")
     public CardDetailResponseDTO getCardProduct(@ApiParam(value = "카드 상품 ID", example = "10", required = true)
-                                                @PathVariable int id,
-                                                @AuthenticationPrincipal UserDetailsImpl user) {
-        UserVO vo = user.getUser();       // 사용자 ID 조회
-        return cardDetailService.getCardDetailById(vo.getUserId(), id);
+                                                @PathVariable int id) {
+        Long userId = getCurrentUser().getUserId();
+        return cardDetailService.getCardDetailById(userId, id);
     }
 
     @ApiOperation(
@@ -40,9 +41,8 @@ public class CardDetailController {
     )
     @PostMapping("/{id}/likes")
     public LikeStatusResponseDTO likeCard(@ApiParam(value = "카드 상품 ID", example = "10", required = true)
-                                          @PathVariable int id,
-                                          @AuthenticationPrincipal UserDetailsImpl user) {
-        long userId = user.getUser().getUserId();
+                                          @PathVariable int id) {
+        Long userId = getCurrentUser().getUserId();
         return cardDetailService.isUserLikedCard(userId, id);
     }
 
@@ -52,9 +52,8 @@ public class CardDetailController {
     )
     @DeleteMapping("/{id}/likes")
     public LikeStatusResponseDTO unlikeCard(@ApiParam(value = "카드 상품 ID", example = "10", required = true)
-                                            @PathVariable int id,
-                                            @AuthenticationPrincipal UserDetailsImpl user) {
-        long userId = user.getUser().getUserId();
+                                            @PathVariable int id) {
+        Long userId = getCurrentUser().getUserId();
         return cardDetailService.isUserLikedCard(userId, id);
     }
 }

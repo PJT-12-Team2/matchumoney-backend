@@ -14,6 +14,8 @@ import team2.pjt12.matchumoney.global.security.UserDetailsImpl;
 
 import java.util.List;
 
+import static team2.pjt12.matchumoney.global.util.SecurityUtils.getCurrentUser;
+
 @RestController
 @RequestMapping("/api/deposit")
 @RequiredArgsConstructor
@@ -29,11 +31,9 @@ public class DepositSearchController {
     @PostMapping("/search")
     public List<DepositSearchResponseDTO> search(
             @ApiParam(value = "검색 필터", required = true)
-            @RequestBody DepositSearchRequestDTO req,
-            @AuthenticationPrincipal UserDetailsImpl user
+            @RequestBody DepositSearchRequestDTO req
     ) {
-        UserVO vo = user.getUser(); // 사용자 ID 조회
-        Long userId = user != null ? vo.getUserId() : null; // 비로그인 허용 시 null
+        Long userId = getCurrentUser().getUserId();
         return depositSearchService.searchDepositProducts(userId, req);
     }
 }
