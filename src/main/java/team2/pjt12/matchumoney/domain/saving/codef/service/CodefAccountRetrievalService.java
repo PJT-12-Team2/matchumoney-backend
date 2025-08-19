@@ -1,6 +1,5 @@
 package team2.pjt12.matchumoney.domain.saving.codef.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -290,11 +289,11 @@ public class CodefAccountRetrievalService {
         } catch (CustomException e) {
             log.error("계정 추가 실패 - {}", e.getErrorCode().getMessage());
             throw e;
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
- 
+
         // 4. 동기화된 계좌 목록 반환
         List<MySavingProductResponseDTO> result = savingAccountMapper.getSavingAccountList(userId);
         log.info("✅ 계좌 동기화 완료 - {}개 계좌", result.size());
