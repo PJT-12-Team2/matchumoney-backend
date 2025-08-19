@@ -1,7 +1,6 @@
 // 6. 개선된 메인 서비스
 package team2.pjt12.matchumoney.domain.saving.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -80,7 +79,7 @@ public class SavingAccountServiceImpl implements SavingAccountService {
             } catch (CustomException e) {
                 log.error("Connected ID 생성 실패 - {}", e.getErrorCode().getMessage());
                 throw e;
-            } catch (JsonProcessingException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
             codefMapper.insertCodefConnectedId(new ConnectedIdVO(userId, connectedId, LocalDateTime.now(), LocalDateTime.now()));
@@ -98,7 +97,7 @@ public class SavingAccountServiceImpl implements SavingAccountService {
             } catch (CustomException e) {
                 log.error("계정 추가 실패 - {}", e.getErrorCode().getMessage());
                 throw e;
-            } catch (JsonProcessingException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
