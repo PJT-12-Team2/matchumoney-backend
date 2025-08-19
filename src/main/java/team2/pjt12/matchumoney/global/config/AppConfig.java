@@ -20,7 +20,6 @@ import javax.sql.DataSource;
 
 @Configuration
 @PropertySource("classpath:application.properties")
-@PropertySource("classpath:openAI.properties")
 @EnableTransactionManagement
 @ComponentScan(
         basePackages = "team2.pjt12",

@@ -14,7 +14,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 @Component
-@PropertySource("classpath:/openAI.properties")
 public class OpenAIClient {
 
     @Value("${openai.api.key}") // 🔥 application.properties에서 불러옴
