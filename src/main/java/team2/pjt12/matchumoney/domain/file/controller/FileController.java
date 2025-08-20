@@ -3,6 +3,8 @@ package team2.pjt12.matchumoney.domain.file.controller;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,7 +16,9 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequ
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 import team2.pjt12.matchumoney.domain.file.dto.PresignRequest;
 import team2.pjt12.matchumoney.domain.file.dto.PresignResponse;
+import team2.pjt12.matchumoney.global.security.UserDetailsImpl;
 
+import javax.swing.*;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
@@ -54,7 +58,6 @@ public class FileController {
             ext = filename.substring(dot + 1).toLowerCase();
         }
 
-        // TODO: 실제 로그인 사용자 ID로 바꾸세요.
         long userId = currentUserIdOrFallback();
 
         // S3 Object Key
@@ -81,15 +84,11 @@ public class FileController {
         return new PresignResponse(presigned.url().toString(), publicUrl, key);
     }
 
-    /**
-     * 프로젝트 보안 구조에 맞게 사용자 ID를 꺼내세요. 지금은 임시 0L 반환
-     */
     private long currentUserIdOrFallback() {
-        // 예: Spring Security 사용 시
-        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        // if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof CustomUserDetails cud) {
-        //     return cud.getUserId();
-        // }
+         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+         if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof UserDetailsImpl cud) {
+             return cud.getUser().getUserId();
+         }
         return 0L; // 임시값: 필요시 0 대신 임의 고정값 가능
     }
 }

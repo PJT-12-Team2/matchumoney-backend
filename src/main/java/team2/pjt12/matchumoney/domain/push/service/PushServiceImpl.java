@@ -68,29 +68,38 @@ public class PushServiceImpl implements PushService {
         if (tokens == null) {
             tokens = List.of();
         }
-        // 중복 토큰 제거
         tokens = tokens.stream().filter(Objects::nonNull).distinct().collect(Collectors.toList());
         if (tokens.isEmpty()) {
             log.info("[PUSH] sendToTokens: NO TOKENS. title='{}' link='{}'", title, link);
             return 0;
         }
 
+        // ① 링크 정규화: 호스트 차이/트레일링 슬래시 차이 제거
+        String normalizedLink = normalizeLink(link);
+
         WebpushConfig webpush = WebpushConfig.builder()
                 .putHeader("TTL", "500")
                 .putHeader("Urgency", "high")
-                .setFcmOptions(WebpushFcmOptions.withLink(link))
+                // withLink에는 정규화 전/후 어느 쪽을 넣어도 되지만, 프론트 캐논키와 일치성을 위해 정규화 버전 사용 권장
+                .setFcmOptions(WebpushFcmOptions.withLink(normalizedLink))
                 .build();
 
-        Map<String,String> safeData = new java.util.HashMap<>((data == null) ? Map.of() : data);
-        String traceId = UUID.randomUUID().toString();     // ← 배치/호출 단위 추적ID
+        Map<String, String> safeData = new HashMap<>((data == null) ? Map.of() : data);
+
+        // ② 추적/표시용 공통 데이터
+        String traceId = UUID.randomUUID().toString();
         safeData.put("traceId", traceId);
         safeData.put("title", title);
         safeData.put("body", body);
-        safeData.put("icon", "AlarmLogo.png"); // public 폴더 기준 경로
-        safeData.put("link", link);
+        safeData.put("icon", "AlarmLogo.png");     // public 기준
+        safeData.put("link", normalizedLink);
 
-        log.info("[PUSH] build messages traceId={} tokens={}", traceId, tokens.size());
-        log.info(" 로그 잘 찍히는 지 확인");
+        // ③ 프론트/서버 모두가 동일하게 계산할 수 있는 캐노니컬 키
+        String type = Optional.ofNullable(safeData.get("type")).orElse("unknown");
+        String canonicalKey = type + "|" + title + "|" + body + "|" + normalizedLink;
+        safeData.put("canonicalKey", canonicalKey);
+
+        log.info("[PUSH] build messages traceId={} tokens={} canonicalKey={}", traceId, tokens.size(), canonicalKey);
 
         final int BATCH = 50;
         int success = 0;
@@ -101,7 +110,7 @@ public class PushServiceImpl implements PushService {
             for (String t : slice) {
                 messages.add(Message.builder()
                         .setToken(t)
-//                        .setNotification(notification)
+                        // .setNotification(...)  <-- 시스템 알림 중복을 막기 위해 계속 비활성화(데이터 전송만)
                         .putAllData(safeData)
                         .setWebpushConfig(webpush)
                         .build());
@@ -125,10 +134,30 @@ public class PushServiceImpl implements PushService {
                     }
                 }
             } catch (FirebaseMessagingException e) {
-                // 네트워크/인증 문제 등: 로그만 남기고 다음 배치 진행 (재시도는 스케줄러/아웃박스에서)
-                e.printStackTrace();
+                // 네트워크/인증 문제 등: 로그만 남기고 다음 배치 진행
+                log.warn("[PUSH] sendEach failed traceId={} cause={}", traceId, e.toString(), e);
             }
         }
         return success;
+    }
+
+    /** 호스트/프로토콜에 상관없이 프론트에서 동일하게 인식되도록 link를 정규화 */
+    private String normalizeLink(String link) {
+        if (link == null || link.isBlank()) return "/";
+        // 로컬 개발 호스트 제거
+        String s = link
+                .replace("http://localhost:5173", "")
+                .replace("https://localhost:5173", "")
+                .replace("http://127.0.0.1:5173", "")
+                .replace("https://127.0.0.1:5173", "");
+        // 도메인을 포함한 배포 주소가 있다면 동일하게 제거 규칙을 추가해 주세요.
+        // 예: .replace("https://app.example.com", "")
+
+        if (s.isBlank()) s = "/";
+        // 쿼리/해시는 유지, 트레일링 슬래시 통일
+        if (!s.startsWith("/")) s = "/" + s;
+        // "/" 하나만 남기거나, 다른 경로는 끝의 슬래시 제거
+        if (s.length() > 1 && s.endsWith("/")) s = s.substring(0, s.length() - 1);
+        return s;
     }
 }

@@ -89,9 +89,9 @@ public class ProductChangeScanService {
             };
             String body = "지금 확인해 보세요.";
             String link = switch (type) {
-                case "CARD"    -> "http://localhost:5173/";
-                case "DEPOSIT" -> "http://localhost:5173/";
-                case "SAVING"  -> "http://localhost:5173/";
+                case "CARD"    -> "http://localhost:5173/persona/cards";
+                case "DEPOSIT" -> "http://localhost:5173/persona/deposits";
+                case "SAVING"  -> "http://localhost:5173/persona/savings";
                 default -> "http://localhost:5173/";
             };
 
