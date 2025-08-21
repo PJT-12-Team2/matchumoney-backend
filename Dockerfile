@@ -1,5 +1,5 @@
 # Spring 6/Jakarta면 Tomcat 10.1 사용 권장, JDK17
-FROM tomcat:10.1-jdk17-temurin
+FROM tomcat:9.0-jdk17
 # 기본 ROOT 앱 삭제
 RUN rm -rf /usr/local/tomcat/webapps/ROOT
 # 빌드 산출물 WAR을 ROOT로 배포
