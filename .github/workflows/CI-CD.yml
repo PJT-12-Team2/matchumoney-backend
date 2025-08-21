@@ -2,7 +2,7 @@ name: deploy-dockerhub
 
 on:
   push:
-    branches: ["develop"]
+    branches: ["develop"]   # 필요시 main 등으로 변경
 
 permissions:
   contents: read
@@ -15,7 +15,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -23,7 +24,7 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      - name: Build with Gradle
+      - name: Build with Gradle (no tests)
         run: ./gradlew build -x test --no-daemon
 
       - name: Login to Docker Hub
@@ -40,71 +41,104 @@ jobs:
           docker build -t ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG} .
           docker push    ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}
 
-      - name: Send compose to EC2
+      # ---------- SSH 키 준비 (base64 → pem) ----------
+      - name: Prepare SSH key (base64 → pem)
+        shell: bash
         env:
-          HOST: ${{ secrets.EC2_HOST }}
-          USER: ${{ secrets.EC2_USER }}
           KEY_B64: ${{ secrets.EC2_SSH_KEY_B64 }}
         run: |
-          echo "$KEY_B64" | base64 -d > key.pem
+          set -e
+          [ -n "$KEY_B64" ] || { echo "❌ EC2_SSH_KEY_B64 is empty"; exit 1; }
+          echo "$KEY_B64" | tr -d '\r\n' | base64 -d > key.pem
           chmod 600 key.pem
-          ssh -o StrictHostKeyChecking=no -i key.pem ${USER}@${HOST} "mkdir -p ~/app"
+          # 유효성 검사
+          ssh-keygen -y -f key.pem >/dev/null 2>&1 || { echo "❌ Invalid private key"; exit 1; }
+
+      - name: Send docker-compose.yml to EC2
+        shell: bash
+        env:
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}               # Amazon Linux: ec2-user / Ubuntu: ubuntu
+        run: |
+          set -e
+          ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i key.pem ${USER}@${HOST} "mkdir -p ~/app"
           scp -o StrictHostKeyChecking=no -i key.pem docker-compose.yml ${USER}@${HOST}:~/app/
 
-      - name: SSH & deploy
+      - name: SSH & deploy on EC2
+        shell: bash
         env:
           HOST: ${{ secrets.EC2_HOST }}
           USER: ${{ secrets.EC2_USER }}
-          KEY_B64: ${{ secrets.EC2_SSH_KEY }}
-          DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_USER:  ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-          IMAGE_NAME: matchumoney-backend
-          IMAGE_TAG: latest
-          SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
+          IMAGE_NAME: ${IMAGE_NAME}
+          IMAGE_TAG:  ${IMAGE_TAG}
+
+          SPRING_DATASOURCE_URL:      ${{ secrets.SPRING_DATASOURCE_URL }}
           SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
           SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
-          REDIS_HOST: ${{ secrets.REDIS_HOST }}
-          REDIS_PORT: ${{ secrets.REDIS_PORT }}
-          AWS_REGION_RT: ${{ secrets.AWS_REGION }}
-          S3_BUCKET: ${{ secrets.S3_BUCKET }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
-          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-          KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
-          KAKAO_REDIRECT_URI: ${{ secrets.KAKAO_REDIRECT_URI }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          REDIS_HOST:                 ${{ secrets.REDIS_HOST }}
+          REDIS_PORT:                 ${{ secrets.REDIS_PORT }}
+          AWS_REGION_RT:              ${{ secrets.AWS_REGION }}
+          S3_BUCKET:                  ${{ secrets.S3_BUCKET }}
+          JWT_SECRET:                 ${{ secrets.JWT_SECRET }}
+          EMAIL_USERNAME:             ${{ secrets.EMAIL_USERNAME }}
+          EMAIL_PASSWORD:             ${{ secrets.EMAIL_PASSWORD }}
+          KAKAO_CLIENT_ID:            ${{ secrets.KAKAO_CLIENT_ID }}
+          KAKAO_REDIRECT_URI:         ${{ secrets.KAKAO_REDIRECT_URI }}
+          OPENAI_API_KEY:             ${{ secrets.OPENAI_API_KEY }}
+          # 선택: 파이어베이스 JSON을 Secret에 저장했다면 사용
+          FIREBASE_CREDENTIALS_JSON:  ${{ secrets.FIREBASE_CREDENTIALS_JSON }}
         run: |
           set -e
-          echo "$KEY_B64" | base64 -d > key.pem
-          chmod 600 key.pem
+          # 원격 명령은 이중따옴표로 감싸 로컬 env를 원격에 값으로 전달
+          ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i key.pem ${USER}@${HOST} "
+            set -e
+            cd ~/app
 
-          ssh -o StrictHostKeyChecking=no -i key.pem ${USER}@${HOST} <<'EOF'
-          set -e
-          cd ~/app
+            # .env 생성 (들여쓰기 없음, 안전한 printf)
+            printf '%s\n' \
+              'SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}' \
+              'SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}' \
+              'SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}' \
+              'REDIS_HOST=${REDIS_HOST}' \
+              'REDIS_PORT=${REDIS_PORT}' \
+              'AWS_REGION=${AWS_REGION_RT}' \
+              'S3_BUCKET=${S3_BUCKET}' \
+              'JWT_SECRET=${JWT_SECRET}' \
+              'EMAIL_USERNAME=${EMAIL_USERNAME}' \
+              'EMAIL_PASSWORD=${EMAIL_PASSWORD}' \
+              'KAKAO_CLIENT_ID=${KAKAO_CLIENT_ID}' \
+              'KAKAO_REDIRECT_URI=${KAKAO_REDIRECT_URI}' \
+              'OPENAI_API_KEY=${OPENAI_API_KEY}' \
+            > .env
 
-          # .env 파일 작성
-          cat > .env <<EOT
-          SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
-          SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
-          SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
-          REDIS_HOST=${REDIS_HOST}
-          REDIS_PORT=${REDIS_PORT}
-          AWS_REGION=${AWS_REGION_RT}
-          S3_BUCKET=${S3_BUCKET}
-          JWT_SECRET=${JWT_SECRET}
-          EMAIL_USERNAME=${EMAIL_USERNAME}
-          EMAIL_PASSWORD=${EMAIL_PASSWORD}
-          KAKAO_CLIENT_ID=${KAKAO_CLIENT_ID}
-          KAKAO_REDIRECT_URI=${KAKAO_REDIRECT_URI}
-          OPENAI_API_KEY=${OPENAI_API_KEY}
-          EOT
+            # (선택) Firebase 자격증명 파일 생성 + 환경변수 추가
+            if [ -n '${FIREBASE_CREDENTIALS_JSON}' ]; then
+              printf '%s' '${FIREBASE_CREDENTIALS_JSON}' > firebase-key.json
+              grep -q '^GOOGLE_APPLICATION_CREDENTIALS=' .env 2>/dev/null || \
+                printf '%s\n' 'GOOGLE_APPLICATION_CREDENTIALS=/app/firebase-key.json' >> .env
+            fi
 
-          # Docker Hub 로그인
-          echo "${DOCKERHUB_TOKEN}" | docker login -u "${DOCKERHUB_USER}" --password-stdin
+            # Docker Hub 로그인 (private 레포일 때 필요)
+            echo '${DOCKERHUB_TOKEN}' | docker login -u '${DOCKERHUB_USER}' --password-stdin
 
-          # 이미지 pull & 실행
-          IMAGE=${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} docker compose pull
-          IMAGE=${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} docker compose up -d
+            # docker compose ↔ docker-compose 자동 감지
+            if docker compose version >/dev/null 2>&1; then
+              COMPOSE='docker compose'
+            elif command -v docker-compose >/dev/null 2>&1; then
+              COMPOSE='docker-compose'
+            else
+              echo '❌ docker compose / docker-compose not found on EC2'; exit 1
+            fi
 
-          docker image prune -f
-          EOF          "
+            # 이미지 pull & 기동
+            IMAGE='${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}' \$COMPOSE pull
+            IMAGE='${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}' \$COMPOSE up -d
+
+            # 필요없는(dangling) 이미지 정리
+            docker image prune -f
+
+            # 상태 출력
+            \$COMPOSE ps
+          "
