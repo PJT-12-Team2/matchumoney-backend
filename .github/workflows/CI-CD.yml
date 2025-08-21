@@ -50,7 +50,8 @@ jobs:
           USER: ${{ secrets.EC2_USER }}
           KEY:  ${{ secrets.EC2_SSH_KEY }}
         run: |
-          echo "$KEY" > key.pem && chmod 600 key.pem
+          printf '%s' "$KEY" | sed 's/\r$//' > key.pem
+          chmod 600 key.pem
           ssh -o StrictHostKeyChecking=no -i key.pem ${USER}@${HOST} "mkdir -p ~/app"
           scp -o StrictHostKeyChecking=no -i key.pem docker-compose.yml ${USER}@${HOST}:~/app/
 
