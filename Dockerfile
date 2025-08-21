@@ -1,16 +1,8 @@
-# Dockerfile
-
-# jdk17 Image Start
-FROM openjdk:17
-
-# 인자 설정 - JAR_File
-ARG JAR_FILE=build/libs/*.jar
-
-# jar 파일 복제
-COPY ${JAR_FILE} app.jar
-
-# 인자 설정 부분과 jar 파일 복제 부분 합쳐서 진행해도 무방
-#COPY build/libs/*.jar app.jar
-
-# 실행 명령어
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Spring 6/Jakarta면 Tomcat 10.1 사용 권장, JDK17
+FROM tomcat:10.1-jdk17-temurin
+# 기본 ROOT 앱 삭제
+RUN rm -rf /usr/local/tomcat/webapps/ROOT
+# 빌드 산출물 WAR을 ROOT로 배포
+COPY build/libs/*.war /usr/local/tomcat/webapps/ROOT.war
+EXPOSE 8080
+# 톰캣 기본 엔트리포인트 사용
