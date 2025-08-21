@@ -45,7 +45,7 @@ jobs:
       - name: Prepare SSH key (base64 → pem)
         shell: bash
         env:
-          KEY_B64: ${{ secrets.EC2_SSH_KEY_B64 }}
+          KEY_B64: ${{ secrets.EC2_SSH_KEY }}
         run: |
           set -e
           [ -n "$KEY_B64" ] || { echo "❌ EC2_SSH_KEY_B64 is empty"; exit 1; }
