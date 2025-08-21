@@ -1,16 +1,16 @@
-version: "3.8"
-
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: myapp:latest         # 학습용: latest만 사용
+    image: ${IMAGE}
     container_name: myapp
     ports:
       - "8080:8080"
     env_file:
-      - .env                    # CI가 매 배포마다 생성(A 방식)
+      - .env
+    volumes:
+      - ./firebase-key.json:/app/firebase-key.json:ro
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebase-key.json
+      - TZ=Asia/Seoul
     restart: always
 
     depends_on:
@@ -23,3 +23,6 @@ services:
        - "6379:6379"
      command: ["redis-server","--appendonly","yes"]
      restart: always
+version: "3.8"
+
+
