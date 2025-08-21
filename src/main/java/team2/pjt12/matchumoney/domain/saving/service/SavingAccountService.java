@@ -17,8 +17,10 @@ public interface SavingAccountService {
     @Transactional
     List<MySavingProductResponseDTO> retrieveAccountsPre();
 
-    List<SavingListItemResponseDTO> getUserRecommendedSavingAccounts(Long id, int page, int size);
 
     //정보 제거
     String deleteConnectedId();
+
+    List<SavingListItemResponseDTO> getUserRecommendedSavingAccounts(Long id, int page, int size);
+
 }

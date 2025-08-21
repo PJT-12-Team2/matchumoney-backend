@@ -111,7 +111,7 @@ dependencies {
     implementation "com.sun.mail:jakarta.mail:1.6.7"
 
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.3'
-
+    implementation 'io.codef.api:easycodef-java:1.0.6'
     //암호화
     implementation 'commons-codec:commons-codec:1.15'
     implementation "org.bouncycastle:bcprov-jdk18on:${BouncyCastleVersion}"

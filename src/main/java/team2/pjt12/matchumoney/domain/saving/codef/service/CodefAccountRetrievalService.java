@@ -4,28 +4,26 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import team2.pjt12.matchumoney.domain.saving.codef.CodefApiClient;
 import team2.pjt12.matchumoney.domain.saving.codef.CodefConnectedIdProvider;
 import team2.pjt12.matchumoney.domain.saving.codef.constant.CodefApiConstants;
 import team2.pjt12.matchumoney.domain.saving.codef.mapper.CodefMapper;
 import team2.pjt12.matchumoney.domain.saving.domain.DepositAccountVO;
-import team2.pjt12.matchumoney.domain.saving.domain.SavingAccountVO;
 import team2.pjt12.matchumoney.domain.saving.dto.BankLoginRequestDTO;
 import team2.pjt12.matchumoney.domain.saving.dto.MySavingProductResponseDTO;
 import team2.pjt12.matchumoney.domain.saving.mapper.SavingAccountMapper;
-import team2.pjt12.matchumoney.domain.saving.util.SavingAccountConverter;
 import team2.pjt12.matchumoney.global.exception.CodefApiException;
 import team2.pjt12.matchumoney.global.exception.CodefApiSubError;
 import team2.pjt12.matchumoney.global.exception.CustomException;
 import team2.pjt12.matchumoney.global.exception.ErrorCode;
+import team2.pjt12.matchumoney.global.util.SecurityUtils;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-
-import static team2.pjt12.matchumoney.global.util.SecurityUtils.getCurrentUser;
 
 @Slf4j
 @Service
@@ -33,444 +31,148 @@ import static team2.pjt12.matchumoney.global.util.SecurityUtils.getCurrentUser;
 public class CodefAccountRetrievalService {
 
     private final CodefApiClient codefApiClient;
-    private final CodefMapper codefMapper;
     private final SavingAccountMapper savingAccountMapper;
+    private final CodefMapper codefMapper;
     private final CodefConnectedIdProvider codefConnectedIdProvider;
-    private final SavingAccountConverter dataTransformService;
 
-    //계좌 목록 조회
-    public List<JsonNode> retrieveAccountList(String accessToken, String connectedId, String orgCode) {
-
-        String payload = buildAccountListPayload(connectedId, orgCode);
-
-        log.info("계좌 목록 조회 요청 - 은행코드: {}", orgCode);
-
-        JsonNode response = codefApiClient.postJson(CodefApiConstants.ACCOUNT_LIST_URL, accessToken, payload);
-
-        String resultCode = response.path("result").path("code").asText();
-
-        //성공하지 못하면
-        if (!"CF-00000".equals(resultCode)) {
-            String message = response.path("result").path("message").asText();
-
-            List<CodefApiSubError> subErrorList = new ArrayList<>();
-            JsonNode errorList = response.path("data").path("errorList");
-            if (errorList != null && errorList.isArray()) {
-                for (JsonNode err : errorList) {
-                    subErrorList.add(new CodefApiSubError(
-                            err.path("code").asText(),
-                            err.path("message").asText()
-                    ));
-                }
-            }
-            throw new CodefApiException(resultCode, message, subErrorList);
-        }
-
-        JsonNode accountList = response.path("data").path("resDepositTrust");
-
-        if (!accountList.isArray()) {
-            log.warn("계좌 목록이 배열 형태가 아님 - 응답: {}", response.toPrettyString());
-            return new ArrayList<>();
-        }
-
-        Long userId = getCurrentUser().getUserId();
-        //예금 지워
-        savingAccountMapper.deleteDepositByUserIdAndFinId(userId, Long.valueOf(orgCode));
-        //적금 객체 반환
-        List<JsonNode> savingAccounts = new ArrayList<>();
-        log.info(accountList.toPrettyString());
-        for (JsonNode account : accountList) {
-            //종류
-            String depositType = account.path("resAccountDeposit").asText();
-            if (CodefApiConstants.DEPOSIT_TYPE_SAVINGS.equals(depositType) || CodefApiConstants.DEPOSIT_TYPE_SAVINGS2.equals(depositType)) {
-                savingAccounts.add(account);
-            } else if (CodefApiConstants.DEPOSIT_TYPE_DEPOSIT.equals(depositType)) {
-                DepositAccountVO depositAccountVO = new DepositAccountVO(account, userId, Long.valueOf(orgCode));
-                savingAccountMapper.insertDepositAccount(depositAccountVO);
-            }
-        }
-        log.info("✅ 적금 계좌 {}개 조회 완료", savingAccounts.size());
-        return savingAccounts;
-    }
-
-    //각 적금 세부 내역 조회
-    public JsonNode retrieveTransactionHistory(String accessToken, String connectedId, String orgCode, String accountNumber, String birthDate) {
-        String payload = buildTransactionPayload(connectedId, orgCode, accountNumber, birthDate);
-
-        log.info("거래내역 조회 요청 - 계좌번호: {}", accountNumber);
-        JsonNode response = codefApiClient.postJson(CodefApiConstants.TRANSACTION_LIST_URL, accessToken, payload);
-
-        String resultCode = response.path("result").path("code").asText();
-
-        //성공하지 못하면
-        if (!"CF-00000".equals(resultCode)) {
-            String message = response.path("result").path("message").asText();
-
-            List<CodefApiSubError> subErrorList = new ArrayList<>();
-            JsonNode errorList = response.path("data").path("errorList");
-            if (errorList != null && errorList.isArray()) {
-                for (JsonNode err : errorList) {
-                    subErrorList.add(new CodefApiSubError(
-                            err.path("code").asText(),
-                            err.path("message").asText()
-                    ));
-                }
-            }
-            throw new CodefApiException(resultCode, message, subErrorList);
-        }
-
-        JsonNode data = response.path("data");
-        log.info(data.toPrettyString());
-        if (data == null || data.isEmpty()) {
-            log.warn("거래내역이 존재하지 않음 - 계좌번호: {}", accountNumber);
-            throw new CustomException(ErrorCode.CODEF_ERROR);
-        }
-
-        log.info("✅ 거래내역 조회 완료 - 계좌번호: {}", accountNumber);
-        return data;
-
-    }
-
-    //ACCESS TOKEN에 대한 CONNECTED ID
-    public JsonNode getConnectedIdList() {
-        String accessToken = codefApiClient.getAccessToken();
-        String payload = """
-                {
-                  "pageNo": "0"
-                }
-                """;
-
-
-        JsonNode response = codefApiClient.postJson(CodefApiConstants.ACCOUNT_GET_ID_URL, accessToken, payload);
-
-        String resultCode = response.path("result").path("code").asText();
-
-        //성공하지 못하면
-        if (!"CF-00000".equals(resultCode)) {
-            String message = response.path("result").path("message").asText();
-
-            List<CodefApiSubError> subErrorList = new ArrayList<>();
-            JsonNode errorList = response.path("data").path("errorList");
-            if (errorList != null && errorList.isArray()) {
-                for (JsonNode err : errorList) {
-                    subErrorList.add(new CodefApiSubError(
-                            err.path("code").asText(),
-                            err.path("message").asText()
-                    ));
-                }
-            }
-            throw new CodefApiException(resultCode, message, subErrorList);
-        }
-
-        JsonNode data = response.path("data");
-        log.info(data.toPrettyString());
-
-        return data;
-
-    }
-
-    private String buildAccountListPayload(String connectedId, String orgCode) {
-        return String.format("""
-                {
-                  "connectedId": "%s",
-                  "organization": "%s"
-                }
-                """, connectedId, orgCode);
-    }
-
-    //connected id에 연결된 것들 목록
-    public List<String> getOrganizationCodes(String connectedId) {
-        String accessToken = codefApiClient.getAccessToken();
-
-        String payload = String.format("""
-                {
-                  "connectedId": "%s"
-                }
-                """, connectedId);
-        JsonNode response = codefApiClient.postJson(CodefApiConstants.ACCOUNT_GET_URL, accessToken, payload);
-        log.info("accountList: " + response.toPrettyString());
-        // 성공 여부 확인
-        String resultCode = response.path("result").path("code").asText();
-        if (!"CF-00000".equals(resultCode)) {
-            String message = response.path("result").path("message").asText();
-
-            List<CodefApiSubError> subErrorList = new ArrayList<>();
-            JsonNode errorList = response.path("data").path("errorList");
-            if (errorList != null && errorList.isArray()) {
-                for (JsonNode err : errorList) {
-                    subErrorList.add(new CodefApiSubError(
-                            err.path("code").asText(),
-                            err.path("message").asText()
-                    ));
-                }
-            }
-            throw new CodefApiException(resultCode, message, subErrorList);
-        }
-
-        // accountList에서 organization 추출
-        List<String> organizationCodes = new ArrayList<>();
-        JsonNode accountList = response.path("data").path("accountList");
-        if (accountList != null && accountList.isArray()) {
-            for (JsonNode account : accountList) {
-                String orgCode = account.path("organization").asText(null);
-                if (orgCode != null && !orgCode.isBlank()) {
-                    organizationCodes.add(orgCode);
-                }
-            }
-        }
-
-        return organizationCodes;
-    }
-
-    //connected id 제거
-    public void deleteConnectedId(String connectedId) {
-        if (connectedId == null || connectedId.isBlank()) {
-            throw new IllegalArgumentException("connectedId must not be null or blank");
-        }
-
-        final String accessToken = codefApiClient.getAccessToken();
-
-        // 1) account/get
-        final String getPayload = String.format("{\"connectedId\":\"%s\"}", connectedId);
-        final JsonNode getResp = codefApiClient.postJson(CodefApiConstants.ACCOUNT_GET_URL, accessToken, getPayload);
-        log.info("accountGet response: {}", getResp.toPrettyString());
-
-        final String getCode = getResp.path("result").path("code").asText(null);
-        final String getMsg = getResp.path("result").path("message").asText(null);
-        if (!"CF-00000".equals(getCode)) {
-            throw new CodefApiException(getCode, getMsg, List.of());
-        }
-
-        final JsonNode dataNode = getResp.path("data");
-        if (dataNode == null || dataNode.isMissingNode() || dataNode.isNull()) {
-            throw new CodefApiException("CF-DELETE-PAYLOAD-NOTFOUND",
-                    "조회 응답의 data가 없어 삭제 페이로드를 구성할 수 없습니다.", List.of());
-        }
-
-        // 2) deletePayload 직접 생성 (필수 키만 포함)
-        final String deletePayload = buildDeletePayloadFromGetData(dataNode);
-        log.info("accountDelete request: {}", deletePayload);
-
-        // 3) account/delete
-        final JsonNode deleteResp =
-                codefApiClient.postJson(CodefApiConstants.ACCOUNT_DELETE_URL, accessToken, deletePayload);
-
-        log.info("accountDelete response: {}", deleteResp.toPrettyString());
-
-        final String delCode = deleteResp.path("result").path("code").asText(null);
-        final String delMsg = deleteResp.path("result").path("message").asText(null);
-        if (!"CF-00000".equals(delCode)) {
-            throw new CodefApiException(delCode, delMsg, List.of());
-        }
-    }
-
-    //은행 로그인 정보 업데이트
-    public List<MySavingProductResponseDTO> updateConnectedId(BankLoginRequestDTO requestDto) {
-        Long userId = getCurrentUser().getUserId();
-
-        // 1) 현재 사용자 connectedId 조회
+    public List<MySavingProductResponseDTO> updateAccount(BankLoginRequestDTO requestDto) {
+        Long userId = SecurityUtils.getCurrentUserId();
         String connectedId = codefMapper.getCodefConnectedIdByUserId(userId);
-        if (connectedId == null || connectedId.isBlank()) {
-            throw new CustomException(ErrorCode.USER_NOT_FOUND); // 혹은 전용 에러코드
-        }
-
-        // 1. Access Token 발급
-        String accessToken = codefApiClient.getAccessToken();
-
-        try {
-            codefConnectedIdProvider.updateAccountByConnectedId(
-                    accessToken,
-                    requestDto.getId(),
-                    requestDto.getPassword(),
-                    requestDto.getBankCode(),
-                    requestDto.getBirthDate(),
-                    connectedId
-            );
-        } catch (CustomException e) {
-            log.error("계정 추가 실패 - {}", e.getErrorCode().getMessage());
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-
-        // 4. 동기화된 계좌 목록 반환
-        List<MySavingProductResponseDTO> result = savingAccountMapper.getSavingAccountList(userId);
-        log.info("✅ 계좌 동기화 완료 - {}개 계좌", result.size());
-
-        return result;
+        codefConnectedIdProvider.updateAccountByConnectedId(requestDto, connectedId);
+        //연결 로직 필요
+        return savingAccountMapper.getSavingAccountList(userId);
     }
 
-    /**
-     * account/get의 data에서 가이드에 맞는 최소 JSON으로 deletePayload를 조립한다.
-     * 루트: connectedId, accountList
-     * accountList[*]: countryCode, businessType, clientType, organization, loginType (모두 문자열)
-     */
-    private String buildDeletePayloadFromGetData(JsonNode dataNode) {
-        final String cid = dataNode.path("connectedId").asText("");
-        if (cid.isEmpty()) {
-            throw new CodefApiException("CF-DELETE-PAYLOAD-BAD-DATA",
-                    "data.connectedId가 비어있습니다.", List.of());
-        }
+    public List<String> getOrganizationCodes(String connectedId) {
+        HashMap<String, Object> params = new HashMap<>();
+        params.put("connectedId", connectedId);
 
-        // accountList
-        JsonNode srcList = dataNode.path("accountList");
-        // 비어있어도 스펙상 빈 배열 허용
-        StringBuilder sb = new StringBuilder(256);
-        sb.append("{\"connectedId\":\"").append(escapeJson(cid)).append("\",\"accountList\":[");
+//        JsonNode res = codefApiClient.postJson(CodefApiConstants.ACCOUNT_GET_URL, params);
+//        log.info(res.toString());
+//        JsonNode list = res.path("data").path("organizationList");
+        Long userId = SecurityUtils.getCurrentUser().getUserId();
 
-        if (srcList != null && srcList.isArray() && srcList.size() > 0) {
-            for (int i = 0; i < srcList.size(); i++) {
-                JsonNode acc = srcList.get(i);
-
-                // 허용된 5개 키만 추출(문자열 보장)
-                String countryCode = textOrDefault(acc, "countryCode", "KR");
-                String businessType = requiredText(acc, "businessType", "businessType");
-                String clientType = requiredText(acc, "clientType", "clientType");
-                String organization = requiredText(acc, "organization", "organization");
-                String loginType = requiredText(acc, "loginType", "loginType"); // "0" 또는 "1"
-
-                if (i > 0) sb.append(',');
-
-                sb.append('{')
-                        .append("\"countryCode\":\"").append(escapeJson(countryCode)).append('"').append(',')
-                        .append("\"businessType\":\"").append(escapeJson(businessType)).append('"').append(',')
-                        .append("\"clientType\":\"").append(escapeJson(clientType)).append('"').append(',')
-                        .append("\"organization\":\"").append(escapeJson(organization)).append('"').append(',')
-                        .append("\"loginType\":\"").append(escapeJson(loginType)).append('"')
-                        .append('}');
-            }
-        }
-
-        sb.append("]}");
-        return sb.toString();
+        List<String> codes = codefMapper.selectOrganizationNamesByUserId(userId);
+        return codes;
     }
 
-    private String textOrDefault(JsonNode node, String field, String def) {
-        JsonNode v = node.path(field);
-        String s = (v.isMissingNode() || v.isNull()) ? null : v.asText(null);
-        return (s == null || s.isEmpty()) ? def : s;
-    }
 
-    private String requiredText(JsonNode node, String field, String labelForError) {
-        JsonNode v = node.path(field);
-        String s = (v.isMissingNode() || v.isNull()) ? null : v.asText(null);
-        if (s == null || s.isEmpty()) {
-            throw new CodefApiException("CF-DELETE-PAYLOAD-BAD-DATA",
-                    labelForError + " 값이 누락되었습니다.", List.of());
-        }
-        return s;
-    }
+    public List<JsonNode> retrieveAccountList(String connectedId, String bankCode) {
+        // 1) 파라미터 구성
+        HashMap<String, Object> params = new HashMap<>();
+        params.put("connectedId", connectedId);
+        params.put("organization", bankCode);
 
-    /**
-     * 아주 단순한 JSON 문자열 이스케이프 (따옴표/역슬래시)
-     */
-    private String escapeJson(String s) {
-        return s.replace("\\", "\\\\").replace("\"", "\\\"");
-    }
+        // 2) API 호출 (경로는 반드시 "경로만": /v1/...)
+        JsonNode res = codefApiClient.postJson(CodefApiConstants.ACCOUNT_LIST_URL, params);
 
-    //각 계좌 조회
-    private String buildTransactionPayload(String connectedId, String orgCode, String accountNumber, String birthDate) {
-        //오늘까지로 조회되도록(미래일 경우 오류 발생)
-        String endDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-
-        return String.format("""
-                {
-                  "connectedId": "%s",
-                  "organization": "%s",
-                  "account": "%s",
-                  "startDate": "%s",
-                  "endDate": "%s",
-                  "orderBy": "0",
-                  "inquiryType": "1",
-                  "birthDate": "%s"
+        // 3) 결과 코드 검사
+        String resultCode = res.path("result").path("code").asText();
+        if (!"CF-00000".equals(resultCode)) {
+            String message = res.path("result").path("message").asText();
+            List<CodefApiSubError> subErrorList = new ArrayList<>();
+            JsonNode errorList = res.path("data").path("errorList");
+            if (errorList != null && errorList.isArray()) {
+                for (JsonNode err : errorList) {
+                    subErrorList.add(new CodefApiSubError(
+                            err.path("code").asText(),
+                            err.path("message").asText()
+                    ));
                 }
-                """, connectedId, orgCode, accountNumber, CodefApiConstants.DEFAULT_START_DATE, endDate, birthDate);
-    }
+            }
+            throw new CodefApiException(resultCode, message, subErrorList);
+        }
 
-    //계좌 동기화 처리
-    @Transactional(rollbackFor = Exception.class)
-    public void processAccountSynchronization(String accessToken, String connectedId, Long userId, String birthDate, String bankCode) {
+        // 4) 계좌 배열 추출 (기관/상품 스펙에 맞춰 경로 확인)
+        //    예: 적금/예금 통합 응답인 경우 resDepositTrust에 리스트가 담김
+        JsonNode accountList = res.path("data").path("resDepositTrust");
+        if (!accountList.isArray()) {
+            log.warn("계좌 목록이 배열 형태가 아님 - 응답: {}", res.toPrettyString());
+            return Collections.emptyList();
+        }
+
+        // 5) 사용자/기관 ID 준비
+        Long userId = SecurityUtils.getCurrentUser().getUserId();
         Long finId;
         try {
-            finId = Long.parseLong(bankCode);
+            finId = Long.valueOf(bankCode);
         } catch (NumberFormatException e) {
-            log.error("금융기관 코드 파싱 실패: {}", bankCode);
+            log.error("기관 코드 파싱 실패: {}", bankCode);
             throw new CustomException(ErrorCode.DATA_CONVERSION_FAILED);
         }
 
+        // 6) 기존 예금/적금 정리(선택)
+        //    동기화 정책에 따라 사전에 기존 레코드 삭제
         try {
-            savingAccountMapper.deleteByUserIdAndFinId(userId, finId);
-            log.info("기존 적금 계좌 삭제 완료 - 사용자ID: {}, 금융기관ID: {}", userId, finId);
+            savingAccountMapper.deleteByUserIdAndFinId(userId, finId);          // 적금 테이블 정리
+            savingAccountMapper.deleteDepositByUserIdAndFinId(userId, finId);   // 예금 테이블 정리
         } catch (Exception e) {
-            log.error("적금 계좌 삭제 실패", e);
+            log.error("기존 계좌 삭제 실패", e);
             throw new CustomException(ErrorCode.DB_SAVING_DELETE_FAILED);
         }
 
-        List<JsonNode> savingAccounts;
-        try {
-            savingAccounts = retrieveAccountList(
-                    accessToken, connectedId, bankCode
-            );
-        } catch (CodefApiException e) {
-            log.error("Codef API 실패 - code: {}, message: {}", e.getCode(), e.getMessage());
-            throw e; // GlobalExceptionHandler에서 응답 내려감
-        }
-
-        int processedCount = 0;
-        List<String> failedAccounts = new ArrayList<>();
-
-        for (JsonNode account : savingAccounts) {
-            String accountNumber = account.path("resAccount").asText();
-
-            try {
-                if (processTransactionHistory(accessToken, connectedId, accountNumber, userId, finId, birthDate, bankCode)) {
-                    processedCount++;
-                } else {
-                    failedAccounts.add(accountNumber);
+        // 7) 분기 저장: 적금은 반환용 리스트에 담고, 예금은 DB 저장
+        List<JsonNode> savingAccounts = new ArrayList<>();
+        for (JsonNode account : accountList) {
+            // 기관 반환 필드명 확인: 아래 예시는 resAccountDeposit(예/적금 구분), resAccount(계좌번호)
+            String depositType = account.path("resAccountDeposit").asText(); // "11"(예금), "12"/"14"(적금)
+            if (CodefApiConstants.DEPOSIT_TYPE_SAVINGS.equals(depositType)
+                    || CodefApiConstants.DEPOSIT_TYPE_SAVINGS2.equals(depositType)) {
+                // ✅ 적금: 호출자에게 넘겨서 후속 거래내역 수집/적금테이블 저장에 사용
+                savingAccounts.add(account);
+            } else if (CodefApiConstants.DEPOSIT_TYPE_DEPOSIT.equals(depositType)) {
+                // ✅ 예금: 바로 예금 테이블 저장
+                try {
+                    // 본인 프로젝트의 VO 생성자/매핑 로직에 맞게 사용
+                    log.info("받아온 account: " + account);
+                    DepositAccountVO deposit = new DepositAccountVO(account, userId, finId);
+                    savingAccountMapper.insertDepositAccount(deposit);
+                } catch (Exception e) {
+                    log.warn("예금 계좌 저장 실패 - account: {}", account.path("resAccount").asText(), e);
                 }
-            } catch (Exception e) {
-                log.warn("거래내역 처리 실패 - accountNumber: {}, error: {}", accountNumber, e.getMessage());
-                failedAccounts.add(accountNumber);
+            } else {
+                // 기타 유형이 있으면 필요 시 추가 분기
+                log.debug("알 수 없는 예적금 유형: {}", depositType);
             }
         }
 
-        log.info("✅ 계좌 처리 완료 - 총 {}개 중 {}개 성공", savingAccounts.size(), processedCount);
-
-        if (!failedAccounts.isEmpty()) {
-            log.warn("❗ 실패한 계좌 목록: {}", failedAccounts);
-            // 경우에 따라 프론트에 실패 목록까지 전달하는 DTO도 구성 가능
-        }
+        log.info("✅ 적금 계좌 {}개, 예금 계좌는 DB 저장 완료", savingAccounts.size());
+        return savingAccounts;
     }
 
-    //거래내역 처리
-    public boolean processTransactionHistory(String accessToken, String connectedId,
-                                             String accountNumber, Long userId, Long finId, String birthDate, String bankCode) {
-
-        JsonNode transactionData = retrieveTransactionHistory(
-                accessToken, connectedId, bankCode, accountNumber, birthDate
-        );
-
-        SavingAccountVO vo = dataTransformService.transformToVO(transactionData, userId, finId);
-
-        try {
-            savingAccountMapper.insertSavingAccount(vo);
-        } catch (Exception e) {
-            log.error("적금 계좌 저장 실패 - 계좌번호: {}", accountNumber, e);
-            throw new CustomException(ErrorCode.DB_SAVING_INSERT_FAILED);
+    public JsonNode retrieveTransactionHistory(String connectedId, String bankCode, String accountNumber, String birthDate) {
+        HashMap<String, Object> params = new HashMap<>();
+        params.put("connectedId", connectedId);
+        params.put("organization", bankCode);
+        params.put("account", accountNumber);
+        if (birthDate != null && !birthDate.isBlank()) {
+            params.put("birthDate", birthDate);
         }
-        log.info("✅ 적금 계좌 저장 완료 - 계좌번호: {}", accountNumber);
-        return true;
+        // 기간/정렬 등 추가 파라미터가 필요하면 여기에 확장
+        params.put("startDate", CodefApiConstants.DEFAULT_START_DATE);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+        String today = LocalDate.now().format(formatter);
+
+        params.put("endDate", today);
+        params.put("orderBy", "0");
+
+        log.info("params:계좌 저장: " + params);
+        return codefApiClient.postJson(CodefApiConstants.TRANSACTION_LIST_URL, params);
     }
 
 
-    public List<String> getBanksByConnectedId() {
-        Long userId = getCurrentUser().getUserId();
-        log.info("🏦 은행 계좌 동기화 시작 - 사용자ID: {}", userId);
+    public void deleteConnectedId(String connectedId) {
+        HashMap<String, Object> params = new HashMap<>();
+        params.put("connectedId", connectedId);
+        JsonNode res2 = codefApiClient.postJson(CodefApiConstants.ACCOUNT_GET_URL, params);
+        params.put("accountList", res2.path("data").path("accountList"));
 
-        List<String> result = codefMapper.selectOrganizationNamesByUserId(userId);
-
-
-        return result;
+        JsonNode res = codefApiClient.postJson(CodefApiConstants.ACCOUNT_DELETE_URL, params);
+        String code = res.path("result").path("code").asText();
+        if (!"CF-00000".equals(code)) {
+            String msg = res.path("result").path("message").asText();
+            throw new CodefApiException(code, msg, Collections.emptyList());
+        }
     }
 }
