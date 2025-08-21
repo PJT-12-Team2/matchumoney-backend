@@ -42,61 +42,46 @@ jobs:
           docker push    ${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}
 
       # ---------- SSH 키 준비 (base64 → pem) ----------
-      - name: Prepare SSH key (base64 → pem)
-        shell: bash
-        env:
-          KEY_B64: ${{ secrets.EC2_SSH_KEY }}
-        run: |
-          set -e
-          [ -n "$KEY_B64" ] || { echo "❌ EC2_SSH_KEY_B64 is empty"; exit 1; }
-          echo "$KEY_B64" | tr -d '\r\n' | base64 -d > key.pem
-          chmod 600 key.pem
-          # 유효성 검사
-          ssh-keygen -y -f key.pem >/dev/null 2>&1 || { echo "❌ Invalid private key"; exit 1; }
-
-      - name: Send docker-compose.yml to EC2
-        shell: bash
-        env:
-          HOST: ${{ secrets.EC2_HOST }}
-          USER: ${{ secrets.EC2_USER }}               # Amazon Linux: ec2-user / Ubuntu: ubuntu
-        run: |
-          set -e
-          ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i key.pem ${USER}@${HOST} "mkdir -p ~/app"
-          scp -o StrictHostKeyChecking=no -i key.pem docker-compose.yml ${USER}@${HOST}:~/app/
-
       - name: SSH & deploy on EC2
         shell: bash
         env:
           HOST: ${{ secrets.EC2_HOST }}
           USER: ${{ secrets.EC2_USER }}
-          DOCKERHUB_USER:  ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-          IMAGE_NAME: ${IMAGE_NAME}
-          IMAGE_TAG:  ${IMAGE_TAG}
+          # ↓ 여기의 IMAGE_NAME/IMAGE_TAG는 Job/Workflow env의 값을 그대로 씁니다 (소문자 확인!)
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
 
-          SPRING_DATASOURCE_URL:      ${{ secrets.SPRING_DATASOURCE_URL }}
+          SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
           SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
           SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
-          REDIS_HOST:                 ${{ secrets.REDIS_HOST }}
-          REDIS_PORT:                 ${{ secrets.REDIS_PORT }}
-          AWS_REGION_RT:              ${{ secrets.AWS_REGION }}
-          S3_BUCKET:                  ${{ secrets.S3_BUCKET }}
-          JWT_SECRET:                 ${{ secrets.JWT_SECRET }}
-          EMAIL_USERNAME:             ${{ secrets.EMAIL_USERNAME }}
-          EMAIL_PASSWORD:             ${{ secrets.EMAIL_PASSWORD }}
-          KAKAO_CLIENT_ID:            ${{ secrets.KAKAO_CLIENT_ID }}
-          KAKAO_REDIRECT_URI:         ${{ secrets.KAKAO_REDIRECT_URI }}
-          OPENAI_API_KEY:             ${{ secrets.OPENAI_API_KEY }}
-          # 선택: 파이어베이스 JSON을 Secret에 저장했다면 사용
-          FIREBASE_CREDENTIALS_JSON:  ${{ secrets.FIREBASE_CREDENTIALS_JSON }}
+          REDIS_HOST: ${{ secrets.REDIS_HOST }}
+          REDIS_PORT: ${{ secrets.REDIS_PORT }}
+          AWS_REGION_RT: ${{ secrets.AWS_REGION }}
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
+          KAKAO_REDIRECT_URI: ${{ secrets.KAKAO_REDIRECT_URI }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          FIREBASE_CREDENTIALS_JSON: ${{ secrets.FIREBASE_CREDENTIALS_JSON }}
         run: |
           set -e
-          # 원격 명령은 이중따옴표로 감싸 로컬 env를 원격에 값으로 전달
-          ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i key.pem ${USER}@${HOST} "
+
+          # 1) 러너에서 "완성된" IMAGE 문자열 만들기 (소문자 체크)
+          IMAGE="${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
+          echo "Using image: $IMAGE"
+          # 소문자 강제 (필요 시)
+          IMAGE=$(echo "$IMAGE" | tr '[:upper:]' '[:lower:]')
+
+          # 2) SSH로 원격 실행
+          ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i key.pem "${USER}@${HOST}" "
             set -e
             cd ~/app
 
-            # .env 생성 (들여쓰기 없음, 안전한 printf)
+            # .env 생성 (printf로 안전)
             printf '%s\n' \
               'SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}' \
               'SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}' \
@@ -113,32 +98,29 @@ jobs:
               'OPENAI_API_KEY=${OPENAI_API_KEY}' \
             > .env
 
-            # (선택) Firebase 자격증명 파일 생성 + 환경변수 추가
+            # (선택) Firebase 자격증명 파일
             if [ -n '${FIREBASE_CREDENTIALS_JSON}' ]; then
               printf '%s' '${FIREBASE_CREDENTIALS_JSON}' > firebase-key.json
               grep -q '^GOOGLE_APPLICATION_CREDENTIALS=' .env 2>/dev/null || \
                 printf '%s\n' 'GOOGLE_APPLICATION_CREDENTIALS=/app/firebase-key.json' >> .env
             fi
 
-            # Docker Hub 로그인 (private 레포일 때 필요)
-            echo '${DOCKERHUB_TOKEN}' | docker login -u '${DOCKERHUB_USER}' --password-stdin
-
-            # docker compose ↔ docker-compose 자동 감지
+            # compose 명령 감지
             if docker compose version >/dev/null 2>&1; then
               COMPOSE='docker compose'
             elif command -v docker-compose >/dev/null 2>&1; then
               COMPOSE='docker-compose'
             else
-              echo '❌ docker compose / docker-compose not found on EC2'; exit 1
+              echo '❌ docker compose/docker-compose not found'; exit 1
             fi
 
-            # 이미지 pull & 기동
-            IMAGE='${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}' \$COMPOSE pull
-            IMAGE='${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}' \$COMPOSE up -d
+            # Docker Hub 로그인 (프라이빗일 때 필요)
+            echo '${DOCKERHUB_TOKEN}' | docker login -u '${DOCKERHUB_USER}' --password-stdin
 
-            # 필요없는(dangling) 이미지 정리
+            # 3) 이미 완성된 IMAGE 값을 사용 (원격에서 변수 결합 금지)
+            IMAGE='${IMAGE}' \$COMPOSE pull
+            IMAGE='${IMAGE}' \$COMPOSE up -d
+
             docker image prune -f
-
-            # 상태 출력
             \$COMPOSE ps
           "
