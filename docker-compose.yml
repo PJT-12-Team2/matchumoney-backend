@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: myapp:latest         # 학습용: latest만 사용
+    container_name: myapp
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env                    # CI가 매 배포마다 생성(A 방식)
+    restart: always
+
+    depends_on:
+       - redis
+
+  redis:
+     image: redis:7-alpine
+     container_name: redis
+     ports:
+       - "6379:6379"
+     command: ["redis-server","--appendonly","yes"]
+     restart: always
