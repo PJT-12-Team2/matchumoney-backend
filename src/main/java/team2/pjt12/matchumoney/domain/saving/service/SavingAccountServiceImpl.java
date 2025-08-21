@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.session.RowBounds;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import team2.pjt12.matchumoney.domain.saving.codef.CodefApiClient;
 import team2.pjt12.matchumoney.domain.saving.codef.CodefConnectedIdProvider;
 import team2.pjt12.matchumoney.domain.saving.codef.domain.ConnectedIdVO;
 import team2.pjt12.matchumoney.domain.saving.codef.mapper.CodefMapper;
@@ -34,43 +33,34 @@ import static team2.pjt12.matchumoney.global.util.SecurityUtils.getCurrentUser;
 public class SavingAccountServiceImpl implements SavingAccountService {
 
     private final SavingAccountMapper savingAccountMapper;
-    private final CodefApiClient codefApiClient;
     private final CodefConnectedIdProvider codefConnectedIdProvider;
     private final CodefAccountRetrievalService codefAccountRetrievalService;
     private final SavingAccountConverter dataTransformService;
     private final CodefMapper codefMapper;
 
-    //사용자 적금 계좌 목록 조회
+    // 사용자 적금 계좌 목록 조회
     @Override
     @Transactional(readOnly = true)
     public List<MySavingProductResponseDTO> getSavingAccountList() {
         Long userId = getCurrentUser().getUserId();
         log.info("📋 적금 계좌 목록 조회 - 사용자ID: {}", userId);
-
         return savingAccountMapper.getSavingAccountList(userId);
     }
 
-
-    //은행에서 계좌 정보 동기화
+    // 은행에서 계좌 정보 동기화
     @Transactional
     @Override
     public List<MySavingProductResponseDTO> retrieveAccounts(BankLoginRequestDTO requestDto) {
         Long userId = getCurrentUser().getUserId();
         log.info("🏦 은행 계좌 동기화 시작 - 사용자ID: {}", userId);
 
-        // 1. Access Token 발급
-        String accessToken = codefApiClient.getAccessToken();
-
-
-        // 2. Connected ID 생성
-
+        // 1) Connected ID 생성/가져오기 및 계정 연결
         String connectedId;
+        String existing = codefMapper.getCodefConnectedIdByUserId(userId);
 
-
-        if (codefMapper.getCodefConnectedIdByUserId(userId) == null) {
+        if (existing == null) {
             try {
                 connectedId = codefConnectedIdProvider.createConnectedId(
-                        accessToken,
                         requestDto.getId(),
                         requestDto.getPassword(),
                         requestDto.getBankCode(),
@@ -80,14 +70,16 @@ public class SavingAccountServiceImpl implements SavingAccountService {
                 log.error("Connected ID 생성 실패 - {}", e.getErrorCode().getMessage());
                 throw e;
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                log.error("Connected ID 생성 예외", e);
+                throw new CustomException(ErrorCode.CODEF_ERROR);
             }
-            codefMapper.insertCodefConnectedId(new ConnectedIdVO(userId, connectedId, LocalDateTime.now(), LocalDateTime.now()));
+            codefMapper.insertCodefConnectedId(
+                    new ConnectedIdVO(userId, connectedId, LocalDateTime.now(), LocalDateTime.now())
+            );
         } else {
+            connectedId = existing;
             try {
-                connectedId = codefMapper.getCodefConnectedIdByUserId(userId);
                 codefConnectedIdProvider.addAccountByConnectedId(
-                        accessToken,
                         requestDto.getId(),
                         requestDto.getPassword(),
                         requestDto.getBankCode(),
@@ -98,61 +90,55 @@ public class SavingAccountServiceImpl implements SavingAccountService {
                 log.error("계정 추가 실패 - {}", e.getErrorCode().getMessage());
                 throw e;
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                log.error("계정 추가 예외", e);
+                throw new CustomException(ErrorCode.CODEF_ERROR);
             }
         }
-        // 3. 계좌 목록 조회 및 저장
-        processAccountSynchronization(accessToken, connectedId, userId, requestDto.getBirthDate(), requestDto.getBankCode());
 
-        //은행 코드 DB에 추가
+        // 2) 계좌 목록 조회 및 저장
+        processAccountSynchronization(connectedId, userId, requestDto.getBirthDate(), requestDto.getBankCode());
+
+        // 은행 코드 DB에 추가(맵핑 테이블 관리)
         codefMapper.insertCodefConnectedIdOrganization(connectedId, requestDto.getBankCode());
 
-        // 4. 동기화된 계좌 목록 반환
+        // 3) 결과 반환
         List<MySavingProductResponseDTO> result = savingAccountMapper.getSavingAccountList(userId);
         log.info("✅ 계좌 동기화 완료 - {}개 계좌", result.size());
-
         return result;
     }
 
-
-    //은행에서 계좌 정보 동기화
+    // 은행에서 계좌 정보 동기화(사전 연결된 기관 전체)
     @Transactional
     @Override
     public List<MySavingProductResponseDTO> retrieveAccountsPre() {
         Long userId = getCurrentUser().getUserId();
-        log.info("🏦 은행 계좌 동기화 시작 - 사용자ID: {}", userId);
+        log.info("🏦 은행 계좌 동기화(사전 연결 기관) 시작 - 사용자ID: {}", userId);
 
-        // 1. Access Token 발급
-        String accessToken = codefApiClient.getAccessToken();
-
-
-        // 2. Connected ID 생성
         String connectedId;
         try {
             connectedId = codefMapper.getCodefConnectedIdByUserId(userId);
-            //db에서 가져오기
+            if (connectedId == null || connectedId.isBlank()) {
+                throw new CustomException(ErrorCode.USER_NOT_FOUND);
+            }
         } catch (CustomException e) {
-            log.error("Connected ID 생성 실패 - {}", e.getErrorCode().getMessage());
+            log.error("Connected ID 조회 실패 - {}", e.getErrorCode().getMessage());
             throw e;
         }
 
         List<String> codes = codefAccountRetrievalService.getOrganizationCodes(connectedId);
-        // 3. 계좌 목록 조회 및 저장
+
         for (String code : codes) {
-            processAccountSynchronization(accessToken, connectedId, userId, "", code);
+            processAccountSynchronization(connectedId, userId, "", code);
         }
 
-        // 4. 동기화된 계좌 목록 반환
         List<MySavingProductResponseDTO> result = savingAccountMapper.getSavingAccountList(userId);
         log.info("✅ 계좌 동기화 완료 - {}개 계좌", result.size());
-
         return result;
     }
 
-
-    //계좌 동기화 처리
+    // 계좌 동기화 처리
     @Transactional(rollbackFor = Exception.class)
-    public void processAccountSynchronization(String accessToken, String connectedId, Long userId, String birthDate, String bankCode) {
+    public void processAccountSynchronization(String connectedId, Long userId, String birthDate, String bankCode) {
         Long finId;
         try {
             finId = Long.parseLong(bankCode);
@@ -171,14 +157,15 @@ public class SavingAccountServiceImpl implements SavingAccountService {
 
         List<JsonNode> savingAccounts;
         try {
+            // v1: accessToken 넘기지 않음
             savingAccounts = codefAccountRetrievalService.retrieveAccountList(
-                    accessToken, connectedId, bankCode
+                    connectedId, bankCode
             );
         } catch (CodefApiException e) {
             log.error("Codef API 실패 - code: {}, message: {}", e.getCode(), e.getMessage());
-            throw e; // GlobalExceptionHandler에서 응답 내려감
+            throw e;
         }
-
+        log.info("savingAccounts: " + savingAccounts);
         int processedCount = 0;
         List<String> failedAccounts = new ArrayList<>();
 
@@ -186,7 +173,7 @@ public class SavingAccountServiceImpl implements SavingAccountService {
             String accountNumber = account.path("resAccount").asText();
 
             try {
-                if (processTransactionHistory(accessToken, connectedId, accountNumber, userId, finId, birthDate, bankCode)) {
+                if (processTransactionHistory(connectedId, accountNumber, userId, finId, birthDate, bankCode)) {
                     processedCount++;
                 } else {
                     failedAccounts.add(accountNumber);
@@ -201,20 +188,24 @@ public class SavingAccountServiceImpl implements SavingAccountService {
 
         if (!failedAccounts.isEmpty()) {
             log.warn("❗ 실패한 계좌 목록: {}", failedAccounts);
-            // 경우에 따라 프론트에 실패 목록까지 전달하는 DTO도 구성 가능
         }
     }
 
+    // 거래내역 처리
+    public boolean processTransactionHistory(String connectedId,
+                                             String accountNumber, Long userId, Long finId,
+                                             String birthDate, String bankCode) {
 
-    //거래내역 처리
-    public boolean processTransactionHistory(String accessToken, String connectedId,
-                                             String accountNumber, Long userId, Long finId, String birthDate, String bankCode) {
-
+        // v1: accessToken 넘기지 않음
         JsonNode transactionData = codefAccountRetrievalService.retrieveTransactionHistory(
-                accessToken, connectedId, bankCode, accountNumber, birthDate
+                connectedId, bankCode, accountNumber, birthDate
         );
-
-        SavingAccountVO vo = dataTransformService.transformToVO(transactionData, userId, finId);
+        log.info("transactionData: " + transactionData);
+        // transactionData 가 JsonNode 라는 가정
+        JsonNode data = transactionData.path("data");
+        log.info("data: " + data);
+// ✅ VO 생성 (Long 필드는 내부에서 0L로 안전 파싱)
+        SavingAccountVO vo = new SavingAccountVO(data, userId, finId);
 
         try {
             savingAccountMapper.insertSavingAccount(vo);
@@ -226,7 +217,7 @@ public class SavingAccountServiceImpl implements SavingAccountService {
         return true;
     }
 
-    //내 계좌에 대한 추천 리스트
+    // 내 계좌에 대한 추천 리스트
     @Override
     public List<SavingListItemResponseDTO> getUserRecommendedSavingAccounts(Long id, int page, int size) {
         Long userId = getCurrentUser().getUserId();
@@ -266,8 +257,8 @@ public class SavingAccountServiceImpl implements SavingAccountService {
 
         return savingAccountMapper.getRecommendSavingAccountList(period, rate, userId, rowBounds);
     }
-    //계좌 동기화 처리
 
+    // ConnectedId 삭제
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String deleteConnectedId() {
@@ -276,21 +267,18 @@ public class SavingAccountServiceImpl implements SavingAccountService {
         // 1) 현재 사용자 connectedId 조회
         String connectedId = codefMapper.getCodefConnectedIdByUserId(userId);
         if (connectedId == null || connectedId.isBlank()) {
-            throw new CustomException(ErrorCode.USER_NOT_FOUND); // 혹은 전용 에러코드
+            throw new CustomException(ErrorCode.USER_NOT_FOUND);
         }
 
         // 2) CODEF 계정 삭제 호출 (외부 API)
-        //    실패하면 예외 -> @Transactional에 의해 DB 변경 롤백
         codefAccountRetrievalService.deleteConnectedId(connectedId);
 
         // 3) DB에서 연결 정보 삭제
         boolean affected = codefMapper.deleteCodefConnectedIdByUserId(userId);
         if (!affected) {
-            // 필요 시 예외 처리/로그
             throw new IllegalStateException("삭제 대상이 없거나 여러 건이 삭제됨: affected=" + affected);
         }
-        // 4) 모두 성공한 경우에만 성공 메시지 반환
+        // 4) 성공 메시지
         return connectedId + "가 제거되었습니다.";
     }
 }
-

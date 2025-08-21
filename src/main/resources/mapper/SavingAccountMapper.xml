@@ -123,56 +123,29 @@
         ORDER BY CAST(so.intr_rate AS DECIMAL(5, 4)) DESC
     </select>
 
-    <insert id="insertSavingAccount" parameterType="team2.pjt12.matchumoney.domain.saving.domain.SavingAccountVO">
-        INSERT INTO mydata_saving_accounts (res_account,
-                                            user_id,
-                                            fin_id,
-                                            res_account_status,
-                                            res_account_display,
-                                            res_account_name,
+    <!-- parameterType 을 VO로 지정 -->
+    <!-- SavingAccountMapper.xml -->
+    <insert id="insertSavingAccount"
+            parameterType="team2.pjt12.matchumoney.domain.saving.domain.SavingAccountVO"
+            useGeneratedKeys="true" keyProperty="accountId">
+        INSERT INTO mydata_saving_accounts (res_account, user_id, fin_id,
+                                            res_account_status, res_account_display, res_account_name,
                                             res_account_nickname,
-                                            res_account_holder,
-                                            res_final_round_no,
-                                            res_account_start_date,
+                                            res_account_holder, res_final_round_no, res_account_start_date,
                                             res_account_end_date,
-                                            res_account_balance,
-                                            res_monthly_payment,
-                                            res_valid_period,
-                                            res_type,
-                                            res_management_branch,
-                                            res_rate,
-                                            res_contract_amount,
-                                            res_payment_methods,
-                                            res_last_tran_date,
-                                            comm_start_date,
-                                            comm_end_date,
-                                            created_time,
+                                            res_account_balance, res_monthly_payment, res_valid_period, res_type,
+                                            res_management_branch, res_rate, res_contract_amount, res_payment_methods,
+                                            res_last_tran_date, comm_start_date, comm_end_date, created_time,
                                             last_modified_time)
-        VALUES (#{resAccount},
-                #{userId},
-                #{finId},
-                #{resAccountStatus},
-                #{resAccountDisplay},
-                #{resAccountName},
-                #{resAccountNickName},
-                #{resAccountHolder},
-                #{resFinalRoundNo},
-                #{resAccountStartDate},
-                #{resAccountEndDate},
-                #{resAccountBalance},
-                #{resMonthlyPayment},
-                #{resValidPeriod},
+        VALUES (#{resAccount}, #{userId}, #{finId},
+                #{resAccountStatus}, #{resAccountDisplay}, #{resAccountName}, #{resAccountNickName},
+                #{resAccountHolder}, #{resFinalRoundNo}, #{resAccountStartDate}, #{resAccountEndDate},
+                #{resAccountBalance,jdbcType=BIGINT}, #{resMonthlyPayment,jdbcType=BIGINT}, #{resValidPeriod},
                 #{resType},
-                #{resManagementBranch},
-                #{resRate},
-                #{resContractAmount},
-                #{resPaymentMethods},
-                #{resLastTranDate},
-                #{commStartDate},
-                #{commEndDate},
-                #{createdTime},
-                #{lastModifiedTime})
+                #{resManagementBranch}, #{resRate}, #{resContractAmount,jdbcType=BIGINT}, #{resPaymentMethods},
+                #{resLastTranDate}, #{commStartDate}, #{commEndDate}, #{createdTime}, #{lastModifiedTime})
     </insert>
+
     <insert id="insertDepositAccount" parameterType="team2.pjt12.matchumoney.domain.saving.domain.DepositAccountVO">
         INSERT INTO mydata_user_account (res_account,
                                          user_id,
