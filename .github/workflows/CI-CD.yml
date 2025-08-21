@@ -55,63 +55,61 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i key.pem ${USER}@${HOST} "mkdir -p ~/app"
           scp -o StrictHostKeyChecking=no -i key.pem docker-compose.yml ${USER}@${HOST}:~/app/
 
-      - name: SSH & deploy (pull from Docker Hub)
-        if: always()   # 필요 없으면 이 스텝 삭제
+      - name: SSH & deploy
         env:
           HOST: ${{ secrets.EC2_HOST }}
           USER: ${{ secrets.EC2_USER }}
-          KEY:  ${{ secrets.EC2_SSH_KEY }}
-
-          # 런타임 환경변수 (컨테이너로 주입)
-          SPRING_DATASOURCE_URL:      ${{ secrets.SPRING_DATASOURCE_URL }}
+          KEY_B64: ${{ secrets.EC2_SSH_KEY_B64 }}
+          DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          IMAGE_NAME: matchumoney-backend
+          IMAGE_TAG: latest
+          SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
           SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
           SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
-          REDIS_HOST:                 ${{ secrets.REDIS_HOST }}
-          REDIS_PORT:                 ${{ secrets.REDIS_PORT }}
-          AWS_REGION_RT:              ${{ secrets.AWS_REGION }}
-          S3_BUCKET:                  ${{ secrets.S3_BUCKET }}
-          JWT_SECRET:                 ${{ secrets.JWT_SECRET }}
-          EMAIL_USERNAME:             ${{ secrets.EMAIL_USERNAME }}
-          EMAIL_PASSWORD:             ${{ secrets.EMAIL_PASSWORD }}
-          KAKAO_CLIENT_ID:            ${{ secrets.KAKAO_CLIENT_ID }}
-          KAKAO_REDIRECT_URI:         ${{ secrets.KAKAO_REDIRECT_URI }}
-          OPENAI_API_KEY:             ${{ secrets.OPENAI_API_KEY }}
-          FIREBASE_CREDENTIALS_JSON:  ${{ secrets.FIREBASE_CREDENTIALS_JSON }}
-
-          DOCKERHUB_USER:             ${{ secrets.DOCKERHUB_USERNAME }}
-          IMAGE_NAME:                 matchumoney-backend
-          IMAGE_TAG:                  latest
+          REDIS_HOST: ${{ secrets.REDIS_HOST }}
+          REDIS_PORT: ${{ secrets.REDIS_PORT }}
+          AWS_REGION_RT: ${{ secrets.AWS_REGION }}
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
+          KAKAO_REDIRECT_URI: ${{ secrets.KAKAO_REDIRECT_URI }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           set -e
-          echo "$KEY" > key.pem && chmod 600 key.pem
-          ssh -o StrictHostKeyChecking=no -i key.pem ${USER}@${HOST} <<EOF
+          echo "$KEY_B64" | base64 -d > key.pem
+          chmod 600 key.pem
+
+          ssh -o StrictHostKeyChecking=no -i key.pem ${USER}@${HOST} "
             set -e
-            mkdir -p ~/app
             cd ~/app
 
-            echo "$FIREBASE_CREDENTIALS_JSON" > firebase-key.json
+            # .env 생성 (heredoc X, 들여쓰기/컬럼0 걱정 X)
+            printf '%s\n' \
+              'SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}' \
+              'SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}' \
+              'SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}' \
+              'REDIS_HOST=${REDIS_HOST}' \
+              'REDIS_PORT=${REDIS_PORT}' \
+              'AWS_REGION=${AWS_REGION_RT}' \
+              'S3_BUCKET=${S3_BUCKET}' \
+              'JWT_SECRET=${JWT_SECRET}' \
+              'EMAIL_USERNAME=${EMAIL_USERNAME}' \
+              'EMAIL_PASSWORD=${EMAIL_PASSWORD}' \
+              'KAKAO_CLIENT_ID=${KAKAO_CLIENT_ID}' \
+              'KAKAO_REDIRECT_URI=${KAKAO_REDIRECT_URI}' \
+              'OPENAI_API_KEY=${OPENAI_API_KEY}' \
+            > .env
 
-            # .env 생성
-            cat > .env <<EOT
-            SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
-            SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
-            SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
-            REDIS_HOST=${REDIS_HOST}
-            REDIS_PORT=${REDIS_PORT}
-            AWS_REGION=${AWS_REGION_RT}
-            S3_BUCKET=${S3_BUCKET}
-            JWT_SECRET=${JWT_SECRET}
-            EMAIL_USERNAME=${EMAIL_USERNAME}
-            EMAIL_PASSWORD=${EMAIL_PASSWORD}
-            KAKAO_CLIENT_ID=${KAKAO_CLIENT_ID}
-            KAKAO_REDIRECT_URI=${KAKAO_REDIRECT_URI}
-            OPENAI_API_KEY=${OPENAI_API_KEY}
-            EOT
-  
-            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${DOCKERHUB_USER}" --password-stdin
-            
-            IMAGE=${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} docker compose pull
-            IMAGE=${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG} docker compose up -d
-            
+            # Docker Hub 로그인
+            echo '${DOCKERHUB_TOKEN}' | docker login -u '${DOCKERHUB_USER}' --password-stdin
+
+            # 이미지 pull & 기동 (IMAGE 환경변수로 주입)
+            IMAGE='${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}' docker compose pull
+            IMAGE='${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}' docker compose up -d
+
+            # 필요없는 이미지 정리
             docker image prune -f
-            EOF
+          "
