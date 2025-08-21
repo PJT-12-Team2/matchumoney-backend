@@ -76,12 +76,12 @@ jobs:
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
 
-          SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
-          SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
-          SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           REDIS_HOST: ${{ secrets.REDIS_HOST }}
           REDIS_PORT: ${{ secrets.REDIS_PORT }}
-          AWS_REGION_RT: ${{ secrets.AWS_REGION }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
@@ -101,12 +101,12 @@ jobs:
             cd ~/app
 
             printf '%s\n' \
-              'SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}' \
-              'SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}' \
-              'SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}' \
+              'DB_URL=${DB_URL}' \
+              'DB_USERNAME=${DB_USERNAME}' \
+              'DB_PASSWORD=${DB_PASSWORD}' \
               'REDIS_HOST=${REDIS_HOST}' \
               'REDIS_PORT=${REDIS_PORT}' \
-              'AWS_REGION=${AWS_REGION_RT}' \
+              'AWS_REGION=${AWS_REGION}' \
               'S3_BUCKET=${S3_BUCKET}' \
               'JWT_SECRET=${JWT_SECRET}' \
               'EMAIL_USERNAME=${EMAIL_USERNAME}' \
